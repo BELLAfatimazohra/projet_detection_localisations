@@ -4,14 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bfd8eb98-c0ee-44e5-8f2d-0e0580b5522a" name="Changes" comment="first commit">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/MainApp.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/OracleDBTest.java" afterDir="false" />
+    <list default="true" id="bfd8eb98-c0ee-44e5-8f2d-0e0580b5522a" name="Changes" comment="test de connexion avec la base de donnees oracle">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/controller/LoginController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/model/User.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/service/UserService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/module-info.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/fxml/login.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/styles/style.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/projet_detection_localisations/HelloApplication.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/projet_detection_localisations/HelloController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/module-info.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/module-info.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/MainApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/MainApp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/OracleDBTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/OracleDBTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/module-info.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/com/example/projet_detection_localisations/hello-view.fxml" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -22,24 +27,25 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
+        <option value="FxmlFile" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "BELLAfatimazohra"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;BELLAfatimazohra&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/BELLAfatimazohra/projet_detection_localisations",
-    "accountId": "2c512944-a984-4699-b67a-a9b5ec9228d9"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/BELLAfatimazohra/projet_detection_localisations&quot;,
+    &quot;accountId&quot;: &quot;2c512944-a984-4699-b67a-a9b5ec9228d9&quot;
   }
-}]]></component>
+}</component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
@@ -47,9 +53,9 @@
       </MavenGeneralSettings>
     </option>
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 6
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
   <component name="ProjectId" id="2nNH1EAPrh19qnuHrJJtxgNtNBx" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
@@ -59,11 +65,12 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Application.HelloApplication.executor": "Run",
+    "Application.MainApp.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/java/javafx-sdk-23/lib/javafx.web.jar",
-    "project.structure.last.edited": "Project",
+    "last_opened_file_path": "C:/Program Files/Java/ojdbc11.jar",
+    "project.structure.last.edited": "Libraries",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.21839081",
     "settings.editor.selected.configurable": "preferences.lookFeel"
@@ -71,7 +78,10 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\INFO\Desktop\IdeaProjects\projet_detection_localisations\src\main\resources\fxml" />
+      <recent name="C:\Users\INFO\Desktop\IdeaProjects\projet_detection_localisations\src\main\java" />
       <recent name="C:\Users\INFO\Desktop\IdeaProjects\projet_detection_localisations\src\main\java\com\example" />
+      <recent name="C:\Users\INFO\Desktop\IdeaProjects\projet_detection_localisations" />
     </key>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -91,11 +101,20 @@
       <option name="project" value="LOCAL" />
       <updated>1728807015598</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="test de connexion avec la base de donnees oracle">
+      <option name="closed" value="true" />
+      <created>1728813841212</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1728813841212</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="first commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="first commit" />
+    <MESSAGE value="test de connexion avec la base de donnees oracle" />
+    <option name="LAST_COMMIT_MESSAGE" value="test de connexion avec la base de donnees oracle" />
   </component>
 </project>

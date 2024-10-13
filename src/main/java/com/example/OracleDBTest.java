@@ -5,21 +5,15 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class OracleDBTest {
+    private static final String URL = "jdbc:oracle:thin:@localhost:1521:orcl"; // Remplacez par votre SID
+    private static final String USER = "votre_utilisateur";
+    private static final String PASSWORD = "votre_mot_de_passe";
 
     public static void testConnection() {
-        String url = "jdbc:oracle:thin:@//localhost:1521/projet_detection_localisations";
-        String username = "string";
-        String password = "tiger";
-
-        try (Connection connection = DriverManager.getConnection(url, username, password)) {
-            if (connection != null) {
-                System.out.println("Connexion réussie à la base de données Oracle !");
-            } else {
-                System.out.println("Échec de la connexion.");
-            }
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            System.out.println("Connexion réussie à la base de données Oracle !");
         } catch (SQLException e) {
-            System.out.println("Erreur de connexion : " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Erreur de connexion : " + e.getMessage());
         }
     }
 }
