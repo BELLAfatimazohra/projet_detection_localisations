@@ -6,9 +6,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 public class UserService {
-    private static final String URL = "jdbc:oracle:thin:@localhost:1521:orcl"; // Remplacez par votre SID
+    private static final String URL = "jdbc:oracle:thin:@localhost:1521:xe"; // Remplacez par votre SID
     private static final String USER = "system";
-    private static final String PASSWORD = "tiger";
+    private static final String PASSWORD = "12344321";
 
     // Méthode pour authentifier l'utilisateur
     public boolean authenticate(String username, String password) {
