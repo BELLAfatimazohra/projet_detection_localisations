@@ -15,7 +15,6 @@
         <maven.compiler.target>21</maven.compiler.target>
         <junit.version>5.10.2</junit.version>
     </properties>
-
     <dependencies>
         <!-- JavaFX Dependencies -->
         <dependency>

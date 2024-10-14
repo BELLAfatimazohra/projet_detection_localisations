@@ -16,7 +16,7 @@ public class MainApp extends Application {
             URL fxmlUrl = getClass().getResource("/fxml/login.fxml");
             System.out.println("Chemin recherché: " + fxmlUrl); // Affichez le chemin pour le débogage
             if (fxmlUrl == null) {
-                System.out.println("Le fichier FXML est introuvable !");
+                System.out.println("Le fichier FXML est introuvatesttble !");
                 return; // Arrêter si le fichier FXML est introuvable
             }
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
