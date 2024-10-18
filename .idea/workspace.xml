@@ -4,18 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bfd8eb98-c0ee-44e5-8f2d-0e0580b5522a" name="Changes" comment="asifha">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/module-info.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/service/LocationService.java" afterDir="false" />
+    <list default="true" id="bfd8eb98-c0ee-44e5-8f2d-0e0580b5522a" name="Changes" comment="yrbi ykhdm had spark 3sbbbbbbbbbbbbbbni">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/model/Location.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/HomeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/controller/HomeController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/akhirtest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/fqq.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/test.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/testtt.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/ttt.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/module-info.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/module-info.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/service/LocationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/service/LocationService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/fxml/home.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/fxml/home.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -78,7 +73,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/INFO/Desktop/IdeaProjects/projet_detection_localisations",
+    "last_opened_file_path": "C:/Program Files/Java/ojdbc11.jar",
     "project.structure.last.edited": "Libraries",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.21839081",
@@ -166,7 +161,15 @@
       <option name="project" value="LOCAL" />
       <updated>1728943716216</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="yrbi ykhdm had spark 3sbbbbbbbbbbbbbbni">
+      <option name="closed" value="true" />
+      <created>1729242096797</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1729242096797</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -187,6 +190,7 @@
     <MESSAGE value="page d'acceuil" />
     <MESSAGE value="testb wsf" />
     <MESSAGE value="asifha" />
-    <option name="LAST_COMMIT_MESSAGE" value="asifha" />
+    <MESSAGE value="yrbi ykhdm had spark 3sbbbbbbbbbbbbbbni" />
+    <option name="LAST_COMMIT_MESSAGE" value="yrbi ykhdm had spark 3sbbbbbbbbbbbbbbni" />
   </component>
 </project>

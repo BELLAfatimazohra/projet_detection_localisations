@@ -6,18 +6,27 @@
     <artifactId>projet_detection_localisations</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>projet_detection_localisations</name>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <junit.version>5.10.2</junit.version>
         <javafx.version>21</javafx.version>
-        <mockito.version>5.14.2</mockito.version> <!-- Version de Mockito -->
-        <hadoop.version>3.4.0</hadoop.version> <!-- Version de Hadoop -->
+        <mockito.version>5.14.2</mockito.version>
+        <hadoop.version>3.4.0</hadoop.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.openstreetmap.osmosis</groupId>
+            <artifactId>osmosis-core</artifactId>
+            <version>0.49.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openstreetmap.osmosis</groupId>
+            <artifactId>osmosis-pbf</artifactId>
+            <version>0.49.2</version>
+        </dependency>
         <!-- JavaFX -->
         <dependency>
             <groupId>org.openjfx</groupId>
@@ -29,17 +38,22 @@
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-web</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
 
         <!-- Apache Spark -->
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.12</artifactId>
-            <version>3.5.3</version>
+            <artifactId>spark-core_2.13</artifactId>
+            <version>4.0.0-preview2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_2.12</artifactId>
-            <version>3.5.3</version>
+            <artifactId>spark-sql_2.13</artifactId>
+            <version>4.0.0-preview2</version>
         </dependency>
 
         <!-- JXMapViewer -->
@@ -54,6 +68,18 @@
             <groupId>org.controlsfx</groupId>
             <artifactId>controlsfx</artifactId>
             <version>11.1.0</version>
+        </dependency>
+
+        <!-- Sedona -->
+        <dependency>
+            <groupId>org.apache.sedona</groupId>
+            <artifactId>sedona-sql-3.4_2.13</artifactId>
+            <version>1.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sedona</groupId>
+            <artifactId>sedona-core-3.4_2.13</artifactId>
+            <version>1.4.1</version>
         </dependency>
 
         <!-- FormsFX -->
@@ -156,7 +182,7 @@
                         <option>--module-path</option>
                         <option>${project.build.directory}/libs</option>
                         <option>--add-modules</option>
-                        <option>javafx.controls,javafx.fxml</option>
+                        <option>javafx.controls,javafx.fxml,javafx.web</option>
                     </options>
                 </configuration>
             </plugin>

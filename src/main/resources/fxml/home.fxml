@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.web.WebView?>
 
-<VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.controller.HomeController">
-    <!-- Conteneur pour la carte -->
-    <VBox fx:id="mapContainer" prefWidth="800" prefHeight="600" />
-
-    <!-- Barre de recherche -->
-    <TextField fx:id="searchField" promptText="Recherche une localisation..." />
-    <Button fx:id="searchButton" text="Rechercher" onAction="#onSearchButtonClick" />
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.controller.HomeController">
+    <TextField fx:id="searchField" promptText="Rechercher une localisation"/>
+    <Button fx:id="searchButton" text="Rechercher" onAction="#onSearchButtonClick"/>
+    <VBox fx:id="mapContainer" prefHeight="600" prefWidth="800">
+        <!-- WebView pour afficher la carte -->
+    </VBox>
 </VBox>
