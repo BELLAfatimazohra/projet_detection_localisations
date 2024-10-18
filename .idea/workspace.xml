@@ -4,7 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bfd8eb98-c0ee-44e5-8f2d-0e0580b5522a" name="Changes" comment="testb wsf" />
+    <list default="true" id="bfd8eb98-c0ee-44e5-8f2d-0e0580b5522a" name="Changes" comment="asifha">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/module-info.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/service/LocationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/HomeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/controller/HomeController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/akhirtest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/fqq.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/test.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/testtt.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/ttt.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/module-info.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/fxml/home.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/fxml/home.fxml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -25,6 +38,7 @@
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="REBASE" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -64,8 +78,8 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/INFO/Desktop/IdeaProjects/ElectricityBillingApp",
-    "project.structure.last.edited": "Modules",
+    "last_opened_file_path": "C:/Users/INFO/Desktop/IdeaProjects/projet_detection_localisations",
+    "project.structure.last.edited": "Libraries",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.21839081",
     "settings.editor.selected.configurable": "preferences.lookFeel"
@@ -73,9 +87,9 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\INFO\Desktop\IdeaProjects\projet_detection_localisations\src\main\resources\fxml" />
-      <recent name="C:\Users\INFO\Desktop\IdeaProjects\projet_detection_localisations\src\main\java" />
       <recent name="C:\Users\INFO\Desktop\IdeaProjects\projet_detection_localisations\src\main\java\com\example" />
+      <recent name="C:\Users\INFO\Desktop\IdeaProjects\projet_detection_localisations\src\main\java" />
+      <recent name="C:\Users\INFO\Desktop\IdeaProjects\projet_detection_localisations\src\main\resources\fxml" />
       <recent name="C:\Users\INFO\Desktop\IdeaProjects\projet_detection_localisations" />
     </key>
   </component>
@@ -136,7 +150,23 @@
       <option name="project" value="LOCAL" />
       <updated>1728938907277</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="asifha">
+      <option name="closed" value="true" />
+      <created>1728939308553</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1728939308553</updated>
+    </task>
+    <task id="LOCAL-00008" summary="asifha">
+      <option name="closed" value="true" />
+      <created>1728943716216</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1728943716216</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -156,6 +186,7 @@
     <MESSAGE value="akkkhiran dart la connexion avec la base de donnes" />
     <MESSAGE value="page d'acceuil" />
     <MESSAGE value="testb wsf" />
-    <option name="LAST_COMMIT_MESSAGE" value="testb wsf" />
+    <MESSAGE value="asifha" />
+    <option name="LAST_COMMIT_MESSAGE" value="asifha" />
   </component>
 </project>
