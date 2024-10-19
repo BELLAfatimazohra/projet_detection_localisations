@@ -10,7 +10,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
+import javafx.scene.control.Button;
 import java.io.IOException;
 
 public class LoginController {
@@ -20,6 +20,9 @@ public class LoginController {
     private PasswordField passwordField;
     @FXML
     private Label errorLabel;
+    @FXML
+    private Button signupButton;
+
 
     private UserService userService = new UserService();
 
@@ -71,5 +74,20 @@ public class LoginController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+    @FXML
+    private void handleSignup() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/signup.fxml"));
+            VBox signupRoot = loader.load();
+
+            Stage stage = (Stage) signupButton.getScene().getWindow();
+            Scene scene = new Scene(signupRoot);
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            showErrorAlert("Erreur de chargement", "Impossible de charger la page d'inscription.");
+        }
     }
 }
