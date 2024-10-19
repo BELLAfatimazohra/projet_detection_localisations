@@ -28,6 +28,12 @@ public class LoginController {
         String username = usernameField.getText();
         String password = passwordField.getText();
 
+        // Validation des champs
+        if (username.isEmpty() || password.isEmpty()) {
+            errorLabel.setText("Veuillez entrer un nom d'utilisateur et un mot de passe.");
+            return;
+        }
+
         // Vérifie si l'utilisateur est authentifié
         if (userService.authenticate(username, password)) {
             errorLabel.setText("Connexion réussie !");
@@ -44,9 +50,10 @@ public class LoginController {
 
     private void redirectToHome(String username, int userId) {
         try {
-            // Charger la page "home.fxml"
+            System.out.println("Tentative de chargement de home.fxml...");
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/home.fxml"));
             VBox homeRoot = loader.load();
+            System.out.println("Chargement réussi de home.fxml");
 
             // Obtenir le contrôleur HomeController et lui passer l'ID et le nom de l'utilisateur
             HomeController homeController = loader.getController();

@@ -4,13 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bfd8eb98-c0ee-44e5-8f2d-0e0580b5522a" name="Changes" comment="yrbi ykhdm had spark 3sbbbbbbbbbbbbbbni">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/model/Location.java" afterDir="false" />
+    <list default="true" id="bfd8eb98-c0ee-44e5-8f2d-0e0580b5522a" name="Changes" comment="spark ymkn khdm">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/HomeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/controller/HomeController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/module-info.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/service/LocationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/service/LocationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/controller/LoginController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/service/LocationService.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/fxml/home.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/fxml/home.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -73,11 +72,12 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Program Files/Java/ojdbc11.jar",
-    "project.structure.last.edited": "Libraries",
+    "last_opened_file_path": "C:/Users/INFO/Desktop/IdeaProjects/projet_detection_localisations/src/main/resources/tiles.mbtiles",
+    "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.21839081",
-    "settings.editor.selected.configurable": "preferences.lookFeel"
+    "settings.editor.selected.configurable": "reference.settings.project.maven.repository.indices",
+    "two.files.diff.last.used.file": "C:/Users/INFO/Desktop/IdeaProjects/projet_detection_localisations/src/main/resources/tiles.mbtiles"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -169,7 +169,15 @@
       <option name="project" value="LOCAL" />
       <updated>1729242096797</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="spark ymkn khdm">
+      <option name="closed" value="true" />
+      <created>1729267090807</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1729267090808</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -191,6 +199,7 @@
     <MESSAGE value="testb wsf" />
     <MESSAGE value="asifha" />
     <MESSAGE value="yrbi ykhdm had spark 3sbbbbbbbbbbbbbbni" />
-    <option name="LAST_COMMIT_MESSAGE" value="yrbi ykhdm had spark 3sbbbbbbbbbbbbbbni" />
+    <MESSAGE value="spark ymkn khdm" />
+    <option name="LAST_COMMIT_MESSAGE" value="spark ymkn khdm" />
   </component>
 </project>
