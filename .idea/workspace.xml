@@ -4,12 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bfd8eb98-c0ee-44e5-8f2d-0e0580b5522a" name="Changes" comment="spark ymkn khdm">
+    <list default="true" id="bfd8eb98-c0ee-44e5-8f2d-0e0580b5522a" name="Changes" comment="hhhh">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/HomeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/controller/HomeController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/controller/LoginController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/service/LocationService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/MapController.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/fxml/home.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/fxml/home.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -46,6 +46,9 @@
     &quot;accountId&quot;: &quot;2c512944-a984-4699-b67a-a9b5ec9228d9&quot;
   }
 }</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="jar://$PROJECT_DIR$/../../../../../Program Files/Java/jdk-21/lib/src.zip!/java.base/java/io/ByteArrayInputStream.java" root0="SKIP_INSPECTION" />
+  </component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
@@ -65,23 +68,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.HelloApplication.executor": "Run",
-    "Application.MainApp.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/INFO/Desktop/IdeaProjects/projet_detection_localisations/src/main/resources/tiles.mbtiles",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.21839081",
-    "settings.editor.selected.configurable": "reference.settings.project.maven.repository.indices",
-    "two.files.diff.last.used.file": "C:/Users/INFO/Desktop/IdeaProjects/projet_detection_localisations/src/main/resources/tiles.mbtiles"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.HelloApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Application.MainApp.executor&quot;: &quot;Run&quot;,
+    &quot;Application.TileExporter.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/java/javafx-sdk-23/lib/javafx.web.jar&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Libraries&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.21839081&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;two.files.diff.last.used.file&quot;: &quot;C:/Users/INFO/Desktop/IdeaProjects/projet_detection_localisations/src/main/resources/tiles.mbtiles&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\INFO\Desktop\IdeaProjects\projet_detection_localisations\src\main\resources\data" />
       <recent name="C:\Users\INFO\Desktop\IdeaProjects\projet_detection_localisations\src\main\java\com\example" />
       <recent name="C:\Users\INFO\Desktop\IdeaProjects\projet_detection_localisations\src\main\java" />
       <recent name="C:\Users\INFO\Desktop\IdeaProjects\projet_detection_localisations\src\main\resources\fxml" />
@@ -177,7 +183,15 @@
       <option name="project" value="LOCAL" />
       <updated>1729267090808</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="hhhh">
+      <option name="closed" value="true" />
+      <created>1729367081703</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1729367081703</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -200,6 +214,7 @@
     <MESSAGE value="asifha" />
     <MESSAGE value="yrbi ykhdm had spark 3sbbbbbbbbbbbbbbni" />
     <MESSAGE value="spark ymkn khdm" />
-    <option name="LAST_COMMIT_MESSAGE" value="spark ymkn khdm" />
+    <MESSAGE value="hhhh" />
+    <option name="LAST_COMMIT_MESSAGE" value="hhhh" />
   </component>
 </project>

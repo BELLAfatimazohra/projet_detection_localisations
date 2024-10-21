@@ -8,6 +8,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -52,7 +53,7 @@ public class LoginController {
         try {
             System.out.println("Tentative de chargement de home.fxml...");
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/home.fxml"));
-            VBox homeRoot = loader.load();
+            AnchorPane homeRoot = loader.load();  // Changer VBox à AnchorPane
             System.out.println("Chargement réussi de home.fxml");
 
             // Obtenir le contrôleur HomeController et lui passer l'ID et le nom de l'utilisateur
@@ -71,6 +72,7 @@ public class LoginController {
             showErrorAlert("Erreur de chargement", "Impossible de charger la page d'accueil.");
         }
     }
+
 
     private void showErrorAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
