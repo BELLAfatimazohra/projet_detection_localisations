@@ -8,6 +8,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.scene.control.Button;
@@ -31,6 +32,12 @@ public class LoginController {
         String username = usernameField.getText();
         String password = passwordField.getText();
 
+        // Validation des champs
+        if (username.isEmpty() || password.isEmpty()) {
+            errorLabel.setText("Veuillez entrer un nom d'utilisateur et un mot de passe.");
+            return;
+        }
+
         // Vérifie si l'utilisateur est authentifié
         if (userService.authenticate(username, password)) {
             errorLabel.setText("Connexion réussie !");
@@ -47,9 +54,10 @@ public class LoginController {
 
     private void redirectToHome(String username, int userId) {
         try {
-            // Charger la page "home.fxml"
+            System.out.println("Tentative de chargement de home.fxml...");
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/home.fxml"));
-            VBox homeRoot = loader.load();
+            AnchorPane homeRoot = loader.load();  // Changer VBox à AnchorPane
+            System.out.println("Chargement réussi de home.fxml");
 
             // Obtenir le contrôleur HomeController et lui passer l'ID et le nom de l'utilisateur
             HomeController homeController = loader.getController();
@@ -67,6 +75,7 @@ public class LoginController {
             showErrorAlert("Erreur de chargement", "Impossible de charger la page d'accueil.");
         }
     }
+
 
     private void showErrorAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
