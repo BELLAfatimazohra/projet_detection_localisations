@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox alignment="CENTER" spacing="10" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.example.controller.SignupController">
+
+    <Label text="Inscription" styleClass="title"/>
+
+    <TextField fx:id="usernameField" promptText="Nom d'utilisateur"/>
+    <TextField fx:id="emailField" promptText="Email"/>
+    <PasswordField fx:id="passwordField" promptText="Mot de passe"/>
+    <PasswordField fx:id="confirmPasswordField" promptText="Confirmer le mot de passe"/>
+
+    <Button text="S'inscrire" onAction="#handleSignup"/>
+
+    <Label fx:id="errorLabel" textFill="red"/>
+</VBox>

@@ -10,4 +10,7 @@
     <PasswordField fx:id="passwordField" promptText="Password"/>
     <Button text="Login" onAction="#handleLogin"/>
     <Label fx:id="errorLabel" textFill="red"/>
+    <Button fx:id="signupButton" onAction="#handleSignup" text="S'inscrire" />
+
+
 </VBox>

@@ -8,15 +8,20 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URL;
+
 public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        loadLoginInterface(primaryStage); // Charge l'interface de connexion au démarrage
+    }
+
+    private void loadLoginInterface(Stage primaryStage) {
         try {
             URL fxmlUrl = getClass().getResource("/fxml/login.fxml");
             System.out.println("Chemin recherché: " + fxmlUrl); // Affichez le chemin pour le débogage
             if (fxmlUrl == null) {
-                System.out.println("Le fichier FXML est introuvatesttble !");
+                System.out.println("Le fichier FXML est introuvable !");
                 return; // Arrêter si le fichier FXML est introuvable
             }
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
