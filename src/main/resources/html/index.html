@@ -2,9 +2,78 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Test</title>
+    <title>Carte du Maroc</title>
+    <link rel="stylesheet" href="openlayers/ol.css">
+    <script src="openlayers/ol.js"></script>
+    <style>
+        .map {
+            width: 100%;
+            height: 100vh;
+        }
+        body {
+            margin: 0;
+        }
+    </style>
 </head>
 <body>
-<h1>La carte ne se charge pas !</h1>
+<div id="map" class="map"></div>
+<input type="text" id="searchField" placeholder="Rechercher un lieu..." onkeypress="if(event.key === 'Enter') handleSearch()">
+<button onclick="handleSearch()">Recherche</button>
+<script>
+    // Créez la carte
+    var map = new ol.Map({
+        target: 'map',
+        layers: [
+            new ol.layer.Tile({
+                source: new ol.source.OSM()
+            })
+        ],
+        view: new ol.View({
+            center: ol.proj.fromLonLat([-7.0926, 31.7917]), // Centrer la carte sur le Maroc
+            zoom: 6,
+            minZoom: 2,
+            maxZoom: 20,
+            duration: 0 // Désactive les animations
+        })
+    });
+
+    var vectorSource = new ol.source.Vector(); // Source de vecteurs pour les marqueurs
+    var vectorLayer = new ol.layer.Vector({
+        source: vectorSource,
+        style: new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 10,
+                fill: new ol.style.Fill({ color: 'rgba(255, 0, 0, 0.6)' }), // Rouge pour les résultats de recherche
+                stroke: new ol.style.Stroke({ color: 'rgba(0, 0, 0, 0.6)', width: 1 })
+            })
+        })
+    });
+
+    map.addLayer(vectorLayer); // Ajouter la couche de vecteurs à la carte
+
+    // Fonction pour mettre à jour la carte avec les résultats de la recherche
+    function updateMap(locations) {
+        vectorSource.clear(); // Effacez les anciens marqueurs
+
+        locations.forEach(function(location) {
+            var marker = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat([location.lng, location.lat])), // Utiliser les coordonnées du résultat
+                name: location.name // Ajouter le nom pour une éventuelle utilisation
+            });
+
+            vectorSource.addFeature(marker); // Ajouter le marqueur à la source
+        });
+    }
+
+    // Fonction pour gérer la recherche
+    function handleSearch() {
+        var searchField = document.getElementById("searchField");
+        var searchQuery = searchField.value;
+        if (searchQuery) {
+            // Appeler la méthode handleSearch() dans HomeController
+            window.javaAppController.handleSearch(searchQuery);
+        }
+    }
+</script>
 </body>
 </html>

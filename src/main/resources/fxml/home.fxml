@@ -2,8 +2,18 @@
 
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.web.WebView?>
-<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.controller.HomeController">
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Button?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.controller.HomeController">
     <children>
-        <WebView fx:id="webView" prefHeight="600.0" prefWidth="800.0" />
+        <Label fx:id="welcomeLabel" layoutX="50" layoutY="50" text="Bienvenue" />
+
+        <!-- Ajout de la barre de recherche -->
+        <TextField fx:id="searchField" layoutX="50" layoutY="80" prefWidth="300" promptText="Entrez votre recherche ici..." />
+        <Button layoutX="360" layoutY="80" text="Chercher" onAction="#handleSearch" />
+
+        <WebView fx:id="webView" layoutX="50" layoutY="120" />
     </children>
 </AnchorPane>
