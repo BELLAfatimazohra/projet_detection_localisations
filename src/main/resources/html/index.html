@@ -6,19 +6,33 @@
     <link rel="stylesheet" href="openlayers/ol.css">
     <script src="openlayers/ol.js"></script>
     <style>
-        .map {
-            width: 100%;
-            height: 100vh;
-        }
         body {
             margin: 0;
+            display: flex; /* Utiliser Flexbox pour un alignement horizontal */
+        }
+        .map {
+            width: 70%; /* Largeur de la carte */
+            height: 100vh;
+        }
+        .sidebar {
+            width: 30%; /* Largeur de la barre latérale */
+            height: 100vh;
+            background-color: #f4f4f4; /* Couleur de fond de la barre latérale */
+            padding: 10px; /* Espacement interne */
+            overflow-y: auto; /* Défilement si le contenu dépasse */
+        }
+        #searchField {
+            width: 100%; /* Largeur du champ de recherche */
         }
     </style>
 </head>
 <body>
 <div id="map" class="map"></div>
-<input type="text" id="searchField" placeholder="Rechercher un lieu..." onkeypress="if(event.key === 'Enter') handleSearch()">
-<button onclick="handleSearch()">Recherche</button>
+<div class="sidebar">
+    <h2>Informations</h2>
+
+    <div id="infoDisplay"></div> <!-- Zone pour afficher les informations -->
+</div>
 <script>
     // Créez la carte
     var map = new ol.Map({
@@ -32,7 +46,7 @@
             center: ol.proj.fromLonLat([-7.0926, 31.7917]), // Centrer la carte sur le Maroc
             zoom: 6,
             minZoom: 2,
-            maxZoom: 20,
+            maxZoom: 22,
             duration: 0 // Désactive les animations
         })
     });
@@ -63,6 +77,9 @@
 
             vectorSource.addFeature(marker); // Ajouter le marqueur à la source
         });
+
+        // Affichez les informations dans la barre latérale
+        document.getElementById('infoDisplay').innerHTML = locations.map(loc => loc.name).join('<br>'); // Exemple d'affichage des noms
     }
 
     // Fonction pour gérer la recherche

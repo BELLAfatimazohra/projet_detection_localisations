@@ -1,16 +1,25 @@
 package com.example.controller;
 
-import static org.apache.spark.sql.functions.*; // Importation des fonctions de Spark SQL
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
-import java.util.List;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.Collections;
 
 public class HomeController {
 
@@ -21,29 +30,24 @@ public class HomeController {
     @FXML
     private TextField searchField;
 
+    // Labels pour la barre latérale
+    @FXML
+    private Label locationNameLabel; // Label pour le nom de l'emplacement
+    @FXML
+    private Label locationDescriptionLabel; // Label pour la description de l'emplacement
+
     private SparkSession spark;
-    private Dataset<Row> data;
 
     @FXML
     public void initialize() {
-        // Initialisation de Spark
-        try {
-            spark = SparkSession.builder()
-                    .appName("SearchLocationApp")
-                    .master("local")
-                    .getOrCreate();
+        // Initialisation de la session Spark
+        spark = SparkSession.builder()
+                .appName("SearchLocationApp")
+                .master("local")
+                .getOrCreate();
 
-            // Chargement des données depuis le fichier CSV
-            data = spark.read()
-                    .option("header", "true")
-                    .csv(getClass().getResource("/zone.csv").toExternalForm()); // Utilisation de getResource pour le chemin
-
-            WebEngine webEngine = webView.getEngine();
-            // Chargez le fichier HTML depuis le dossier html dans resources
-            webEngine.load(getClass().getResource("/html/index.html").toExternalForm());
-        } catch (Exception e) {
-            System.err.println("Erreur lors de l'initialisation de Spark ou du chargement des données : " + e.getMessage());
-        }
+        WebEngine webEngine = webView.getEngine();
+        webEngine.load(getClass().getResource("/html/index.html").toExternalForm());
     }
 
     public void setUserDetails(String username, int userId) {
@@ -54,10 +58,9 @@ public class HomeController {
         }
     }
 
-    // Méthode pour gérer la recherche
     @FXML
     private void handleSearch() {
-        String searchQuery = searchField.getText().trim(); // Élimine les espaces autour
+        String searchQuery = searchField.getText().trim();
         if (!searchQuery.isEmpty()) {
             searchLocation(searchQuery);
         } else {
@@ -66,37 +69,93 @@ public class HomeController {
     }
 
     private void searchLocation(String query) {
+        String url;
         try {
-            // Filtrer les résultats où le nom contient la requête de recherche, insensible à la casse
-            Dataset<Row> results = data.filter(lower(data.col("name")).contains(query.toLowerCase())); // Utilisation de lower()
+            // Encoder le query pour l'utiliser dans l'URL
+            String encodedQuery = URLEncoder.encode(query, "UTF-8");
+            url = "https://nominatim.openstreetmap.org/search?q=" + encodedQuery + "&format=json&addressdetails=1&limit=10";
 
-            // Si des résultats sont trouvés, afficher sur la carte
-            if (results.count() > 0) {
-                List<Row> rows = results.collectAsList();
-                StringBuilder jsonArray = new StringBuilder("[");
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                HttpGet request = new HttpGet(url);
+                CloseableHttpResponse response = httpClient.execute(request);
 
-                for (Row row : rows) {
-                    String name = row.getAs("name");
-                    String latitude = row.getAs("latitude").toString();
-                    String longitude = row.getAs("longitude").toString();
+                // Vérifier si la réponse est réussie (code 200)
+                if (response.getStatusLine().getStatusCode() == 200) {
+                    String jsonResponse = EntityUtils.toString(response.getEntity());
+                    JSONArray results = new JSONArray(jsonResponse);
 
-                    jsonArray.append(String.format("{\"name\":\"%s\", \"lat\":%s, \"lng\":%s},", name, latitude, longitude));
+                    if (results.length() > 0) {
+                        StringBuilder jsonArray = new StringBuilder("[");
+
+                        for (int i = 0; i < results.length(); i++) {
+                            JSONObject location = results.getJSONObject(i);
+                            String name = location.optString("display_name");
+                            String latitude = location.optString("lat");
+                            String longitude = location.optString("lon");
+
+                            jsonArray.append(String.format("{\"name\":\"%s\", \"lat\":%s, \"lng\":%s},", name, latitude, longitude));
+                        }
+
+                        // Retirer la dernière virgule si nécessaire
+                        if (jsonArray.length() > 1) {
+                            jsonArray.setLength(jsonArray.length() - 1);
+                        }
+                        jsonArray.append("]");
+
+                        // Mettre à jour la carte avec le résultat
+                        webView.getEngine().executeScript("updateMap(" + jsonArray.toString() + ");");
+
+                        // Convertir le résultat en DataFrame Spark
+                        Dataset<Row> locationsDF = spark.read().json(spark.createDataset(Collections.singletonList(jsonArray.toString()), org.apache.spark.sql.Encoders.STRING()));
+                        locationsDF.show();  // Afficher le DataFrame pour vérifier les résultats
+
+                        // Obtenir les détails de Wikipedia pour le premier emplacement trouvé
+                        String firstLocationName = results.getJSONObject(0).optString("display_name");
+                        getWikipediaDetails(firstLocationName);
+
+                    } else {
+                        System.out.println("Aucun lieu trouvé pour la recherche : " + query);
+                    }
+                } else {
+                    System.err.println("Erreur lors de la requête HTTP : " + response.getStatusLine());
                 }
-
-                // Retirer la dernière virgule si nécessaire
-                if (jsonArray.length() > 1) {
-                    jsonArray.setLength(jsonArray.length() - 1);
-                }
-                jsonArray.append("]");
-
-                // Exécuter le script JavaScript pour mettre à jour la carte
-                webView.getEngine().executeScript("updateMap(" + jsonArray.toString() + ");");
-            } else {
-                System.out.println("Aucun lieu trouvé pour la recherche : " + query);
             }
-        } catch (Exception e) {
+        } catch (UnsupportedEncodingException e) {
+            System.err.println("Erreur d'encodage de l'URL : " + e.getMessage());
+        } catch (IOException e) {
             System.err.println("Erreur lors de la recherche de la localisation : " + e.getMessage());
         }
     }
 
+    public void getWikipediaDetails(String locationName) throws UnsupportedEncodingException {
+        String url = "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=" +
+                URLEncoder.encode(locationName, "UTF-8") + "&format=json&origin=*";
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpGet request = new HttpGet(url);
+            CloseableHttpResponse response = httpClient.execute(request);
+
+            // Vérifier si la réponse est réussie (code 200)
+            if (response.getStatusLine().getStatusCode() == 200) {
+                String jsonResponse = EntityUtils.toString(response.getEntity());
+                JSONObject jsonObject = new JSONObject(jsonResponse);
+                JSONArray searchResults = jsonObject.getJSONObject("query").getJSONArray("search");
+
+                if (searchResults.length() > 0) {
+                    JSONObject firstResult = searchResults.getJSONObject(0);
+                    String title = firstResult.getString("title");
+                    String snippet = firstResult.getString("snippet");
+
+                    // Mettre à jour la barre latérale avec les détails
+                    locationNameLabel.setText("Nom : " + title);
+                    locationDescriptionLabel.setText("Description : " + snippet);
+                } else {
+                    System.out.println("Aucun résultat trouvé sur Wikipedia pour : " + locationName);
+                }
+            } else {
+                System.err.println("Erreur lors de la requête à Wikipedia : " + response.getStatusLine());
+            }
+        } catch (IOException e) {
+            System.err.println("Erreur lors de l'obtention des détails de Wikipedia : " + e.getMessage());
+        }
+    }
 }
