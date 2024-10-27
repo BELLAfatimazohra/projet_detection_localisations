@@ -159,5 +159,5 @@ public class HomeController {
             Platform.runLater(() -> locationDescriptionLabel.setText("Informations historiques non disponibles."));
         }
     }
-
+// hi kanjrb lpush
 }
