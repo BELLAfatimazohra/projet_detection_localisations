@@ -6,6 +6,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.TextArea?>
 <AnchorPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.controller.HomeController">
     <children>
         <Label fx:id="welcomeLabel" layoutX="50" layoutY="50" text="Bienvenue" />
@@ -22,5 +23,8 @@
         </VBox>
 
         <WebView fx:id="webView" layoutX="50" layoutY="120" />
+        <Button layoutX="50" layoutY="350" text="Obtenir ma localisation" onAction="#handleGetLocation"/>
+        <TextArea fx:id="locationTextArea" layoutX="50" layoutY="390" prefHeight="200" prefWidth="600" promptText="Les données de localisation s'afficheront ici..." />
+
     </children>
 </AnchorPane>

@@ -10,18 +10,18 @@
             margin: 0;
             display: flex; /* Utiliser Flexbox pour un alignement horizontal */
         }
-        .map {
+                .map {
             width: 70%; /* Largeur de la carte */
             height: 100vh;
         }
-        .sidebar {
+                .sidebar {
             width: 30%; /* Largeur de la barre latérale */
             height: 100vh;
             background-color: #f4f4f4; /* Couleur de fond de la barre latérale */
             padding: 10px; /* Espacement interne */
             overflow-y: auto; /* Défilement si le contenu dépasse */
         }
-        #searchField {
+                #searchField {
             width: 100%; /* Largeur du champ de recherche */
         }
     </style>
@@ -36,61 +36,61 @@
 <script>
     // Créez la carte
     var map = new ol.Map({
-        target: 'map',
-        layers: [
-            new ol.layer.Tile({
-                source: new ol.source.OSM()
-            })
-        ],
-        view: new ol.View({
-            center: ol.proj.fromLonLat([-7.0926, 31.7917]), // Centrer la carte sur le Maroc
-            zoom: 6,
-            minZoom: 2,
-            maxZoom: 22,
-            duration: 0 // Désactive les animations
-        })
+    target: 'map',
+layers: [
+    new ol.layer.Tile({
+source: new ol.source.OSM()
+})
+    ],
+view: new ol.View({
+center: ol.proj.fromLonLat([-7.0926, 31.7917]), // Centrer la carte sur le Maroc
+zoom: 6,
+        minZoom: 2,
+        maxZoom: 22,
+        duration: 0 // Désactive les animations
+})
     });
 
-    var vectorSource = new ol.source.Vector(); // Source de vecteurs pour les marqueurs
-    var vectorLayer = new ol.layer.Vector({
-        source: vectorSource,
-        style: new ol.style.Style({
-            image: new ol.style.Circle({
-                radius: 10,
-                fill: new ol.style.Fill({ color: 'rgba(255, 0, 0, 0.6)' }), // Rouge pour les résultats de recherche
-                stroke: new ol.style.Stroke({ color: 'rgba(0, 0, 0, 0.6)', width: 1 })
-            })
+var vectorSource = new ol.source.Vector(); // Source de vecteurs pour les marqueurs
+var vectorLayer = new ol.layer.Vector({
+    source: vectorSource,
+style: new ol.style.Style({
+image: new ol.style.Circle({
+        radius: 10,
+        fill: new ol.style.Fill({ color: 'rgba(255, 0, 0, 0.6)' }), // Rouge pour les résultats de recherche
+stroke: new ol.style.Stroke({ color: 'rgba(0, 0, 0, 0.6)', width: 1 })
         })
+})
     });
 
     map.addLayer(vectorLayer); // Ajouter la couche de vecteurs à la carte
 
-    // Fonction pour mettre à jour la carte avec les résultats de la recherche
-    function updateMap(locations) {
-        vectorSource.clear(); // Effacez les anciens marqueurs
+// Fonction pour mettre à jour la carte avec les résultats de la recherche
+function updateMap(locations) {
+vectorSource.clear(); // Effacez les anciens marqueurs
 
-        locations.forEach(function(location) {
-            var marker = new ol.Feature({
-                geometry: new ol.geom.Point(ol.proj.fromLonLat([location.lng, location.lat])), // Utiliser les coordonnées du résultat
-                name: location.name // Ajouter le nom pour une éventuelle utilisation
-            });
-
-            vectorSource.addFeature(marker); // Ajouter le marqueur à la source
+locations.forEach(function(location) {
+    var marker = new ol.Feature({
+            geometry: new ol.geom.Point(ol.proj.fromLonLat([location.lng, location.lat])), // Utiliser les coordonnées du résultat
+    name: location.name // Ajouter le nom pour une éventuelle utilisation
         });
 
-        // Affichez les informations dans la barre latérale
-        document.getElementById('infoDisplay').innerHTML = locations.map(loc => loc.name).join('<br>'); // Exemple d'affichage des noms
-    }
+    vectorSource.addFeature(marker); // Ajouter le marqueur à la source
+});
 
-    // Fonction pour gérer la recherche
-    function handleSearch() {
-        var searchField = document.getElementById("searchField");
-        var searchQuery = searchField.value;
-        if (searchQuery) {
-            // Appeler la méthode handleSearch() dans HomeController
-            window.javaAppController.handleSearch(searchQuery);
-        }
-    }
+// Affichez les informations dans la barre latérale
+document.getElementById('infoDisplay').innerHTML = locations.map(loc => loc.name).join('<br>'); // Exemple d'affichage des noms
+}
+
+// Fonction pour gérer la recherche
+function handleSearch() {
+var searchField = document.getElementById("searchField");
+var searchQuery = searchField.value;
+if (searchQuery) {
+    // Appeler la méthode handleSearch() dans HomeController
+    window.javaAppController.handleSearch(searchQuery);
+}
+}
 </script>
 </body>
 </html>

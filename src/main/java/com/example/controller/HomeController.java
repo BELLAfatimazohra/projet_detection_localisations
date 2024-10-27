@@ -1,16 +1,34 @@
 package com.example.controller;
 
-import static org.apache.spark.sql.functions.*; // Importation des fonctions de Spark SQL
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import javafx.scene.control.TextArea;
+import java.io.BufferedReader;
 
-import java.util.List;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import com.example.service.GeolocationService;
 
 public class HomeController {
 
@@ -20,30 +38,43 @@ public class HomeController {
     private Label welcomeLabel;
     @FXML
     private TextField searchField;
+    @FXML
+    private Label locationNameLabel;
+    @FXML
+    private Label locationDescriptionLabel;
+    @FXML
+    private TextArea locationTextArea; // L'élément de la zone de texte dans home.fxml
 
     private SparkSession spark;
-    private Dataset<Row> data;
+    private GeolocationService geolocationService;
+
+    public HomeController() {
+
+        this.geolocationService = new GeolocationService(); // Initialiser le service
+    }
+
+    @FXML
+    public void handleGetLocation() {
+        double[] coordinates = geolocationService.getLocationCoordinates(); // Obtenir les coordonnées
+
+        // JavaScript pour ajouter un marqueur avec les coordonnées obtenues
+        String script = String.format("addMarker(%f, %f);", coordinates[0], coordinates[1]);
+
+        // Exécuter le script pour ajouter le marqueur sur la carte
+        webView.getEngine().executeScript(script);
+    }
+
 
     @FXML
     public void initialize() {
-        // Initialisation de Spark
-        try {
-            spark = SparkSession.builder()
-                    .appName("SearchLocationApp")
-                    .master("local")
-                    .getOrCreate();
+        spark = SparkSession.builder()
+                .appName("SearchLocationApp")
+                .master("local")
+                .getOrCreate();
+        WebEngine webEngine = webView.getEngine();
+        webEngine.load(getClass().getResource("/html/index.html").toExternalForm());
+        // Obtenir la localisation de l'utilisateur dès l'ouverture de l'application
 
-            // Chargement des données depuis le fichier CSV
-            data = spark.read()
-                    .option("header", "true")
-                    .csv(getClass().getResource("/zone.csv").toExternalForm()); // Utilisation de getResource pour le chemin
-
-            WebEngine webEngine = webView.getEngine();
-            // Chargez le fichier HTML depuis le dossier html dans resources
-            webEngine.load(getClass().getResource("/html/index.html").toExternalForm());
-        } catch (Exception e) {
-            System.err.println("Erreur lors de l'initialisation de Spark ou du chargement des données : " + e.getMessage());
-        }
     }
 
     public void setUserDetails(String username, int userId) {
@@ -54,48 +85,102 @@ public class HomeController {
         }
     }
 
-    // Méthode pour gérer la recherche
     @FXML
     private void handleSearch() {
-        String searchQuery = searchField.getText().trim(); // Élimine les espaces autour
+        String searchQuery = searchField.getText().trim();
         if (!searchQuery.isEmpty()) {
             searchLocation(searchQuery);
         } else {
             System.out.println("Veuillez entrer une requête de recherche.");
         }
     }
-
+    //
     private void searchLocation(String query) {
         try {
-            // Filtrer les résultats où le nom contient la requête de recherche, insensible à la casse
-            Dataset<Row> results = data.filter(lower(data.col("name")).contains(query.toLowerCase())); // Utilisation de lower()
+            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
+            String url = "https://nominatim.openstreetmap.org/search?q=" + encodedQuery + "&format=json&addressdetails=1&limit=10";
 
-            // Si des résultats sont trouvés, afficher sur la carte
-            if (results.count() > 0) {
-                List<Row> rows = results.collectAsList();
-                StringBuilder jsonArray = new StringBuilder("[");
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                HttpGet request = new HttpGet(url);
+                try (CloseableHttpResponse response = httpClient.execute(request)) {
 
-                for (Row row : rows) {
-                    String name = row.getAs("name");
-                    String latitude = row.getAs("latitude").toString();
-                    String longitude = row.getAs("longitude").toString();
+                    if (response.getStatusLine().getStatusCode() == 200) {
+                        String jsonResponse = EntityUtils.toString(response.getEntity());
+                        JSONArray results = new JSONArray(jsonResponse);
 
-                    jsonArray.append(String.format("{\"name\":\"%s\", \"lat\":%s, \"lng\":%s},", name, latitude, longitude));
+                        if (results.length() > 0) {
+                            StringBuilder jsonArray = new StringBuilder("[");
+
+                            for (int i = 0; i < results.length(); i++) {
+                                JSONObject location = results.getJSONObject(i);
+                                String name = location.optString("display_name");
+                                String latitude = location.optString("lat");
+                                String longitude = location.optString("lon");
+
+                                jsonArray.append(String.format("{\"name\":\"%s\", \"lat\":%s, \"lng\":%s},", name, latitude, longitude));
+                            }
+
+                            if (jsonArray.length() > 1) {
+                                jsonArray.setLength(jsonArray.length() - 1);
+                            }
+                            jsonArray.append("]");
+
+                            webView.getEngine().executeScript("updateMap(" + jsonArray.toString() + ");");
+
+                            Dataset<Row> locationsDF = spark.read().json(spark.createDataset(Collections.singletonList(jsonArray.toString()), org.apache.spark.sql.Encoders.STRING()));
+                            locationsDF.show();
+
+                            // Utiliser le nom du premier emplacement trouvé pour charger la page Wikipedia
+                            String firstLocationName = results.getJSONObject(0).optString("display_name");
+                            getWikipediaDetails(firstLocationName);
+                        } else {
+                            System.out.println("Aucun lieu trouvé pour la recherche : " + query);
+                        }
+                    } else {
+                        System.err.println("Erreur lors de la requête HTTP : " + response.getStatusLine());
+                    }
                 }
-
-                // Retirer la dernière virgule si nécessaire
-                if (jsonArray.length() > 1) {
-                    jsonArray.setLength(jsonArray.length() - 1);
-                }
-                jsonArray.append("]");
-
-                // Exécuter le script JavaScript pour mettre à jour la carte
-                webView.getEngine().executeScript("updateMap(" + jsonArray.toString() + ");");
-            } else {
-                System.out.println("Aucun lieu trouvé pour la recherche : " + query);
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.err.println("Erreur lors de la recherche de la localisation : " + e.getMessage());
+        }
+    }
+
+    private void getWikipediaDetails(String locationName) {
+        try {
+            // URL de l'API de Wikipedia pour récupérer un extrait de l'article
+            String apiUrl = "https://fr.wikipedia.org/api/rest_v1/page/summary/" + URLEncoder.encode(locationName, "UTF-8");
+
+            // Créer une requête HTTP pour l'API
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(apiUrl))
+                    .build();
+
+            // Envoyer la requête et traiter la réponse
+            client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .thenApply(HttpResponse::body)
+                    .thenAccept(response -> {
+                        try {
+                            JSONObject json = new JSONObject(response);
+
+                            // Récupérer uniquement l'extrait du texte
+                            String extract = json.optString("extract", "Aucune information disponible.");
+
+                            // Afficher uniquement l'extrait dans le label
+                            Platform.runLater(() -> locationDescriptionLabel.setText(extract));
+
+                        } catch (JSONException e) {
+                            Platform.runLater(() -> locationDescriptionLabel.setText("Erreur lors du chargement des informations."));
+                        }
+                    })
+                    .exceptionally(e -> {
+                        Platform.runLater(() -> locationDescriptionLabel.setText("Erreur de connexion à l'API Wikipedia."));
+                        return null;
+                    });
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'ouverture de la page Wikipedia : " + e.getMessage());
+            Platform.runLater(() -> locationDescriptionLabel.setText("Informations historiques non disponibles."));
         }
     }
 
