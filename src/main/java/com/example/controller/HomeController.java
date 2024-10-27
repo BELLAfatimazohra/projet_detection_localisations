@@ -11,7 +11,6 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
 import java.util.List;
-import java.util.Objects;
 
 public class HomeController {
 
@@ -35,23 +34,13 @@ public class HomeController {
                     .getOrCreate();
 
             // Chargement des données depuis le fichier CSV
-            var resource = getClass().getResource("/zone.csv");
-            if (resource != null) {
-                data = spark.read()
-                        .option("header", "true")
-                        .csv(resource.toExternalForm());
-            } else {
-                System.err.println("Le fichier zone.csv est introuvable dans le dossier resources !");
-            }
+            data = spark.read()
+                    .option("header", "true")
+                    .csv(getClass().getResource("/zone.csv").toExternalForm()); // Utilisation de getResource pour le chemin
 
             WebEngine webEngine = webView.getEngine();
-            var htmlResource = getClass().getResource("/html/index.html");
-            if (htmlResource != null) {
-                webEngine.load(htmlResource.toExternalForm());
-            } else {
-                System.err.println("Le fichier HTML index.html est introuvable dans le dossier resources/html !");
-            }
-
+            // Chargez le fichier HTML depuis le dossier html dans resources
+            webEngine.load(getClass().getResource("/html/index.html").toExternalForm());
         } catch (Exception e) {
             System.err.println("Erreur lors de l'initialisation de Spark ou du chargement des données : " + e.getMessage());
         }
