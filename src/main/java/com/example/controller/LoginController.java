@@ -59,6 +59,11 @@ public class LoginController {
             AnchorPane homeRoot = loader.load();  // Changer VBox à AnchorPane
             System.out.println("Chargement réussi de home.fxml");
 
+            // Appliquer le fichier CSS ici
+            Scene scene = new Scene(homeRoot);
+            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+            System.out.println("Fichier CSS chargé avec succès.");
+
             // Obtenir le contrôleur HomeController et lui passer l'ID et le nom de l'utilisateur
             HomeController homeController = loader.getController();
             if (homeController != null) {
@@ -67,7 +72,6 @@ public class LoginController {
 
             // Obtenir la fenêtre actuelle et remplacer la scène
             Stage stage = (Stage) usernameField.getScene().getWindow();
-            Scene scene = new Scene(homeRoot);
             stage.setScene(scene);
             stage.show();
         } catch (IOException e) {
@@ -75,6 +79,7 @@ public class LoginController {
             showErrorAlert("Erreur de chargement", "Impossible de charger la page d'accueil.");
         }
     }
+
 
 
     private void showErrorAlert(String title, String message) {

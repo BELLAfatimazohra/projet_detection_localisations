@@ -15,7 +15,8 @@
             height: 100vh;
         }
         .sidebar {
-            width: 30%; /* Largeur de la barre latérale */
+            width:
+30%; /* Largeur de la barre latérale */
             height: 100vh;
             background-color: #f4f4f4; /* Couleur de fond de la barre latérale */
             padding: 10px; /* Espacement interne */
@@ -29,12 +30,13 @@
 <body>
 <div id="map" class="map"></div>
 <div class="sidebar">
-    <h2>Informations</h2>
-
-    <div id="infoDisplay"></div> <!-- Zone pour afficher les informations -->
+    <ul id="suggestionsList" style="list-style-type: none; padding: 0;"></ul>
+    <h2 id="locationNameLabel"></h2>
+    <p id="locationDescriptionLabel"></p>
 </div>
+
 <script>
-    // Créez la carte
+    // Initialisation de la carte OpenLayers
     var map = new ol.Map({
         target: 'map',
         layers: [
@@ -43,54 +45,47 @@
             })
         ],
         view: new ol.View({
-            center: ol.proj.fromLonLat([-7.0926, 31.7917]), // Centrer la carte sur le Maroc
-            zoom: 6,
-            minZoom: 2,
-            maxZoom: 22,
-            duration: 0 // Désactive les animations
+            center: ol.proj.fromLonLat([-7.1, 31.9]),
+            zoom: 6
         })
     });
 
-    var vectorSource = new ol.source.Vector(); // Source de vecteurs pour les marqueurs
-    var vectorLayer = new ol.layer.Vector({
-        source: vectorSource,
-        style: new ol.style.Style({
-            image: new ol.style.Circle({
-                radius: 10,
-                fill: new ol.style.Fill({ color: 'rgba(255, 0, 0, 0.6)' }), // Rouge pour les résultats de recherche
-                stroke: new ol.style.Stroke({ color: 'rgba(0, 0, 0, 0.6)', width: 1 })
-            })
-        })
-    });
-
-    map.addLayer(vectorLayer); // Ajouter la couche de vecteurs à la carte
-
-    // Fonction pour mettre à jour la carte avec les résultats de la recherche
-    function updateMap(locations) {
-        vectorSource.clear(); // Effacez les anciens marqueurs
-
-        locations.forEach(function(location) {
-            var marker = new ol.Feature({
-                geometry: new ol.geom.Point(ol.proj.fromLonLat([location.lng, location.lat])), // Utiliser les coordonnées du résultat
-                name: location.name // Ajouter le nom pour une éventuelle utilisation
-            });
-
-            vectorSource.addFeature(marker); // Ajouter le marqueur à la source
+   function updateMap(locations) {
+    locations.forEach(function(location) {
+        var coords = ol.proj.fromLonLat([location.lng, location.lat]);
+        var marker = new ol.Feature({
+            geometry: new ol.geom.Point(coords),
+            name: location.name
         });
 
-        // Affichez les informations dans la barre latérale
-        document.getElementById('infoDisplay').innerHTML = locations.map(loc => loc.name).join('<br>'); // Exemple d'affichage des noms
-    }
+        // Définir l'image du marqueur avec une taille personnalisée
+        var iconStyle = new ol.style.Style({
+            image: new ol.style.Icon({
+                anchor: [0.5, 1], // Position de l'ancre de l'icône
+                src: '../images/marker.png', // Chemin vers votre image de marqueur
+                scale: 0.1 // Ajustez cette valeur pour redimensionner l'icône
+            })
+        });
+        marker.setStyle(iconStyle);
+        var vectorSource = new ol.source.Vector({
+            features: [marker]
+        });
 
-    // Fonction pour gérer la recherche
-    function handleSearch() {
-        var searchField = document.getElementById("searchField");
-        var searchQuery = searchField.value;
-        if (searchQuery) {
-            // Appeler la méthode handleSearch() dans HomeController
-            window.javaAppController.handleSearch(searchQuery);
-        }
-    }
+        var markerLayer = new ol.layer.Vector({
+            source: vectorSource
+        });
+
+        // Ajout du marqueur à la carte
+        map.addLayer(markerLayer);
+
+        // Centrage de la carte sur la position du lieu
+        map.getView().setCenter(coords);
+        map.getView().setZoom(12); // Zoomer sur la localisation
+    });
+}
+
+
+
 </script>
 </body>
 </html>

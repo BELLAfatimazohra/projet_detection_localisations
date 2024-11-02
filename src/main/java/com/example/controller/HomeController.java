@@ -3,7 +3,9 @@ package com.example.controller;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -18,17 +20,25 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class HomeController {
 
+    @FXML
+    private ListView<String> resultsListView;
     @FXML
     private WebView webView;
     @FXML
@@ -40,17 +50,29 @@ public class HomeController {
     @FXML
     private Label locationDescriptionLabel;
 
+    @FXML
+    private ListView<String> suggestionsList; // Nouvelle liste pour les suggestions
+
     private SparkSession spark;
 
     @FXML
     public void initialize() {
+        // Initialisation de SparkSession
         spark = SparkSession.builder()
                 .appName("SearchLocationApp")
                 .master("local")
                 .getOrCreate();
 
+        // Chargement de la page HTML dans WebView
         WebEngine webEngine = webView.getEngine();
         webEngine.load(getClass().getResource("/html/index.html").toExternalForm());
+
+        // Vérification si suggestionsList est initialisé
+        if (suggestionsList == null) {
+            System.out.println("suggestionsList is null");
+        } else {
+            suggestionsList.setVisible(false); // Masquer la liste des suggestions au départ
+        }
     }
 
     public void setUserDetails(String username, int userId) {
@@ -70,7 +92,67 @@ public class HomeController {
             System.out.println("Veuillez entrer une requête de recherche.");
         }
     }
-//
+
+    @FXML
+    private void onSearchFieldKeyTyped(KeyEvent event) {
+        String query = searchField.getText();
+        if (query.length() > 1) { // Démarrer la recherche après 2 caractères
+            fetchSuggestions(query);
+        } else {
+            suggestionsList.setVisible(false); // Masquer si la longueur est <= 1
+        }
+    }
+
+    private void fetchSuggestions(String query) {
+        String urlString = "https://nominatim.openstreetmap.org/search?q=" + URLEncoder.encode(query, StandardCharsets.UTF_8) + "&format=json&addressdetails=1&limit=10";
+        new Thread(() -> {
+            try {
+                URL url = new URL(urlString);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String inputLine;
+                List<String> suggestions = new ArrayList<>();
+
+                // Analysez la réponse JSON et extrayez les noms de lieu
+                StringBuilder jsonResponse = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    jsonResponse.append(inputLine);
+                }
+                in.close();
+
+                JSONArray results = new JSONArray(jsonResponse.toString());
+                for (int i = 0; i < results.length(); i++) {
+                    JSONObject location = results.getJSONObject(i);
+                    String name = location.optString("display_name");
+                    suggestions.add(name); // Ajoutez le nom à la liste des suggestions
+                }
+
+                // Mettez à jour la liste des suggestions sur le JavaFX Application Thread
+                updateSuggestions(suggestions);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private void updateSuggestions(List<String> suggestions) {
+        // Mettez à jour la liste des suggestions et affichez-la
+        suggestionsList.getItems().clear();
+        suggestionsList.getItems().addAll(suggestions);
+        suggestionsList.setVisible(!suggestions.isEmpty());
+    }
+
+    @FXML
+    private void onSuggestionClicked() {
+        String selectedPlace = suggestionsList.getSelectionModel().getSelectedItem();
+        if (selectedPlace != null) {
+            searchField.setText(selectedPlace); // Remplir le champ de recherche avec la suggestion choisie
+            suggestionsList.setVisible(false); // Masquer la liste après la sélection
+            searchLocation(selectedPlace); // Rechercher la localisation sélectionnée
+        }
+    }
+
     private void searchLocation(String query) {
         try {
             String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
@@ -79,7 +161,6 @@ public class HomeController {
             try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
                 HttpGet request = new HttpGet(url);
                 try (CloseableHttpResponse response = httpClient.execute(request)) {
-
                     if (response.getStatusLine().getStatusCode() == 200) {
                         String jsonResponse = EntityUtils.toString(response.getEntity());
                         JSONArray results = new JSONArray(jsonResponse);
@@ -97,12 +178,14 @@ public class HomeController {
                             }
 
                             if (jsonArray.length() > 1) {
-                                jsonArray.setLength(jsonArray.length() - 1);
+                                jsonArray.setLength(jsonArray.length() - 1); // Remove the last comma
                             }
                             jsonArray.append("]");
 
+                            // Mise à jour de la carte
                             webView.getEngine().executeScript("updateMap(" + jsonArray.toString() + ");");
 
+                            // Création d'un DataFrame Spark
                             Dataset<Row> locationsDF = spark.read().json(spark.createDataset(Collections.singletonList(jsonArray.toString()), org.apache.spark.sql.Encoders.STRING()));
                             locationsDF.show();
 
@@ -122,42 +205,59 @@ public class HomeController {
         }
     }
 
-    private void getWikipediaDetails(String locationName) {
-        try {
-            // URL de l'API de Wikipedia pour récupérer un extrait de l'article
-            String apiUrl = "https://fr.wikipedia.org/api/rest_v1/page/summary/" + URLEncoder.encode(locationName, "UTF-8");
-
-            // Créer une requête HTTP pour l'API
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(apiUrl))
-                    .build();
-
-            // Envoyer la requête et traiter la réponse
-            client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .thenApply(HttpResponse::body)
-                    .thenAccept(response -> {
-                        try {
-                            JSONObject json = new JSONObject(response);
-
-                            // Récupérer uniquement l'extrait du texte
-                            String extract = json.optString("extract", "Aucune information disponible.");
-
-                            // Afficher uniquement l'extrait dans le label
-                            Platform.runLater(() -> locationDescriptionLabel.setText(extract));
-
-                        } catch (JSONException e) {
-                            Platform.runLater(() -> locationDescriptionLabel.setText("Erreur lors du chargement des informations."));
-                        }
-                    })
-                    .exceptionally(e -> {
-                        Platform.runLater(() -> locationDescriptionLabel.setText("Erreur de connexion à l'API Wikipedia."));
-                        return null;
-                    });
-        } catch (Exception e) {
-            System.err.println("Erreur lors de l'ouverture de la page Wikipedia : " + e.getMessage());
-            Platform.runLater(() -> locationDescriptionLabel.setText("Informations historiques non disponibles."));
+    @FXML
+    private void handleSearchWikipedia() {
+        String searchQuery = searchField.getText().trim();
+        if (!searchQuery.isEmpty()) {
+            getWikipediaDetails(searchQuery);
+        } else {
+            System.out.println("Veuillez entrer un nom de localisation.");
         }
     }
-// hi kanjrb lpush
+
+    private void getWikipediaDetails(String locationName) {
+        // Prendre uniquement le nom principal avant la première virgule ou espace
+        String[] parts = locationName.split(",|\\s+");
+        final String finalLocationName = parts[0].trim(); // Déclarez comme final
+
+        // Afficher le nom de la localisation pour débogage
+        System.out.println("Nom de la localisation pour Wikipedia : " + finalLocationName);
+
+        // Construire l'URL de l'API
+        String apiUrl = "https://fr.wikipedia.org/api/rest_v1/page/summary/" + URLEncoder.encode(finalLocationName, StandardCharsets.UTF_8);
+
+        // Afficher l'URL de l'API pour vérifier
+        System.out.println("URL de l'API: " + apiUrl);
+
+        // Requête HTTP à l'API
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiUrl))
+                .build();
+
+        client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenAccept(response -> {
+                    try {
+                        JSONObject json = new JSONObject(response);
+                        String extract = json.getString("extract");
+                        String displayTitle = json.getString("title");
+
+                        // Mettre à jour l'interface utilisateur avec les informations
+                        Platform.runLater(() -> {
+                            locationNameLabel.setText(displayTitle);
+                            locationDescriptionLabel.setText(extract);
+                        });
+                    } catch (JSONException e) {
+                        System.err.println("Erreur lors de la parsing de la réponse de Wikipedia : " + e.getMessage());
+                    }
+                });
+    }
+    @FXML
+    private void handleItinerary() {
+        // Logique pour afficher ou calculer l'itinéraire
+        System.out.println("Itinéraire demandé pour : " + locationNameLabel.getText());
+
+        // Vous pouvez ajouter ici du code pour afficher l'itinéraire dans WebView ou un autre élément
+    }
 }
