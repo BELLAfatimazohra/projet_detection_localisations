@@ -28,10 +28,11 @@
                 <TextField fx:id="searchField" prefWidth="300" promptText="Entrez votre recherche ici..." onKeyTyped="#onSearchFieldKeyTyped"/>
                 <Button text="Chercher" onAction="#handleSearch" />
 
-
-
                 <!-- WebView for displaying map -->
                 <WebView fx:id="webView" prefHeight="400" />
+                <Button layoutX="50" layoutY="350" text="Obtenir ma localisation" onAction="#handleGetLocation"/>
+
+
             </VBox>
         </HBox>
     </children>

@@ -1,5 +1,6 @@
 package com.example.controller;
 
+import com.example.service.GeolocationService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -54,7 +55,23 @@ public class HomeController {
     private ListView<String> suggestionsList; // Nouvelle liste pour les suggestions
 
     private SparkSession spark;
+    private GeolocationService geolocationService;
 
+    public HomeController() {
+
+        this.geolocationService = new GeolocationService(); // Initialiser le service
+    }
+
+    @FXML
+    public void handleGetLocation() {
+        double[] coordinates = geolocationService.getLocationCoordinates(); // Obtenir les coordonnées
+
+        // JavaScript pour ajouter un marqueur avec les coordonnées obtenues
+        String script = String.format("addMarker(%f, %f);", coordinates[0], coordinates[1]);
+
+        // Exécuter le script pour ajouter le marqueur sur la carte
+        webView.getEngine().executeScript(script);
+    }
     @FXML
     public void initialize() {
         // Initialisation de SparkSession
