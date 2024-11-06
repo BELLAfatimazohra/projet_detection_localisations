@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -68,36 +69,48 @@
     }
 
     // Fonction pour mettre à jour la carte avec plusieurs marqueurs
-    function updateMap(locations) {
-        locations.forEach(function(location) {
-            var coords = ol.proj.fromLonLat([location.lng, location.lat]);
-            var marker = new ol.Feature({
-                geometry: new ol.geom.Point(coords),
-                name: location.name
-            });
+function updateMap(locations) {
+    // Supprimer toutes les couches de marqueurs existantes
+    const existingLayers = map.getLayers().getArray().filter(layer => layer instanceof ol.layer.Vector);
+    existingLayers.forEach(layer => {
+        map.removeLayer(layer);
+    });
 
-            var iconStyle = new ol.style.Style({
-                image: new ol.style.Icon({
-                    anchor: [0.5, 1],
-                    src: '../images/marker.png',
-                    scale: 0.1
-                })
-            });
-            marker.setStyle(iconStyle);
-
-            var vectorSource = new ol.source.Vector({
-                features: [marker]
-            });
-
-            var markerLayer = new ol.layer.Vector({
-                source: vectorSource
-            });
-
-            map.addLayer(markerLayer);
-            map.getView().setCenter(coords);
-            map.getView().setZoom(12);
+    locations.forEach(function(location) {
+        var coords = ol.proj.fromLonLat([location.lng, location.lat]);
+        var marker = new ol.Feature({
+            geometry: new ol.geom.Point(coords),
+            name: location.name
         });
+
+        var iconStyle = new ol.style.Style({
+            image: new ol.style.Icon({
+                anchor: [0.5, 1],
+                src: '../images/marker.png',
+                scale: 0.1
+            })
+        });
+        marker.setStyle(iconStyle);
+
+        var vectorSource = new ol.source.Vector({
+            features: [marker]
+        });
+
+        var markerLayer = new ol.layer.Vector({
+            source: vectorSource
+        });
+
+        map.addLayer(markerLayer); // Ajouter la nouvelle couche de marqueur
+    });
+
+    // Ajuster la vue de la carte pour centrer sur le premier marqueur (facultatif)
+    if (locations.length > 0) {
+        var firstCoords = ol.proj.fromLonLat([locations[0].lng, locations[0].lat]);
+        map.getView().setCenter(firstCoords);
+        map.getView().setZoom(12);
     }
+}
+
 </script>
 </body>
 </html>

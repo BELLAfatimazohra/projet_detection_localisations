@@ -1,8 +1,11 @@
 package com.example.controller;
 
+import com.example.model.User;
+import com.example.database.DatabaseConnection;
 import com.example.service.GeolocationService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
@@ -32,12 +35,18 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class HomeController {
 
+    @FXML
+    private Button itineraryButton;
     @FXML
     private ListView<String> resultsListView;
     @FXML
@@ -50,47 +59,43 @@ public class HomeController {
     private Label locationNameLabel;
     @FXML
     private Label locationDescriptionLabel;
-
     @FXML
-    private ListView<String> suggestionsList; // Nouvelle liste pour les suggestions
+    private ListView<String> suggestionsList;
 
     private SparkSession spark;
     private GeolocationService geolocationService;
 
     public HomeController() {
-
-        this.geolocationService = new GeolocationService(); // Initialiser le service
+        this.geolocationService = new GeolocationService();
     }
 
     @FXML
     public void handleGetLocation() {
-        double[] coordinates = geolocationService.getLocationCoordinates(); // Obtenir les coordonnées
-
-        // JavaScript pour ajouter un marqueur avec les coordonnées obtenues
+        double[] coordinates = geolocationService.getLocationCoordinates();
         String script = String.format("addMarker(%f, %f);", coordinates[0], coordinates[1]);
-
-        // Exécuter le script pour ajouter le marqueur sur la carte
         webView.getEngine().executeScript(script);
     }
+
     @FXML
     public void initialize() {
-        // Initialisation de SparkSession
+        // Initialiser le service de géolocalisation
         spark = SparkSession.builder()
                 .appName("SearchLocationApp")
                 .master("local")
                 .getOrCreate();
 
-        // Chargement de la page HTML dans WebView
+        // Charger le WebView avec le fichier HTML
         WebEngine webEngine = webView.getEngine();
         webEngine.load(getClass().getResource("/html/index.html").toExternalForm());
 
-        // Vérification si suggestionsList est initialisé
-        if (suggestionsList == null) {
-            System.out.println("suggestionsList is null");
+        // S'assurer que suggestionsList est correctement lié
+        if (suggestionsList != null) {
+            suggestionsList.setVisible(false);
         } else {
-            suggestionsList.setVisible(false); // Masquer la liste des suggestions au départ
+            System.err.println("Erreur: suggestionsList est null.");
         }
     }
+
 
     public void setUserDetails(String username, int userId) {
         if (welcomeLabel != null) {
@@ -113,10 +118,10 @@ public class HomeController {
     @FXML
     private void onSearchFieldKeyTyped(KeyEvent event) {
         String query = searchField.getText();
-        if (query.length() > 1) { // Démarrer la recherche après 2 caractères
+        if (query.length() > 1) {
             fetchSuggestions(query);
         } else {
-            suggestionsList.setVisible(false); // Masquer si la longueur est <= 1
+            suggestionsList.setVisible(false);
         }
     }
 
@@ -131,7 +136,6 @@ public class HomeController {
                 String inputLine;
                 List<String> suggestions = new ArrayList<>();
 
-                // Analysez la réponse JSON et extrayez les noms de lieu
                 StringBuilder jsonResponse = new StringBuilder();
                 while ((inputLine = in.readLine()) != null) {
                     jsonResponse.append(inputLine);
@@ -142,10 +146,9 @@ public class HomeController {
                 for (int i = 0; i < results.length(); i++) {
                     JSONObject location = results.getJSONObject(i);
                     String name = location.optString("display_name");
-                    suggestions.add(name); // Ajoutez le nom à la liste des suggestions
+                    suggestions.add(name);
                 }
 
-                // Mettez à jour la liste des suggestions sur le JavaFX Application Thread
                 updateSuggestions(suggestions);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -154,7 +157,6 @@ public class HomeController {
     }
 
     private void updateSuggestions(List<String> suggestions) {
-        // Mettez à jour la liste des suggestions et affichez-la
         suggestionsList.getItems().clear();
         suggestionsList.getItems().addAll(suggestions);
         suggestionsList.setVisible(!suggestions.isEmpty());
@@ -164,9 +166,9 @@ public class HomeController {
     private void onSuggestionClicked() {
         String selectedPlace = suggestionsList.getSelectionModel().getSelectedItem();
         if (selectedPlace != null) {
-            searchField.setText(selectedPlace); // Remplir le champ de recherche avec la suggestion choisie
-            suggestionsList.setVisible(false); // Masquer la liste après la sélection
-            searchLocation(selectedPlace); // Rechercher la localisation sélectionnée
+            searchField.setText(selectedPlace);
+            suggestionsList.setVisible(false);
+            searchLocation(selectedPlace);
         }
     }
 
@@ -195,20 +197,19 @@ public class HomeController {
                             }
 
                             if (jsonArray.length() > 1) {
-                                jsonArray.setLength(jsonArray.length() - 1); // Remove the last comma
+                                jsonArray.setLength(jsonArray.length() - 1);
                             }
                             jsonArray.append("]");
 
-                            // Mise à jour de la carte
                             webView.getEngine().executeScript("updateMap(" + jsonArray.toString() + ");");
 
-                            // Création d'un DataFrame Spark
                             Dataset<Row> locationsDF = spark.read().json(spark.createDataset(Collections.singletonList(jsonArray.toString()), org.apache.spark.sql.Encoders.STRING()));
                             locationsDF.show();
 
-                            // Utiliser le nom du premier emplacement trouvé pour charger la page Wikipedia
                             String firstLocationName = results.getJSONObject(0).optString("display_name");
                             getWikipediaDetails(firstLocationName);
+
+                            storeSearchInDatabase(query);
                         } else {
                             System.out.println("Aucun lieu trouvé pour la recherche : " + query);
                         }
@@ -219,6 +220,21 @@ public class HomeController {
             }
         } catch (IOException e) {
             System.err.println("Erreur lors de la recherche de la localisation : " + e.getMessage());
+        }
+    }
+
+    private void storeSearchInDatabase(String searchQuery) {
+        int userId = getId("username"); // Remplacez "username" par le nom d'utilisateur réel
+
+        String insertQuery = "INSERT INTO SEARCH_HISTORY (name, user_id) VALUES (?, ?)";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)) {
+            preparedStatement.setString(1, searchQuery);
+            preparedStatement.setInt(2, userId);
+            preparedStatement.executeUpdate();
+            System.out.println("Recherche enregistrée : " + searchQuery + " pour l'utilisateur ID : " + userId);
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de l'enregistrement de la recherche : " + e.getMessage());
         }
     }
 
@@ -233,20 +249,10 @@ public class HomeController {
     }
 
     private void getWikipediaDetails(String locationName) {
-        // Prendre uniquement le nom principal avant la première virgule ou espace
         String[] parts = locationName.split(",|\\s+");
-        final String finalLocationName = parts[0].trim(); // Déclarez comme final
+        final String finalLocationName = parts[0].trim();
 
-        // Afficher le nom de la localisation pour débogage
-        System.out.println("Nom de la localisation pour Wikipedia : " + finalLocationName);
-
-        // Construire l'URL de l'API
         String apiUrl = "https://fr.wikipedia.org/api/rest_v1/page/summary/" + URLEncoder.encode(finalLocationName, StandardCharsets.UTF_8);
-
-        // Afficher l'URL de l'API pour vérifier
-        System.out.println("URL de l'API: " + apiUrl);
-
-        // Requête HTTP à l'API
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(apiUrl))
@@ -260,21 +266,40 @@ public class HomeController {
                         String extract = json.getString("extract");
                         String displayTitle = json.getString("title");
 
-                        // Mettre à jour l'interface utilisateur avec les informations
                         Platform.runLater(() -> {
                             locationNameLabel.setText(displayTitle);
                             locationDescriptionLabel.setText(extract);
                         });
                     } catch (JSONException e) {
-                        System.err.println("Erreur lors de la parsing de la réponse de Wikipedia : " + e.getMessage());
+                        System.err.println("Erreur lors de la récupération des détails Wikipedia : " + e.getMessage());
                     }
                 });
     }
-    @FXML
+
+    public int getId(String username) {
+        int userId = -1;
+        String query = "SELECT id FROM USERS WHERE username = ?"; // Remplacez USERS et id par vos noms de table et de colonne réels
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setString(1, username);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                userId = resultSet.getInt("id");
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération de l'ID de l'utilisateur : " + e.getMessage());
+        }
+        return userId;
+    }
+
+
+
+@FXML
     private void handleItinerary() {
         // Logique pour afficher ou calculer l'itinéraire
         System.out.println("Itinéraire demandé pour : " + locationNameLabel.getText());
 
         // Vous pouvez ajouter ici du code pour afficher l'itinéraire dans WebView ou un autre élément
     }
-}
+} 
