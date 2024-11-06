@@ -28,7 +28,7 @@ public class MainApp extends Application {
             Parent root = loader.load();
             Scene scene = new Scene(root);
             primaryStage.setScene(scene);
-            primaryStage.setTitle("Titre de votre application");
+            primaryStage.setTitle("Application de detection des lieux");
             primaryStage.show();
         } catch (IOException e) {
             e.printStackTrace();

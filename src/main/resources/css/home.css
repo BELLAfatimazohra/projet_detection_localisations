@@ -1,0 +1,78 @@
+/* Style global pour le fond de l'application */
+.root {
+    -fx-background-color: #e0e0e0; /* Couleur de fond générale */
+}
+
+/* Style pour les labels */
+.label {
+    -fx-text-fill: #333; /* Couleur du texte */
+}
+#welcomeLabel {
+    -fx-font-size: 24px; /* Taille de la police */
+    -fx-font-weight: bold; /* Épaisseur de la police */
+    -fx-text-fill: #34495e; /* Couleur du texte */
+    -fx-margin-top: 20px; /* Marge supérieure */
+    -fx-padding: 10px; /* Rembourrage interne */
+    -fx-alignment: center; /* Centrer le texte (optionnel) */
+}
+
+/* Style pour le label de localisation */
+#locationNameLabel {
+    -fx-font-size: 18px; /* Taille de la police */
+    -fx-font-weight: bold; /* Épaisseur de la police */
+    -fx-text-fill: #2c3e50; /* Couleur du texte */
+    -fx-margin-top: 30px; /* Marge supérieure */
+}
+
+#locationDescriptionLabel {
+    -fx-font-size: 14px; /* Taille de la police */
+    -fx-text-fill: #7f8c8d; /* Couleur du texte */
+    -fx-margin-top: 35px; /* Marge supérieure */
+}
+
+/* Style pour les boutons */
+.button {
+    -fx-background-color: #3498db; /* Couleur de fond des boutons */
+    -fx-text-fill: white; /* Couleur du texte des boutons */
+    -fx-font-size: 14px; /* Taille de la police */
+    -fx-padding: 10px 20px; /* Espacement interne */
+    -fx-cursor: hand; /* Curseur de la souris */
+}
+
+/* Style pour le bouton lorsque survolé */
+.button:hover {
+    -fx-background-color: #2980b9; /* Couleur de fond lors du survol */
+}
+
+/* Style pour le champ de texte */
+.text-field {
+    -fx-pref-width: 300; /* Largeur préférée */
+    -fx-padding: 10; /* Espacement interne */
+    -fx-background-color: #ffffff; /* Couleur de fond */
+    -fx-border-color: #bdc3c7; /* Couleur de la bordure */
+    -fx-border-radius: 5; /* Coins arrondis */
+}
+
+/* Style pour le WebView */
+#webView {
+
+    -fx-border-color: #bdc3c7; /* Couleur de la bordure */
+    -fx-border-width: 1; /* Largeur de la bordure */
+}
+
+/* Style pour l'espace entre les éléments */
+.vbox {
+    -fx-spacing: 10; /* Espacement vertical entre les éléments */
+}
+
+.hbox {
+    -fx-spacing: 10; /* Espacement horizontal entre les éléments */
+}
+.transparent-webview {
+    -fx-background-color: transparent;
+}
+
+.webview {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}

@@ -4,16 +4,16 @@
 <?import javafx.scene.layout.*?>
 
 <VBox alignment="CENTER" spacing="10" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.example.controller.SignupController">
+      fx:controller="com.example.controller.SignupController" stylesheets="@../css/signup.css">
 
     <Label text="Inscription" styleClass="title"/>
 
-    <TextField fx:id="usernameField" promptText="Nom d'utilisateur"/>
-    <TextField fx:id="emailField" promptText="Email"/>
-    <PasswordField fx:id="passwordField" promptText="Mot de passe"/>
-    <PasswordField fx:id="confirmPasswordField" promptText="Confirmer le mot de passe"/>
+    <TextField fx:id="usernameField" promptText="Nom d'utilisateur" styleClass="text-field"/>
+    <TextField fx:id="emailField" promptText="Email" styleClass="text-field"/>
+    <PasswordField fx:id="passwordField" promptText="Mot de passe" styleClass="text-field"/>
+    <PasswordField fx:id="confirmPasswordField" promptText="Confirmer le mot de passe" styleClass="text-field"/>
 
-    <Button text="S'inscrire" onAction="#handleSignup"/>
+    <Button text="S'inscrire" onAction="#handleSignup" styleClass="button-signup"/>
 
-    <Label fx:id="errorLabel" textFill="red"/>
+    <Label fx:id="errorLabel" textFill="red" styleClass="error-label"/>
 </VBox>

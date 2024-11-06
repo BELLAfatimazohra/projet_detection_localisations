@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -65,24 +66,6 @@
         });
 
         map.addLayer(markerLayer);
-    }
-     // Fonction pour obtenir la position de l'utilisateur
-    function getUserLocation() {
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                const latitude = position.coords.latitude;
-                const longitude = position.coords.longitude;
-                addMarker(latitude, longitude);
-
-                // Centrer la carte sur la position de l'utilisateur
-                map.getView().setCenter(ol.proj.fromLonLat([longitude, latitude]));
-                map.getView().setZoom(12);
-            }, function(error) {
-                console.error("Erreur de géolocalisation : " + error.message);
-            });
-        } else {
-            alert("La géolocalisation n'est pas prise en charge par ce navigateur.");
-        }
     }
 
     // Fonction pour mettre à jour la carte avec plusieurs marqueurs

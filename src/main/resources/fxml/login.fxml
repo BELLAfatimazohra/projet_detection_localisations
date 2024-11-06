@@ -4,13 +4,18 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<VBox alignment="CENTER" spacing="10" xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.controller.LoginController">
-    <Label text="Login" styleClass="title"/>
-    <TextField fx:id="usernameField" promptText="Username"/>
-    <PasswordField fx:id="passwordField" promptText="Password"/>
-    <Button text="Login" onAction="#handleLogin"/>
-    <Label fx:id="errorLabel" textFill="red"/>
-    <Button fx:id="signupButton" onAction="#handleSignup" text="S'inscrire" />
+<VBox alignment="CENTER" spacing="10" xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.controller.LoginController"
+      stylesheets="@../css/login.css">
 
+    <Label text="Bienvenue dans votre application!" styleClass="welcome-message"/>
 
+    <TextField fx:id="usernameField" promptText="Username" styleClass="text-field"/>
+    <PasswordField fx:id="passwordField" promptText="Password" styleClass="text-field"/>
+
+    <!-- Indicateur de chargement -->
+    <ProgressIndicator fx:id="loadingIndicator" visible="false" />
+
+    <Button text="Login" onAction="#handleLogin" styleClass="button"/>
+    <Label fx:id="errorLabel" textFill="red" styleClass="errorLabel"/>
+    <Button fx:id="signupButton" onAction="#handleSignup" text="S'inscrire" styleClass="button"/>
 </VBox>

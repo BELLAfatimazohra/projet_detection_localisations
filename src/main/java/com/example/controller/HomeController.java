@@ -295,11 +295,11 @@ public class HomeController {
 
 
 
-    @FXML
+@FXML
     private void handleItinerary() {
         // Logique pour afficher ou calculer l'itinéraire
         System.out.println("Itinéraire demandé pour : " + locationNameLabel.getText());
 
         // Vous pouvez ajouter ici du code pour afficher l'itinéraire dans WebView ou un autre élément
     }
-}
+} 
