@@ -10,18 +10,19 @@
             margin: 0;
             display: flex; /* Utiliser Flexbox pour un alignement horizontal */
         }
-                .map {
+        .map {
             width: 70%; /* Largeur de la carte */
             height: 100vh;
         }
-                .sidebar {
-            width: 30%; /* Largeur de la barre latérale */
+        .sidebar {
+            width:
+30%; /* Largeur de la barre latérale */
             height: 100vh;
             background-color: #f4f4f4; /* Couleur de fond de la barre latérale */
             padding: 10px; /* Espacement interne */
             overflow-y: auto; /* Défilement si le contenu dépasse */
         }
-                #searchField {
+        #searchField {
             width: 100%; /* Largeur du champ de recherche */
         }
     </style>
@@ -29,68 +30,104 @@
 <body>
 <div id="map" class="map"></div>
 <div class="sidebar">
-    <h2>Informations</h2>
-
-    <div id="infoDisplay"></div> <!-- Zone pour afficher les informations -->
+    <ul id="suggestionsList" style="list-style-type: none; padding: 0;"></ul>
+    <h2 id="locationNameLabel"></h2>
+    <p id="locationDescriptionLabel"></p>
 </div>
+
 <script>
-    // Créez la carte
+    // Initialisation de la carte OpenLayers
     var map = new ol.Map({
-    target: 'map',
-layers: [
-    new ol.layer.Tile({
-source: new ol.source.OSM()
-})
-    ],
-view: new ol.View({
-center: ol.proj.fromLonLat([-7.0926, 31.7917]), // Centrer la carte sur le Maroc
-zoom: 6,
-        minZoom: 2,
-        maxZoom: 22,
-        duration: 0 // Désactive les animations
-})
-    });
-
-var vectorSource = new ol.source.Vector(); // Source de vecteurs pour les marqueurs
-var vectorLayer = new ol.layer.Vector({
-    source: vectorSource,
-style: new ol.style.Style({
-image: new ol.style.Circle({
-        radius: 10,
-        fill: new ol.style.Fill({ color: 'rgba(255, 0, 0, 0.6)' }), // Rouge pour les résultats de recherche
-stroke: new ol.style.Stroke({ color: 'rgba(0, 0, 0, 0.6)', width: 1 })
+        target: 'map',
+        layers: [
+            new ol.layer.Tile({
+                source: new ol.source.OSM()
+            })
+        ],
+        view: new ol.View({
+            center: ol.proj.fromLonLat([-7.1, 31.9]),
+            zoom: 6
         })
-})
     });
 
-    map.addLayer(vectorLayer); // Ajouter la couche de vecteurs à la carte
-
-// Fonction pour mettre à jour la carte avec les résultats de la recherche
-function updateMap(locations) {
-vectorSource.clear(); // Effacez les anciens marqueurs
-
-locations.forEach(function(location) {
-    var marker = new ol.Feature({
-            geometry: new ol.geom.Point(ol.proj.fromLonLat([location.lng, location.lat])), // Utiliser les coordonnées du résultat
-    name: location.name // Ajouter le nom pour une éventuelle utilisation
+    // Fonction pour ajouter un marqueur
+    function addMarker(latitude, longitude) {
+        var marker = new ol.Feature({
+            geometry: new ol.geom.Point(ol.proj.fromLonLat([longitude, latitude]))
         });
 
-    vectorSource.addFeature(marker); // Ajouter le marqueur à la source
-});
+        var vectorSource = new ol.source.Vector({
+            features: [marker]
+        });
 
-// Affichez les informations dans la barre latérale
-document.getElementById('infoDisplay').innerHTML = locations.map(loc => loc.name).join('<br>'); // Exemple d'affichage des noms
+        var markerLayer = new ol.layer.Vector({
+            source: vectorSource
+        });
+
+        map.addLayer(markerLayer);
+    }
+     // Fonction pour obtenir la position de l'utilisateur
+    function getUserLocation() {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                addMarker(latitude, longitude);
+
+                // Centrer la carte sur la position de l'utilisateur
+                map.getView().setCenter(ol.proj.fromLonLat([longitude, latitude]));
+                map.getView().setZoom(12);
+            }, function(error) {
+                console.error("Erreur de géolocalisation : " + error.message);
+            });
+        } else {
+            alert("La géolocalisation n'est pas prise en charge par ce navigateur.");
+        }
+    }
+
+    // Fonction pour mettre à jour la carte avec plusieurs marqueurs
+function updateMap(locations) {
+    // Supprimer toutes les couches de marqueurs existantes
+    const existingLayers = map.getLayers().getArray().filter(layer => layer instanceof ol.layer.Vector);
+    existingLayers.forEach(layer => {
+        map.removeLayer(layer);
+    });
+
+    locations.forEach(function(location) {
+        var coords = ol.proj.fromLonLat([location.lng, location.lat]);
+        var marker = new ol.Feature({
+            geometry: new ol.geom.Point(coords),
+            name: location.name
+        });
+
+        var iconStyle = new ol.style.Style({
+            image: new ol.style.Icon({
+                anchor: [0.5, 1],
+                src: '../images/marker.png',
+                scale: 0.1
+            })
+        });
+        marker.setStyle(iconStyle);
+
+        var vectorSource = new ol.source.Vector({
+            features: [marker]
+        });
+
+        var markerLayer = new ol.layer.Vector({
+            source: vectorSource
+        });
+
+        map.addLayer(markerLayer); // Ajouter la nouvelle couche de marqueur
+    });
+
+    // Ajuster la vue de la carte pour centrer sur le premier marqueur (facultatif)
+    if (locations.length > 0) {
+        var firstCoords = ol.proj.fromLonLat([locations[0].lng, locations[0].lat]);
+        map.getView().setCenter(firstCoords);
+        map.getView().setZoom(12);
+    }
 }
 
-// Fonction pour gérer la recherche
-function handleSearch() {
-var searchField = document.getElementById("searchField");
-var searchQuery = searchField.value;
-if (searchQuery) {
-    // Appeler la méthode handleSearch() dans HomeController
-    window.javaAppController.handleSearch(searchQuery);
-}
-}
 </script>
 </body>
 </html>
