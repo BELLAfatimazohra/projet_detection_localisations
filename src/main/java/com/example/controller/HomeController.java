@@ -76,7 +76,7 @@ public class HomeController {
         double[] coordinates = geolocationService.getLocationCoordinates();
         if (coordinates != null && coordinates.length == 2) {
             String script = String.format(Locale.US, "addMarker(%f, %f);", coordinates[1], coordinates[0]);
-            System.out.println("Latitude hhh: " + coordinates[0] + ", Longitude: " + coordinates[1]);
+            System.out.println("Latitude : " + coordinates[0] + ", Longitude: " + coordinates[1]);
             webView.getEngine().executeScript(script);
             webView.getEngine().executeScript("alert('Test JavaScript depuis Java');");
         } else {
