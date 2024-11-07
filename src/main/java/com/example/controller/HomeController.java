@@ -4,6 +4,7 @@ import com.example.model.User;
 import com.example.database.DatabaseConnection;
 import com.example.service.GeolocationService;
 import javafx.application.Platform;
+import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -42,6 +43,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 public class HomeController {
 
@@ -72,9 +74,17 @@ public class HomeController {
     @FXML
     public void handleGetLocation() {
         double[] coordinates = geolocationService.getLocationCoordinates();
-        String script = String.format("addMarker(%f, %f);", coordinates[0], coordinates[1]);
-        webView.getEngine().executeScript(script);
+        if (coordinates != null && coordinates.length == 2) {
+            String script = String.format(Locale.US, "addMarker(%f, %f);", coordinates[1], coordinates[0]);
+            System.out.println("Latitude hhh: " + coordinates[0] + ", Longitude: " + coordinates[1]);
+            webView.getEngine().executeScript(script);
+            webView.getEngine().executeScript("alert('Test JavaScript depuis Java');");
+        } else {
+            System.err.println("Les coordonnées sont nulles ou incomplètes.");
+        }
     }
+
+
 
     @FXML
     public void initialize() {
@@ -88,12 +98,29 @@ public class HomeController {
         WebEngine webEngine = webView.getEngine();
         webEngine.load(getClass().getResource("/html/index.html").toExternalForm());
 
+        // Ajoutez un écouteur pour vérifier quand la carte est prête
+        webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+            if (newState == Worker.State.SUCCEEDED) {
+                System.out.println("Carte prête pour les interactions.");
+                webEngine.executeScript("alert('Carte chargée');"); // Test pour confirmer le chargement
+            }
+        });
+        webEngine.setOnError(event -> System.out.println("Erreur JavaScript : " + event.getMessage()));
+
+        webEngine.setOnAlert(event -> System.out.println(event.getData())); // pour capturer les alertes JavaScript
+        System.out.println("Carte chargée : " + webEngine.getLoadWorker().getState());
+
+
+
+
         // S'assurer que suggestionsList est correctement lié
         if (suggestionsList != null) {
             suggestionsList.setVisible(false);
         } else {
             System.err.println("Erreur: suggestionsList est null.");
         }
+        System.out.println("Carte chargée.");
+
     }
 
 
