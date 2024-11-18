@@ -91,7 +91,11 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
+        <dependency>
+            <groupId>com.weblookandfeel</groupId>
+            <artifactId>svg-salamander</artifactId>
+            <version>1.1.2.2</version>
+        </dependency>
         <!-- Oracle JDBC -->
         <dependency>
             <groupId>com.oracle.database.jdbc</groupId>
@@ -113,8 +117,6 @@
             <scope>test</scope>
         </dependency>
 
-
-
         <!-- Hadoop -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -126,11 +128,7 @@
             <artifactId>hadoop-client</artifactId>
             <version>${hadoop.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20240303</version>
-        </dependency>
+
     </dependencies>
 
     <repositories>

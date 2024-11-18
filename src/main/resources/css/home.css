@@ -1,78 +1,167 @@
-/* Style global pour le fond de l'application */
-.root {
-    -fx-background-color: #e0e0e0; /* Couleur de fond générale */
+/* Styles globaux */
+.vbox {
+    -fx-spacing: 15; /* Espacement vertical plus important */
 }
 
-/* Style pour les labels */
+.text-field {
+    -fx-pref-width: 400;
+    -fx-padding: 10;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 5;
+}
+
 .label {
-    -fx-text-fill: #333; /* Couleur du texte */
-}
-#welcomeLabel {
-    -fx-font-size: 24px; /* Taille de la police */
-    -fx-font-weight: bold; /* Épaisseur de la police */
-    -fx-text-fill: #34495e; /* Couleur du texte */
-    -fx-margin-top: 20px; /* Marge supérieure */
-    -fx-padding: 10px; /* Rembourrage interne */
-    -fx-alignment: center; /* Centrer le texte (optionnel) */
+    -fx-text-fill: #333;
 }
 
-/* Style pour le label de localisation */
+#welcomeLabel {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #34495e;
+    -fx-padding: 10px;
+    -fx-alignment: center;
+}
+
 #locationNameLabel {
-    -fx-font-size: 18px; /* Taille de la police */
-    -fx-font-weight: bold; /* Épaisseur de la police */
-    -fx-text-fill: #2c3e50; /* Couleur du texte */
-    -fx-margin-top: 30px; /* Marge supérieure */
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
 }
 
 #locationDescriptionLabel {
-    -fx-font-size: 14px; /* Taille de la police */
-    -fx-text-fill: #7f8c8d; /* Couleur du texte */
-    -fx-margin-top: 35px; /* Marge supérieure */
+    -fx-font-size: 14px;
+    -fx-text-fill: #7f8c8d;
 }
 
-/* Style pour les boutons */
-.button {
-    -fx-background-color: #3498db; /* Couleur de fond des boutons */
-    -fx-text-fill: white; /* Couleur du texte des boutons */
-    -fx-font-size: 14px; /* Taille de la police */
-    -fx-padding: 10px 20px; /* Espacement interne */
-    -fx-cursor: hand; /* Curseur de la souris */
+/* Boutons avec la même couleur bleue */
+#itineraryButton,
+#saveButton,
+#searchButton,
+#getLocationButton,
+.action-button,
+.save-button,
+.search-button,
+.secondary-button,
+.danger-button {
+    -fx-background-color: #3498db; /* Bleu */
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px 20px;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+    -fx-transition: background-color 0.3s ease, transform 0.2s ease; /* Transition ajoutée */
 }
 
-/* Style pour le bouton lorsque survolé */
-.button:hover {
-    -fx-background-color: #2980b9; /* Couleur de fond lors du survol */
+/* Effet de survol pour les boutons */
+#itineraryButton:hover,
+#saveButton:hover,
+#searchButton:hover,
+#getLocationButton:hover,
+.action-button:hover,
+.save-button:hover,
+.search-button:hover,
+.secondary-button:hover,
+.danger-button:hover {
+    -fx-background-color: #2980b9; /* Bleu foncé lors du survol */
+    -fx-transform: scale(1.1); /* Légère agrandissement du bouton au survol */
 }
 
-/* Style pour le champ de texte */
-.text-field {
-    -fx-pref-width: 300; /* Largeur préférée */
-    -fx-padding: 10; /* Espacement interne */
-    -fx-background-color: #ffffff; /* Couleur de fond */
-    -fx-border-color: #bdc3c7; /* Couleur de la bordure */
-    -fx-border-radius: 5; /* Coins arrondis */
+/* Effet d'ombre pour les boutons lors du survol */
+#itineraryButton:hover,
+#saveButton:hover,
+#searchButton:hover,
+#getLocationButton:hover,
+.action-button:hover,
+.save-button:hover,
+.search-button:hover,
+.secondary-button:hover,
+.danger-button:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 5, 0, 0, 3); /* Ombre autour du bouton */
 }
 
-/* Style pour le WebView */
 #webView {
-
-    -fx-border-color: #bdc3c7; /* Couleur de la bordure */
-    -fx-border-width: 1; /* Largeur de la bordure */
+    -fx-pref-width: 1000;
+    -fx-background-color: #f7f7f7;
 }
 
-/* Style pour l'espace entre les éléments */
-.vbox {
-    -fx-spacing: 10; /* Espacement vertical entre les éléments */
+#buttonsWebView {
+    -fx-background-color: #ecf0f1;
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 10px;
+    -fx-padding: 10px;
 }
 
-.hbox {
-    -fx-spacing: 10; /* Espacement horizontal entre les éléments */
-}
-.transparent-webview {
-    -fx-background-color: transparent;
+/* Améliorations du style */
+.title-label {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
 }
 
-.webview {
-    -fx-background-color: transparent;
-    -fx-border-width: 0;
+.description-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #7f8c8d;
+}
+
+.action-button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px 20px;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.save-button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px 20px;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.search-field {
+    -fx-pref-width: 400;
+    -fx-padding: 10;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 5;
+}
+
+.search-button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px 20px;
+    -fx-cursor: hand;
+}
+
+.secondary-button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px 20px;
+    -fx-cursor: hand;
+}
+
+.danger-button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px 20px;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+}
+/* Ajout de marge avant le bouton itinéraire */
+#itineraryButton {
+    -fx-background-color: #3498db; /* Bleu */
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px 20px;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+    -fx-transition: background-color 0.3s ease, transform 0.2s ease; /* Transition ajoutée */
+    -fx-margin-left: 10px; /* Espace avant le bouton */
 }

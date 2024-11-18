@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.web.WebView?>
 <?import javafx.scene.control.Label?>
@@ -7,36 +6,86 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.control.ProgressIndicator?>
 
 <AnchorPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.controller.HomeController"
             stylesheets="@../css/home.css">
     <children>
-        <HBox spacing="10">
-            <!-- Sidebar for Wikipedia details -->
-            <VBox spacing="10" prefWidth="300" style="-fx-background-color: #f0f0f0;">
-                <Label fx:id="locationNameLabel" text="Nom de la localisation" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
-                <Label fx:id="locationDescriptionLabel" text="Description" wrapText="true" style="-fx-font-size: 14px;"/>
-                <Button fx:id="itineraryButton" text="Itinéraire" onAction="#handleItinerary" />
+        <HBox spacing="20" prefHeight="600" prefWidth="950">
+            <!-- Sidebar à gauche -->
+            <VBox spacing="15" prefWidth="600" style="-fx-background-color: #f0f0f0;">
+                <Label fx:id="locationNameLabel" text="Nom de la localisation" styleClass="title-label"/>
+                <Label fx:id="locationDescriptionLabel" text="Description" wrapText="true" styleClass="description-label"/>
+
+                <!-- HBox pour les boutons sur la même ligne -->
+                <HBox spacing="15">
+                    <Button fx:id="itineraryButton" text="Itinéraire" onAction="#handleItinerary" styleClass="action-button">
+                        <graphic>
+                            <ImageView fx:id="itineraryIcon" fitWidth="20" fitHeight="20">
+                                <Image url="@../images/itinerary-icon.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                    <Button fx:id="saveButton" text="Enregistrer" onAction="#handleSave" styleClass="save-button">
+                        <graphic>
+                            <ImageView fx:id="saveIcon" fitWidth="20" fitHeight="20">
+                                <Image url="@../images/save-icon.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                </HBox>
             </VBox>
 
-            <!-- Main content -->
-            <VBox spacing="10" layoutX="320">
-                <Label fx:id="welcomeLabel" text="Bienvenue" />
+            <!-- Contenu principal -->
+            <VBox spacing="20" layoutX="320">
+                <Label fx:id="welcomeLabel" text="Bienvenue dans l'application" styleClass="welcome-label"/>
 
-                <!-- HBox for search bar and button -->
+                <!-- Barre de recherche -->
                 <HBox spacing="10">
-                    <TextField fx:id="searchField" prefWidth="300" promptText="Entrez votre recherche ici..." onKeyTyped="#onSearchFieldKeyTyped"/>
-                    <Button text="Chercher" onAction="#handleSearch" />
+                    <TextField fx:id="searchField" prefWidth="400" promptText="Rechercher une localisation..." onKeyTyped="#onSearchFieldKeyTyped" styleClass="search-field"/>
+                    <Button fx:id="searchButton" text="Chercher" onAction="#handleSearch" styleClass="search-button"/>
                 </HBox>
 
-                <!-- WebView for displaying map -->
-                <WebView fx:id="webView" prefHeight="400" />
-                <Button layoutX="50" layoutY="350" text="Obtenir ma localisation" onAction="#handleGetLocation"/>
+                <!-- WebView pour afficher la carte -->
+                <WebView fx:id="webView" prefHeight="600" styleClass="map-view"/>
 
-                <!-- ProgressIndicator for loading state -->
+                <!-- Section inférieure -->
+                <HBox spacing="20" alignment="CENTER_RIGHT">
+                    <Button fx:id="restaurantsButton" text="Restaurants" onAction="#handleRestaurants" styleClass="secondary-button">
+                        <graphic>
+                            <ImageView fx:id="restaurantsIcon" fitWidth="20" fitHeight="20">
+                                <Image url="@../images/restaurants-icon.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                    <Button fx:id="mosquesButton" text="Mosquées" onAction="#handlemosque" styleClass="secondary-button">
+                        <graphic>
+                            <ImageView fx:id="mosquesIcon" fitWidth="20" fitHeight="20">
+                                <Image url="@../images/mosques-icon.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                    <Button fx:id="pharmaciesButton" text="Pharmacies" onAction="#handlePharmacies" styleClass="secondary-button">
+                        <graphic>
+                            <ImageView fx:id="pharmaciesIcon" fitWidth="20" fitHeight="20">
+                                <Image url="@../images/pharmacies-icon.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                    <Button fx:id="getLocationButton" text="Ma localisation" onAction="#handleGetLocation" styleClass="danger-button">
+                        <graphic>
+                            <ImageView fx:id="locationIcon" fitWidth="20" fitHeight="20">
+                                <Image url="@../images/location-icon.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                </HBox>
+
+                <!-- Indicateur de chargement -->
                 <ProgressIndicator fx:id="loadingIndicator" visible="false" />
-                <Label fx:id="loadingLabel" text="Chargement en cours..." visible="false" style="-fx-text-fill: blue;"/>
+                <Label fx:id="loadingLabel" text="Chargement..." visible="false" style="-fx-text-fill: blue;" />
             </VBox>
         </HBox>
     </children>

@@ -30,7 +30,7 @@ public class LoginController {
     private Button loginButton; // Ajouté pour référencer le bouton de connexion
     @FXML
     private ProgressIndicator loadingIndicator; // Indicateur de chargement
-
+// creation d'une instance de la classe UserService
     private UserService userService = new UserService();
 
     @FXML
