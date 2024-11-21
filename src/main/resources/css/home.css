@@ -165,3 +165,32 @@
     -fx-transition: background-color 0.3s ease, transform 0.2s ease; /* Transition ajoutée */
     -fx-margin-left: 10px; /* Espace avant le bouton */
 }
+
+/* Style pour les boutons */
+.profil, .menu-button {
+    -fx-background-color: #ffffff;  /* Fond blanc */
+    -fx-border-color: #dcdcdc;      /* Bordure grise claire */
+    -fx-border-radius: 5;           /* Bordures arrondies */
+    -fx-padding: 10px 15px;         /* Espacement interne */
+    -fx-font-size: 14px;            /* Taille de la police */
+    -fx-font-weight: bold;          /* Police en gras */
+    -fx-text-fill: #333333;         /* Couleur du texte */
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.2), 5, 0, 1, 1); /* Ombre légère */
+    -fx-alignment: center;          /* Centrer le texte et l'icône */
+}
+
+/* Style pour l'icône dans chaque bouton */
+.profil .graphic, .menu-button .graphic {
+    -fx-padding: 0 10px 0 0;        /* Espacement entre l'icône et le texte */
+}
+
+/* Effet au survol des boutons */
+.profil:hover, .menu-button:hover {
+    -fx-background-color: #e0e0e0;  /* Fond gris clair au survol */
+    -fx-border-color: #b3b3b3;      /* Bordure plus foncée au survol */
+}
+
+/* Ajout d'une petite marge entre chaque bouton */
+.profil, .menu-button {
+    -fx-margin-bottom: 10px;         /* Marge en bas pour chaque bouton */
+}
