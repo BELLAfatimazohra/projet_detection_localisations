@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -8,17 +9,32 @@
     <style>
         body {
             margin: 0;
-            overflow: hidden; /* Éviter les barres de défilement */
+            display: flex; /* Utiliser Flexbox pour un alignement horizontal */
         }
-
         .map {
-            width: 100%; /* Prendre toute la largeur de la fenêtre */
-            height: 100vh; /* Prendre toute la hauteur de la fenêtre */
+            width: 70%; /* Largeur de la carte */
+            height: 100vh;
+        }
+        .sidebar {
+            width:
+30%; /* Largeur de la barre latérale */
+            height: 100vh;
+            background-color: #f4f4f4; /* Couleur de fond de la barre latérale */
+            padding: 10px; /* Espacement interne */
+            overflow-y: auto; /* Défilement si le contenu dépasse */
+        }
+        #searchField {
+            width: 100%; /* Largeur du champ de recherche */
         }
     </style>
 </head>
 <body>
 <div id="map" class="map"></div>
+<div class="sidebar">
+    <ul id="suggestionsList" style="list-style-type: none; padding: 0;"></ul>
+    <h2 id="locationNameLabel"></h2>
+    <p id="locationDescriptionLabel"></p>
+</div>
 
 <script>
     // Initialisation de la carte OpenLayers
@@ -30,31 +46,35 @@
             })
         ],
         view: new ol.View({
-            center: ol.proj.fromLonLat([-7.1, 31.9]), // Coordonnées du Maroc
+            center: ol.proj.fromLonLat([-7.1, 31.9]),
             zoom: 5
         })
     });
 
     // Fonction pour ajouter un marqueur
     function addMarker(latitude, longitude) {
-        if (latitude == null || longitude == null) {
-            console.error("Latitude ou longitude non définie pour addMarker");
-            return;
-        }
-        console.log("Ajout d'un marqueur aux coordonnées : ", latitude, longitude);
-        var coords = ol.proj.fromLonLat([longitude, latitude]);
+     if (latitude == null || longitude == null) {
+        console.error("Latitude ou longitude non définie pour addMarker");
+        return;
+    }
+     console.log("Latitude reçue dans addMarker:", latitude);
+     console.log("Longitude reçue dans addMarker:", longitude);
+     console.log("Ajout d'un marqueur aux coordonnées : ", latitude, longitude);
+     alert("Marqueur ajouté aux coordonnées : " + latitude + ", " + longitude);
+     // Convertir les coordonnées en format compatible avec OpenLayers
+     var coords = ol.proj.fromLonLat([longitude, latitude]);
 
         var marker = new ol.Feature({
-            geometry: new ol.geom.Point(coords)
+            geometry: new ol.geom.Point(ol.proj.fromLonLat([longitude, latitude]))
         });
-
-        var iconStyle = new ol.style.Style({
-            image: new ol.style.Icon({
-                anchor: [0.5, 1],
-                src: '../images/marker.png', // Assurez-vous que l'image existe
-                scale: 0.1
-            })
-        });
+        // Appliquer un style d'icône au marqueur
+    var iconStyle = new ol.style.Style({
+        image: new ol.style.Icon({
+            anchor: [0.5, 1],
+            src: '../images/marker.png',  // Lien vers l'image de votre icône
+            scale: 0.1
+        })
+    });
         marker.setStyle(iconStyle);
 
         var vectorSource = new ol.source.Vector({
@@ -66,188 +86,51 @@
         });
 
         map.addLayer(markerLayer);
+         // Centrer et zoomer sur le marqueur
         map.getView().setCenter(coords);
         map.getView().setZoom(12);
     }
 
+
+
     // Fonction pour mettre à jour la carte avec plusieurs marqueurs
-    function updateMap(locations) {
-        const existingLayers = map.getLayers().getArray().filter(layer => layer instanceof ol.layer.Vector);
-        existingLayers.forEach(layer => map.removeLayer(layer));
-
-        locations.forEach(function(location) {
-            var coords = ol.proj.fromLonLat([location.lng, location.lat]);
-            var marker = new ol.Feature({
-                geometry: new ol.geom.Point(coords),
-                name: location.name
-            });
-
-            var iconStyle = new ol.style.Style({
-                image: new ol.style.Icon({
-                    anchor: [0.5, 1],
-                    src: '../images/marker.png',
-                    scale: 0.1
-                })
-            });
-            marker.setStyle(iconStyle);
-
-            var vectorSource = new ol.source.Vector({
-                features: [marker]
-            });
-
-            var markerLayer = new ol.layer.Vector({
-                source: vectorSource
-            });
-
-            map.addLayer(markerLayer);
-        });
-
-        if (locations.length > 0) {
-            var firstCoords = ol.proj.fromLonLat([locations[0].lng, locations[0].lat]);
-            map.getView().setCenter(firstCoords);
-            map.getView().setZoom(12);
-        }
-    }
-    // Fonction pour mettre à jour la carte avec les marqueurs des restaurants
-function updateMapWithRestaurants(restaurants) {
-    // Supprimer toutes les couches de type Vector existantes
+function updateMap(locations) {
+    // Supprimer toutes les couches de marqueurs existantes
     const existingLayers = map.getLayers().getArray().filter(layer => layer instanceof ol.layer.Vector);
-    existingLayers.forEach(layer => map.removeLayer(layer));
-
-    // Ajouter un marqueur pour chaque restaurant
-    restaurants.forEach(function(restaurant) {
-        // Coordonner de chaque restaurant (latitude et longitude)
-        var coords = ol.proj.fromLonLat([restaurant.lng, restaurant.lat]);
-
-        // Créer le marqueur avec son nom
-        var marker = new ol.Feature({
-            geometry: new ol.geom.Point(coords),
-            name: restaurant.name // Nom du restaurant pour une éventuelle info-bulle
-        });
-
-        // Définir l'icône du marqueur
-        var iconStyle = new ol.style.Style({
-            image: new ol.style.Icon({
-                anchor: [0.5, 1],
-                src: '../images/bed-solid.png', // Assurez-vous que l'image du marqueur existe
-                scale: 0.01
-            })
-        });
-        marker.setStyle(iconStyle);
-
-        // Ajouter le marqueur dans une source de vecteur
-        var vectorSource = new ol.source.Vector({
-            features: [marker]
-        });
-
-        // Créer une couche de vecteur pour le marqueur
-        var markerLayer = new ol.layer.Vector({
-            source: vectorSource
-        });
-
-        // Ajouter la couche de marqueur à la carte
-        map.addLayer(markerLayer);
+    existingLayers.forEach(layer => {
+        map.removeLayer(layer);
     });
 
-    // Si des restaurants sont présents, recentrer la carte sur le premier restaurant
-    if (restaurants.length > 0) {
-        var firstCoords = ol.proj.fromLonLat([restaurants[0].lng, restaurants[0].lat]);
-        map.getView().setCenter(firstCoords);
-        map.getView().setZoom(12);
-    }
-}
-    // Fonction pour mettre à jour la carte avec les marqueurs des pharmacies
-function updateMapWithPharmacies(pharmacies) {
-    // Supprimer toutes les couches de type Vector existantes
-    const existingLayers = map.getLayers().getArray().filter(layer => layer instanceof ol.layer.Vector);
-    existingLayers.forEach(layer => map.removeLayer(layer));
-
-    // Ajouter un marqueur pour chaque pharmacie
-    pharmacies.forEach(function(pharmacy) {
-        // Coordonner de chaque pharmacie (latitude et longitude)
-        var coords = ol.proj.fromLonLat([pharmacy.lng, pharmacy.lat]);
-
-        // Créer le marqueur avec son nom
+    locations.forEach(function(location) {
+        var coords = ol.proj.fromLonLat([location.lng, location.lat]);
         var marker = new ol.Feature({
             geometry: new ol.geom.Point(coords),
-            name: pharmacy.name // Nom de la pharmacie pour une éventuelle info-bulle
+            name: location.name
         });
 
-        // Définir l'icône du marqueur
         var iconStyle = new ol.style.Style({
             image: new ol.style.Icon({
                 anchor: [0.5, 1],
-                src: '../images/marker_phar.png', // Assurez-vous que l'image du marqueur existe
+                src: '../images/marker.png',
                 scale: 0.1
             })
         });
         marker.setStyle(iconStyle);
 
-        // Ajouter le marqueur dans une source de vecteur
         var vectorSource = new ol.source.Vector({
             features: [marker]
         });
 
-        // Créer une couche de vecteur pour le marqueur
         var markerLayer = new ol.layer.Vector({
             source: vectorSource
         });
 
-        // Ajouter la couche de marqueur à la carte
-        map.addLayer(markerLayer);
+        map.addLayer(markerLayer); // Ajouter la nouvelle couche de marqueur
     });
 
-    // Si des pharmacies sont présentes, recentrer la carte sur la première pharmacie
-    if (pharmacies.length > 0) {
-        var firstCoords = ol.proj.fromLonLat([pharmacies[0].lng, pharmacies[0].lat]);
-        map.getView().setCenter(firstCoords);
-        map.getView().setZoom(12);
-    }
-}
-
-function updateMapWithMosques(mosques) {
-    // Supprimer toutes les couches de type Vector existantes
-    const existingLayers = map.getLayers().getArray().filter(layer => layer instanceof ol.layer.Vector);
-    existingLayers.forEach(layer => map.removeLayer(layer));
-
-    // Ajouter un marqueur pour chaque mosquée
-    mosques.forEach(function(mosque) {
-        // Coordonner de chaque mosquée (latitude et longitude)
-        var coords = ol.proj.fromLonLat([mosque.lng, mosque.lat]);
-
-        // Créer le marqueur avec son nom
-        var marker = new ol.Feature({
-            geometry: new ol.geom.Point(coords),
-            name: mosque.name // Nom de la mosquée pour une éventuelle info-bulle
-        });
-
-        // Définir l'icône du marqueur
-        var iconStyle = new ol.style.Style({
-            image: new ol.style.Icon({
-                anchor: [0.5, 1],
-                src: '../images/mosques-icon.png', // Assurez-vous que l'image existe
-                scale: 0.02
-            })
-        });
-        marker.setStyle(iconStyle);
-
-        // Ajouter le marqueur dans une source de vecteur
-        var vectorSource = new ol.source.Vector({
-            features: [marker]
-        });
-
-        // Créer une couche de vecteur pour le marqueur
-        var markerLayer = new ol.layer.Vector({
-            source: vectorSource
-        });
-
-        // Ajouter la couche de marqueur à la carte
-        map.addLayer(markerLayer);
-    });
-
-    // Si des mosquées sont présentes, recentrer la carte sur la première mosquée
-    if (mosques.length > 0) {
-        var firstCoords = ol.proj.fromLonLat([mosques[0].lng, mosques[0].lat]);
+    // Ajuster la vue de la carte pour centrer sur le premier marqueur (facultatif)
+    if (locations.length > 0) {
+        var firstCoords = ol.proj.fromLonLat([locations[0].lng, locations[0].lat]);
         map.getView().setCenter(firstCoords);
         map.getView().setZoom(12);
     }
