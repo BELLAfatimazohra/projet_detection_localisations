@@ -35,79 +35,122 @@
         })
     });
 
-    // Fonction pour ajouter un marqueur
-    function addMarker(latitude, longitude) {
-        if (latitude == null || longitude == null) {
-            console.error("Latitude ou longitude non définie pour addMarker");
-            return;
-        }
-        console.log("Ajout d'un marqueur aux coordonnées : ", latitude, longitude);
-        var coords = ol.proj.fromLonLat([longitude, latitude]);
 
+
+function addMarker(latitude, longitude) {
+ // Supprimer les couches de marqueurs existantes
+    const existingLayers = map.getLayers().getArray().filter(layer => layer instanceof ol.layer.Vector);
+    existingLayers.forEach(layer => map.removeLayer(layer));
+    if (latitude == null || longitude == null || isNaN(latitude) || isNaN(longitude)) {
+        console.error("Latitude ou longitude non définie pour addMarker");
+        return;
+    }
+    console.log("Ajout d'un marqueur aux coordonnées : ", latitude, longitude);
+    var coords = ol.proj.fromLonLat([longitude, latitude]);
+
+    var marker = new ol.Feature({
+        geometry: new ol.geom.Point(coords)
+    });
+
+    var iconStyle = new ol.style.Style({
+        image: new ol.style.Icon({
+            anchor: [0.5, 1],
+            src: '../images/marker.png',
+            scale: 0.1
+        })
+    });
+    marker.setStyle(iconStyle);
+
+    var vectorSource = new ol.source.Vector({
+        features: [marker]
+    });
+
+    var markerLayer = new ol.layer.Vector({
+        source: vectorSource
+    });
+
+    map.addLayer(markerLayer);
+    map.getView().setCenter(coords);
+    map.getView().setZoom(12);
+
+
+}
+
+
+var markersArray = [];
+
+// Fonction pour mettre à jour la carte avec plusieurs marqueurs
+function updateMap(locations) {
+    // Supprimer les couches de marqueurs existantes
+    const existingLayers = map.getLayers().getArray().filter(layer => layer instanceof ol.layer.Vector);
+    existingLayers.forEach(layer => map.removeLayer(layer));
+
+    // Réinitialiser le tableau des marqueurs
+    markersArray = [];
+
+    // Ajouter chaque location à la carte
+    locations.forEach(function(location) {
+        // Convertir les coordonnées pour OpenLayers
+        var coords = ol.proj.fromLonLat([location.lng, location.lat]);
         var marker = new ol.Feature({
-            geometry: new ol.geom.Point(coords)
+            geometry: new ol.geom.Point(coords),
+            name: location.name
         });
 
+        // Style du marqueur
         var iconStyle = new ol.style.Style({
             image: new ol.style.Icon({
                 anchor: [0.5, 1],
-                src: '../images/marker.png', // Assurez-vous que l'image existe
+                src: '../images/marker.png', // Chemin de l'icône du marqueur
                 scale: 0.1
             })
         });
         marker.setStyle(iconStyle);
 
+        // Source et couche de vecteur pour le marqueur
         var vectorSource = new ol.source.Vector({
             features: [marker]
         });
-
         var markerLayer = new ol.layer.Vector({
             source: vectorSource
         });
 
+        // Ajouter la couche de marqueur à la carte
         map.addLayer(markerLayer);
-        map.getView().setCenter(coords);
+
+        // Ajouter les coordonnées de la location dans le tableau markersArray
+        markersArray.push({ lat: location.lat, lng: location.lng });
+    });
+
+    // Recentrer la carte sur le premier marqueur s'il y en a
+    if (locations.length > 0) {
+        var firstCoords = ol.proj.fromLonLat([locations[0].lng, locations[0].lat]);
+        map.getView().setCenter(firstCoords);
         map.getView().setZoom(12);
     }
 
-    // Fonction pour mettre à jour la carte avec plusieurs marqueurs
-    function updateMap(locations) {
-        const existingLayers = map.getLayers().getArray().filter(layer => layer instanceof ol.layer.Vector);
-        existingLayers.forEach(layer => map.removeLayer(layer));
+    // Afficher le contenu du tableau dans la console
+    console.log("Coordonnées des marqueurs ajoutées : ", markersArray);
 
-        locations.forEach(function(location) {
-            var coords = ol.proj.fromLonLat([location.lng, location.lat]);
-            var marker = new ol.Feature({
-                geometry: new ol.geom.Point(coords),
-                name: location.name
-            });
-
-            var iconStyle = new ol.style.Style({
-                image: new ol.style.Icon({
-                    anchor: [0.5, 1],
-                    src: '../images/marker.png',
-                    scale: 0.1
-                })
-            });
-            marker.setStyle(iconStyle);
-
-            var vectorSource = new ol.source.Vector({
-                features: [marker]
-            });
-
-            var markerLayer = new ol.layer.Vector({
-                source: vectorSource
-            });
-
-            map.addLayer(markerLayer);
-        });
-
-        if (locations.length > 0) {
-            var firstCoords = ol.proj.fromLonLat([locations[0].lng, locations[0].lat]);
-            map.getView().setCenter(firstCoords);
-            map.getView().setZoom(12);
-        }
+    // Vérification de l'état du tableau
+    if (markersArray.length === 0) {
+        console.log("Le tableau des marqueurs est vide.");
+    } else {
+        console.log("Le tableau des marqueurs contient : ", markersArray.length, " éléments.");
     }
+}
+// Fonction qui retourne les coordonnées du premier marqueur
+function getFirstMarkerCoordinates() {
+    if (markersArray.length > 0) {
+        return markersArray[0];
+    } else {
+        return null;
+    }
+}
+
+
+
+
     // Fonction pour mettre à jour la carte avec les marqueurs des restaurants
 function updateMapWithRestaurants(restaurants) {
     // Supprimer toutes les couches de type Vector existantes
@@ -130,7 +173,7 @@ function updateMapWithRestaurants(restaurants) {
             image: new ol.style.Icon({
                 anchor: [0.5, 1],
                 src: '../images/bed-solid.png', // Assurez-vous que l'image du marqueur existe
-                scale: 0.01
+                scale: 0.03
             })
         });
         marker.setStyle(iconStyle);

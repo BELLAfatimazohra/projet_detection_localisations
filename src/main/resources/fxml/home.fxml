@@ -41,30 +41,33 @@
                     </HBox>
                 </VBox>
 
-                <VBox fx:id="restaurantVBox" spacing="15" prefWidth="400" style="-fx-background-color: #f0f0f0;" visible="false" managed="false">
-                    <ScrollPane fx:id="restaurantScrollPane" prefWidth="400" fitToWidth="true" fitToHeight="true" >
+            <ScrollPane fx:id="restaurantScrollPane" prefWidth="400" fitToWidth="true" fitToHeight="true" visible="false" managed="false">
+                <VBox fx:id="restaurantVBox" spacing="15" prefWidth="400" style="-fx-background-color: #f0f0f0;">
                     <Label text="Restaurants" styleClass="title-label"/>
-                    </ScrollPane>
                     <!-- Ajoutez ici des éléments spécifiques aux restaurants -->
                 </VBox>
+            </ScrollPane>
 
-
-
-                <VBox fx:id="mosqueVBox" spacing="15" prefWidth="400" style="-fx-background-color: #f0f0f0;" visible="false" managed="false">
-                    <ScrollPane fx:id="mosqueScrollPane" prefWidth="400" fitToWidth="true" fitToHeight="true" >
+            <ScrollPane fx:id="mosqueScrollPane" prefWidth="400" fitToWidth="true" fitToHeight="true" visible="false" managed="false">
+                <VBox fx:id="mosqueVBox" spacing="15" prefWidth="400" style="-fx-background-color: #f0f0f0;">
                     <Label text="Mosquées" styleClass="title-label"/>
-                    </ScrollPane>
                     <!-- Ajoutez ici des éléments spécifiques aux mosquées -->
                 </VBox>
+            </ScrollPane>
 
-
-
-                <VBox fx:id="pharmacyVBox" spacing="15" prefWidth="400" style="-fx-background-color: #f0f0f0;" visible="false" managed="false">
-                    <ScrollPane fx:id="pharmacyScrollPane" prefWidth="400" fitToWidth="true" fitToHeight="true" visible="false" managed="false">
+            <ScrollPane fx:id="pharmacyScrollPane" prefWidth="400" fitToWidth="true" fitToHeight="true" visible="false" managed="false">
+                <VBox fx:id="pharmacyVBox" spacing="15" prefWidth="400" style="-fx-background-color: #f0f0f0;">
                     <Label text="Pharmacies" styleClass="title-label"/>
-                    </ScrollPane>
                     <!-- Ajoutez ici des éléments spécifiques aux pharmacies -->
                 </VBox>
+            </ScrollPane>
+            <ScrollPane fx:id="transportScrollPane" prefWidth="400" fitToWidth="true" fitToHeight="true" visible="false" managed="false">
+                <VBox fx:id="transportVBox" spacing="15" prefWidth="400" style="-fx-background-color: #f0f0f0;">
+                    <Label text="Pharmacies" styleClass="title-label"/>
+                    <!-- Ajoutez ici des éléments spécifiques aux pharmacies -->
+                </VBox>
+            </ScrollPane>
+
 
 
 

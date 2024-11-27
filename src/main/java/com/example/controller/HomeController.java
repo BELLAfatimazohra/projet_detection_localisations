@@ -12,8 +12,14 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
@@ -31,6 +37,8 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -46,13 +54,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
 
 public class HomeController {
 
+    public ScrollPane transportScrollPane;
+    public VBox transportVBox;
     @FXML
     private Button itineraryButton;
     @FXML
@@ -76,19 +84,20 @@ public class HomeController {
 
     private SparkSession spark;
     private GeolocationService geolocationService;
-
+    @FXML
+    private ScrollPane restaurantScrollPane;
+    @FXML
+    private ScrollPane mosqueScrollPane;
+    @FXML
+    private ScrollPane pharmacyScrollPane;
     @FXML
     private VBox locationVBox;
     @FXML
     private VBox restaurantVBox;
-
     @FXML
     private VBox pharmacyVBox;
-
     @FXML
     private VBox mosqueVBox;
-
-
     public HomeController() {
         this.geolocationService = new GeolocationService();
     }
@@ -98,54 +107,128 @@ public class HomeController {
         locationVBox.setVisible(false);
         locationVBox.setManaged(false);
 
-        restaurantVBox.setVisible(false);
-        restaurantVBox.setManaged(false);
+        restaurantScrollPane.setVisible(false);
+        restaurantScrollPane.setManaged(false);
 
-        pharmacyVBox.setVisible(false);
-        pharmacyVBox.setManaged(false);
+        mosqueScrollPane.setVisible(false);
+        mosqueScrollPane.setManaged(false);
 
-        mosqueVBox.setVisible(false);
-        mosqueVBox.setManaged(false);
+        pharmacyScrollPane.setVisible(false);
+        pharmacyScrollPane.setManaged(false);
     }
     @FXML
     private void handleRestaurants(ActionEvent event) {
-        showHotels();
-        hideAllVBoxes();
-        restaurantVBox.setVisible(true);
-        restaurantVBox.setManaged(true);
+        showHotels();  // Cette méthode affiche les hôtels sur la carte
+        hideAllVBoxes();  // Masque tous les VBox et ScrollPanes
 
+        // Rendre visible le ScrollPane du restaurant (et donc son VBox)
+        restaurantScrollPane.setVisible(true);
+        restaurantScrollPane.setManaged(true);
     }
     @FXML
     public void handlePharmacies() {
-        // Appeler la méthode pour afficher les pharmacies sur la carte
-        showPharmacies();
-        hideAllVBoxes();
-        pharmacyVBox.setVisible(true);
-        pharmacyVBox.setManaged(true);
+        showPharmacies();  // Cette méthode affiche les pharmacies sur la carte
+        hideAllVBoxes();  // Masque tous les VBox et ScrollPanes
 
+        // Rendre visible le ScrollPane de la pharmacie (et donc son VBox)
+        pharmacyScrollPane.setVisible(true);
+        pharmacyScrollPane.setManaged(true);
     }
+
     @FXML
     public void handlemosque() {
-        // Appeler la méthode pour afficher les pharmacies sur la carte
-        showMosques();
-        hideAllVBoxes();
-        mosqueVBox.setVisible(true);
-        mosqueVBox.setManaged(true);
+        showMosques();  // Cette méthode affiche les mosquées sur la carte
+        hideAllVBoxes();  // Masque tous les VBox et ScrollPanes
 
+        // Rendre visible le ScrollPane de la mosquée (et donc son VBox)
+        mosqueScrollPane.setVisible(true);
+        mosqueScrollPane.setManaged(true);
+    }
+    private void getLocationNameFromCoordinates(double latitude, double longitude) {
+        // Utilisation de l'API Nominatim sans clé API
+        String apiUrl = String.format("https://nominatim.openstreetmap.org/reverse?lat=%f&lon=%f&format=json&addressdetails=1", latitude, longitude);
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiUrl))
+                .build();
+
+        client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenAccept(response -> {
+                    try {
+                        System.out.println("Réponse JSON brute : " + response); // Afficher la réponse brute pour le débogage
+
+                        // Essayer d'analyser la réponse JSON
+                        JSONObject json = new JSONObject(response);
+
+                        // Utiliser optString pour éviter l'exception si la clé "display_name" est absente
+                        String locationName = json.optString("display_name", "Nom introuvable");
+
+                        if ("Nom introuvable".equals(locationName)) {
+                            System.err.println("Erreur : Nom de localisation introuvable.");
+                        } else {
+                            System.out.println("Nom de localisation : " + locationName);
+
+                            // Appeler la fonction Wikipedia en lui passant le nom de la localisation
+                            getWikipediaDetails(locationName);
+                        }
+
+                    } catch (JSONException e) {
+                        System.err.println("Erreur lors de l'analyse du JSON : " + e.getMessage());
+                    }
+                })
+                .exceptionally(e -> {
+                    System.err.println("Erreur lors de la requête HTTP : " + e.getMessage());
+                    return null;
+                });
     }
 
-    @FXML
     public void handleGetLocation() {
+        // Récupérer les coordonnées
         double[] coordinates = geolocationService.getLocationCoordinates();
+
         if (coordinates != null && coordinates.length == 2) {
-            String script = String.format(Locale.US, "addMarker(%f, %f);", coordinates[1], coordinates[0]);
-            System.out.println("Latitude : " + coordinates[0] + ", Longitude: " + coordinates[1]);
-            webView.getEngine().executeScript(script);
-            webView.getEngine().executeScript("alert('Test JavaScript depuis Java');");
+            // Inverser latitude et longitude dans le JSON
+            String locationsJson = String.format(
+                    Locale.US,
+                    "[{\"lat\": %f, \"lng\": %f}]",
+                    coordinates[1],  // longitude devient latitude
+                    coordinates[0]   // latitude devient longitude
+            );
+
+            // Générer le script JavaScript
+            String script = String.format("updateMap(%s);", locationsJson);
+
+            // Journaux pour vérifier les valeurs
+            System.out.println("Longitude : " + coordinates[1] + ", Latitude: " + coordinates[0]);
+            System.out.println("JSON généré (inversé) : " + locationsJson);
+            System.out.println("Script exécuté : " + script);
+
+            try {
+                // Exécuter le script dans le WebView
+                webView.getEngine().executeScript(script);
+
+                // Tester la communication avec une alerte JavaScript
+                webView.getEngine().executeScript("alert('Test JavaScript depuis Java');");
+
+                // Appeler la fonction pour récupérer le nom du lieu en utilisant le géocodage inverse
+                getLocationNameFromCoordinates(coordinates[0], coordinates[1]);
+
+                // Masquer tous les VBox et afficher celui des informations de localisation
+                hideAllVBoxes();
+                locationVBox.setVisible(true);
+                locationVBox.setManaged(true);
+
+            } catch (Exception e) {
+                System.err.println("Erreur lors de l'exécution du script : " + e.getMessage());
+                e.printStackTrace();
+            }
         } else {
             System.err.println("Les coordonnées sont nulles ou incomplètes.");
         }
     }
+
 
     public void initialize() {
         if (webView == null) {
@@ -270,18 +353,66 @@ public class HomeController {
             e.printStackTrace();
         }
     }
-
-     // Référence au VBox défini dans le FXML
-
     void showHotels() {
         System.out.println("Affichage des hôtels.");
 
-        // Obtenir la localisation actuelle
-        GeolocationService geolocationService = new GeolocationService();
-        double[] coordinates = geolocationService.getLocationCoordinates();
-        double latitude = coordinates[0];
-        double longitude = coordinates[1];
+        if (webView != null && webView.getEngine() != null) {
+            Object markersArrayCheck = webView.getEngine().executeScript("Array.isArray(markersArray)");
 
+            if (markersArrayCheck != null && (Boolean) markersArrayCheck) {
+                Boolean isMarkersArrayEmpty = (Boolean) webView.getEngine().executeScript("markersArray.length === 0");
+
+                if (isMarkersArrayEmpty) {
+                    System.out.println("Tableau de marqueurs vide, géolocalisation...");
+                    GeolocationService geolocationService = new GeolocationService();
+                    double[] coordinates = geolocationService.getLocationCoordinates();
+                    double latitude = coordinates[0];
+                    double longitude = coordinates[1];
+
+                    System.out.println("Coordonnées de géolocalisation : Latitude = " + latitude + ", Longitude = " + longitude);
+                    fetchHotelsAroundLocation(latitude, longitude);
+                } else {
+                    System.out.println("Tableau de marqueurs non vide, utilisation des coordonnées du premier marqueur...");
+
+                    String script = "markersArray[0];";
+                    Object firstMarkerCoordinates = webView.getEngine().executeScript(script);
+
+                    if (firstMarkerCoordinates != null) {
+                        System.out.println("Coordonnées du premier marqueur récupérées : " + firstMarkerCoordinates);
+
+                        // Vérifier si c'est un JSObject
+                        if (firstMarkerCoordinates instanceof JSObject) {
+                            JSObject marker = (JSObject) firstMarkerCoordinates;
+
+                            // Extraire les coordonnées (latitude et longitude)
+                            Object latitudeObj = marker.getMember("lat");  // supposons que "lat" est le nom de la latitude
+                            Object longitudeObj = marker.getMember("lng"); // supposons que "lng" est le nom de la longitude
+
+                            if (latitudeObj instanceof Double && longitudeObj instanceof Double) {
+                                double latitude = (Double) latitudeObj;
+                                double longitude = (Double) longitudeObj;
+
+                                System.out.println("Coordonnées du premier marqueur : Latitude = " + latitude + ", Longitude = " + longitude);
+
+                                fetchHotelsAroundLocation( longitude,latitude);
+                            } else {
+                                System.out.println("Les coordonnées du marqueur ne sont pas dans le format attendu.");
+                            }
+                        } else {
+                            System.out.println("Les coordonnées du premier marqueur ne sont pas dans un objet valide.");
+                        }
+                    } else {
+                        System.out.println("Erreur lors de la récupération des coordonnées du premier marqueur.");
+                    }
+                }
+            } else {
+                System.out.println("markersArray n'est pas un tableau valide.");
+            }
+        } else {
+            System.out.println("WebView ou son moteur non initialisé.");
+        }
+    }
+    private void fetchHotelsAroundLocation(double latitude, double longitude) {
         // Réduire le rayon pour une recherche plus précise (5 km)
         String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:5000," + longitude + "," + latitude + ")[tourism=hotel];out;";
 
@@ -312,19 +443,28 @@ public class HomeController {
                 // Créer une liste pour les hôtels à envoyer au JavaScript
                 StringBuilder hotelLocations = new StringBuilder("[");
 
-                // Créer des HBox dynamiques pour afficher les hôtels dans le VBox
+                // Vider le VBox avant d'ajouter de nouveaux hôtels
+                if (restaurantVBox != null) {
+                    restaurantVBox.getChildren().clear(); // Vider le VBox
+                }
+
+                // Parcourir les résultats des hôtels
                 for (int i = 0; i < elements.length(); i++) {
                     JSONObject hotel = elements.getJSONObject(i);
 
-                    String name = hotel.optJSONObject("tags").optString("name", "Nom inconnu");
-                    double lat = hotel.getDouble("lat");
-                    double lon = hotel.getDouble("lon");
+                    // Extraire le nom de l'hôtel et les tags
+                    JSONObject tags = hotel.optJSONObject("tags");
+                    String name = tags != null ? tags.optString("name", "Nom inconnu") : "Nom inconnu";
+                    String website = tags != null ? tags.optString("website", null) : null;
 
-                    // Affichage des détails de l'hôtel dans la console
-                    System.out.println("Nom : " + name);
-                    System.out.println("Latitude : " + lat);
-                    System.out.println("Longitude : " + lon);
-                    System.out.println("------------------------------");
+                    // Construire une chaîne pour afficher toutes les informations utiles
+                    StringBuilder hotelInfo = new StringBuilder();
+                    if (tags != null) {
+                        for (String key : tags.keySet()) {
+                            String value = tags.optString(key, "Non disponible");
+                            hotelInfo.append(key.replace("addr:", "")).append(": ").append(value).append("\n");
+                        }
+                    }
 
                     // Ajouter les données de l'hôtel à la liste au format JSON
                     if (i > 0) {
@@ -332,32 +472,59 @@ public class HomeController {
                     }
                     hotelLocations.append("{")
                             .append("\"name\": \"").append(name).append("\",")
-                            .append("\"lat\": ").append(lat).append(",")
-                            .append("\"lng\": ").append(lon)
+                            .append("\"info\": \"").append(hotelInfo.toString().replaceAll("\n", " | ")).append("\",")
+                            .append("\"lat\": ").append(hotel.optDouble("lat")).append(",")
+                            .append("\"lng\": ").append(hotel.optDouble("lon"))
                             .append("}");
 
-                    // Ajouter dynamiquement un HBox pour chaque hôtel dans le VBox
+                    // Créer un HBox pour l'hôtel
                     HBox hotelHBox = new HBox(10); // Espacement de 10 pixels entre les éléments
-                    hotelHBox.setAlignment(Pos.CENTER_LEFT); // Alignement à gauche
-                    hotelHBox.setStyle("-fx-padding: 5;"); // Style de padding
+                    hotelHBox.setAlignment(Pos.CENTER_LEFT); // Alignement centré gauche
+                    hotelHBox.setStyle("-fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-color: #f9f9f9;");
 
-                    Label hotelLabel = new Label(name + " - (" + lat + ", " + lon + ")");
-                    hotelLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;"); // Style de texte
+                    // Label pour afficher les informations de l'hôtel
+                    Label hotelLabel = new Label(name + "\n" + hotelInfo.toString());
+                    hotelLabel.setWrapText(true); // Permet le retour à la ligne automatique
+                    hotelLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-max-width: 400px;");
+                    hotelLabel.setMinHeight(200);
 
-                    hotelHBox.getChildren().add(hotelLabel); // Ajouter le label à l'HBox
+                    // Boutons "Enregistrer" et "Itinéraire"
+                    Button saveButton = new Button("Enregistrer");
+                    saveButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-padding: 5 10;");
+                    saveButton.setOnAction(e -> {
+                        System.out.println("Hôtel enregistré : " + name);
+                        // Action d'enregistrement à définir
+                    });
+
+                    Button routeButton = new Button("Itinéraire");
+                    routeButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-padding: 5 10;");
+                    routeButton.setOnAction(e -> {
+                        System.out.println("Afficher l'itinéraire vers : " + name);
+                        // Action pour afficher l'itinéraire
+                    });
+
+                    // Ajouter un Spacer entre les informations et les boutons
+                    Region spacer = new Region();
+                    HBox.setHgrow(spacer, Priority.ALWAYS);
+
+                    // Créer une VBox pour ajouter les boutons
+                    VBox buttonsBox = new VBox(10, saveButton, routeButton);
+                    buttonsBox.setAlignment(Pos.TOP_RIGHT);
+
+                    // Ajouter les éléments dans le HBox
+                    hotelHBox.getChildren().addAll(hotelLabel, spacer, buttonsBox);
 
                     // Ajouter l'HBox au VBox défini dans le FXML (restaurantVBox)
                     if (restaurantVBox != null) {
                         restaurantVBox.getChildren().add(hotelHBox);
                     }
-
                 }
 
                 hotelLocations.append("]");
 
                 // Ajouter les marqueurs sur la carte via WebView
                 if (webView != null && webView.getEngine() != null) {
-                    webView.getEngine().executeScript("updateMapWithHotels(" + hotelLocations.toString() + ");");
+                    webView.getEngine().executeScript("updateMapWithRestaurants(" + hotelLocations.toString() + ");");
                     System.out.println("Hôtels envoyés à la carte.");
                 } else {
                     System.out.println("WebView ou son moteur non initialisé.");
@@ -372,16 +539,69 @@ public class HomeController {
     }
 
 
-    public void showPharmacies() {
+
+
+    void showPharmacies() {
         System.out.println("Affichage des pharmacies.");
 
-        // Obtenir la localisation actuelle
-        GeolocationService geolocationService = new GeolocationService();
-        double[] coordinates = geolocationService.getLocationCoordinates();
-        double latitude = coordinates[0];
-        double longitude = coordinates[1];
+        if (webView != null && webView.getEngine() != null) {
+            Object markersArrayCheck = webView.getEngine().executeScript("Array.isArray(markersArray)");
 
-        // Modifier le rayon (5000 mètres ici pour tester une zone plus petite)
+            if (markersArrayCheck != null && (Boolean) markersArrayCheck) {
+                Boolean isMarkersArrayEmpty = (Boolean) webView.getEngine().executeScript("markersArray.length === 0");
+
+                if (isMarkersArrayEmpty) {
+                    System.out.println("Tableau de marqueurs vide, géolocalisation...");
+                    GeolocationService geolocationService = new GeolocationService();
+                    double[] coordinates = geolocationService.getLocationCoordinates();
+                    double latitude = coordinates[0];
+                    double longitude = coordinates[1];
+
+                    System.out.println("Coordonnées de géolocalisation : Latitude = " + latitude + ", Longitude = " + longitude);
+                    fetchpharmaciesAroundLocation(latitude, longitude);
+                } else {
+                    System.out.println("Tableau de marqueurs non vide, utilisation des coordonnées du premier marqueur...");
+
+                    String script = "markersArray[0];";
+                    Object firstMarkerCoordinates = webView.getEngine().executeScript(script);
+
+                    if (firstMarkerCoordinates != null) {
+                        System.out.println("Coordonnées du premier marqueur récupérées : " + firstMarkerCoordinates);
+
+                        // Vérifier si c'est un JSObject
+                        if (firstMarkerCoordinates instanceof JSObject) {
+                            JSObject marker = (JSObject) firstMarkerCoordinates;
+
+                            // Extraire les coordonnées (latitude et longitude)
+                            Object latitudeObj = marker.getMember("lat");  // supposons que "lat" est le nom de la latitude
+                            Object longitudeObj = marker.getMember("lng"); // supposons que "lng" est le nom de la longitude
+
+                            if (latitudeObj instanceof Double && longitudeObj instanceof Double) {
+                                double latitude = (Double) latitudeObj;
+                                double longitude = (Double) longitudeObj;
+
+                                System.out.println("Coordonnées du premier marqueur : Latitude = " + latitude + ", Longitude = " + longitude);
+
+                                fetchpharmaciesAroundLocation( longitude,latitude);
+                            } else {
+                                System.out.println("Les coordonnées du marqueur ne sont pas dans le format attendu.");
+                            }
+                        } else {
+                            System.out.println("Les coordonnées du premier marqueur ne sont pas dans un objet valide.");
+                        }
+                    } else {
+                        System.out.println("Erreur lors de la récupération des coordonnées du premier marqueur.");
+                    }
+                }
+            } else {
+                System.out.println("markersArray n'est pas un tableau valide.");
+            }
+        } else {
+            System.out.println("WebView ou son moteur non initialisé.");
+        }
+    }
+    private void fetchpharmaciesAroundLocation(double latitude, double longitude) {
+        // Réduire le rayon pour une recherche plus précise (5 km)
         String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:5000," + longitude + "," + latitude + ")[amenity=pharmacy];out;";
 
         try {
@@ -390,73 +610,137 @@ public class HomeController {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
 
-            int statusCode = connection.getResponseCode();  // Vérification du code de statut HTTP
-            System.out.println("Code de statut HTTP : " + statusCode);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
 
-            if (statusCode == 200) {  // Vérifier si la réponse est OK
-                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
+            // Afficher la réponse brute pour vérifier les résultats
+            System.out.println("Réponse brute de Overpass : " + response.toString());
+
+            // Analyser la réponse JSON
+            JSONObject jsonResponse = new JSONObject(response.toString());
+            JSONArray elements = jsonResponse.getJSONArray("elements");
+
+            if (elements.length() > 0) {
+                System.out.println("pharmacies trouvés :");
+
+                // Créer une liste pour les hôtels à envoyer au JavaScript
+                StringBuilder  pharmacyLocations = new StringBuilder("[");
+
+                // Vider le VBox avant d'ajouter de nouveaux hôtels
+                if (pharmacyVBox != null) {
+                    pharmacyVBox.getChildren().clear(); // Vider le VBox
                 }
-                reader.close();
 
-                // Afficher la réponse brute pour vérifier les résultats
-                System.out.println("Réponse brute de Overpass : " + response.toString());
+                for (int i = 0; i < elements.length(); i++) {
+                    JSONObject pharmacies = elements.getJSONObject(i);
 
-                // Analyser la réponse JSON
-                JSONObject jsonResponse = new JSONObject(response.toString());
-                JSONArray elements = jsonResponse.getJSONArray("elements");
+                    // Extraire le nom de l'hôtel et les tags
+                    JSONObject tags = pharmacies.optJSONObject("tags");
+                    String name = tags != null ? tags.optString("name", "Nom inconnu") : "Nom inconnu";
+                    String website = tags != null ? tags.optString("website", null) : null;
 
-                if (elements.length() > 0) {
-                    System.out.println("Pharmacies trouvées :");
-
-                    // Créer une liste pour les pharmacies à envoyer au JavaScript
-                    StringBuilder pharmacyLocations = new StringBuilder("[");
-
-                    for (int i = 0; i < elements.length(); i++) {
-                        JSONObject pharmacy = elements.getJSONObject(i);
-                        String name = pharmacy.optJSONObject("tags").optString("name", "Nom inconnu");
-                        double lat = pharmacy.getDouble("lat");
-                        double lon = pharmacy.getDouble("lon");
-
-                        // Affichage des détails de la pharmacie dans la console
-                        System.out.println("Nom : " + name);
-                        System.out.println("Latitude : " + lat);
-                        System.out.println("Longitude : " + lon);
-                        System.out.println("------------------------------");
-
-                        // Ajouter les données de la pharmacie à la liste au format JSON
-                        if (i > 0) {
-                            pharmacyLocations.append(",");
+                    // Construire une chaîne pour afficher toutes les informations utiles
+                    StringBuilder pharmaciesInfo = new StringBuilder();
+                    if (tags != null) {
+                        for (String key : tags.keySet()) {
+                            String value = tags.optString(key, "Non disponible");
+                           pharmaciesInfo.append(key.replace("addr:", "")).append(": ").append(value).append("\n");
                         }
-                        pharmacyLocations.append("{")
-                                .append("\"name\": \"").append(name).append("\",")
-                                .append("\"lat\": ").append(lat).append(",")
-                                .append("\"lng\": ").append(lon)
-                                .append("}");
-                    }
-                    pharmacyLocations.append("]");
-
-                    // Si le WebView est initialisé, mettre à jour la carte
-                    if (webView != null && webView.getEngine() != null) {
-                        webView.getEngine().executeScript("updateMapWithPharmacies(" + pharmacyLocations.toString() + ");");
-                        System.out.println("Pharmacies envoyées à la carte.");
-                    } else {
-                        System.out.println("WebView ou son moteur non initialisé.");
                     }
 
-                } else {
-                    System.out.println("Aucune pharmacie trouvée dans la zone.");
+                    // Ajouter les données de l'hôtel à la liste au format JSON
+                    if (i > 0) {
+                       pharmacyLocations.append(",");
+                    }
+                    pharmacyLocations.append("{")
+                            .append("\"name\": \"").append(name).append("\",")
+                            .append("\"info\": \"").append(pharmaciesInfo.toString().replaceAll("\n", " | ")).append("\",")
+                            .append("\"lat\": ").append(pharmacies.optDouble("lat")).append(",")
+                            .append("\"lng\": ").append(pharmacies.optDouble("lon"))
+                            .append("}");
+
+
+                    HBox pharmacyHBox = new HBox(10); // Espacement de 10 pixels entre les éléments
+                    pharmacyHBox.setAlignment(Pos.CENTER_LEFT); // Alignement centré gauche
+                   pharmacyHBox.setStyle("-fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-color: #f9f9f9;");
+
+                    // Label pour afficher les informations de l'hôtel
+                    Label pharmacyLabel = new Label(name + "\n" + pharmaciesInfo.toString());
+                    pharmacyLabel.setWrapText(true); // Permet le retour à la ligne automatique
+                    pharmacyLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-max-width: 400px;");
+                    pharmacyLabel.setMinHeight(200);
+
+                    // Boutons "Enregistrer" et "Itinéraire"
+                    Button saveButton = new Button("Enregistrer");
+                    saveButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-padding: 5 10;");
+                    saveButton.setOnAction(e -> {
+                        System.out.println("Hôtel enregistré : " + name);
+                        // Action d'enregistrement à définir
+                    });
+
+                    Button routeButton = new Button("Itinéraire");
+                    routeButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-padding: 5 10;");
+                    routeButton.setOnAction(e -> {
+                        System.out.println("Afficher l'itinéraire vers : " + name);
+                        // Action pour afficher l'itinéraire
+                    });
+
+                    // Ajouter un Spacer entre les informations et les boutons
+                    Region spacer = new Region();
+                    HBox.setHgrow(spacer, Priority.ALWAYS);
+
+                    // Créer une VBox pour ajouter les boutons
+                    VBox buttonsBox = new VBox(10, saveButton, routeButton);
+                    buttonsBox.setAlignment(Pos.TOP_RIGHT);
+
+                    // Ajouter les éléments dans le HBox
+                   pharmacyHBox.getChildren().addAll(pharmacyLabel, spacer, buttonsBox);
+
+                    // Ajouter l'HBox au VBox défini dans le FXML (restaurantVBox)
+                    if (pharmacyVBox != null) {
+                        pharmacyVBox.getChildren().add(pharmacyHBox);
+                    }
                 }
+
+                pharmacyLocations.append("]");
+
+                // Ajouter les marqueurs sur la carte via WebView
+                if (webView != null && webView.getEngine() != null) {
+                    webView.getEngine().executeScript("updateMapWithPharmacies(" + pharmacyLocations.toString() + ");");
+                    System.out.println("Hôtels envoyés à la carte.");
+                } else {
+                    System.out.println("WebView ou son moteur non initialisé.");
+                }
+
             } else {
-                System.out.println("Erreur de connexion avec l'API Overpass, code de statut : " + statusCode);
+                System.out.println("Aucun hôtel trouvé dans la zone.");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public void setUserDetails(String username, int userId) {
         if (welcomeLabel != null) {
