@@ -24,7 +24,7 @@
 
                     <!-- HBox pour les boutons sur la même ligne -->
                     <HBox spacing="15">
-                        <Button fx:id="itineraryButton" onAction="#handleItinerary" styleClass="action-button">
+                        <Button fx:id="itineraryButton" onAction="#handleItinerary" styleClass="description-label">
                             <graphic>
                                 <ImageView fx:id="itineraryIcon" fitWidth="20" fitHeight="20">
                                     <Image url="@../images/itinerary-icon.png"/>
@@ -77,6 +77,7 @@
                 <HBox spacing="10">
                     <TextField fx:id="searchField" prefWidth="400" promptText="Rechercher une localisation..." onKeyTyped="#onSearchFieldKeyTyped" styleClass="search-field"/>
                     <Button fx:id="searchButton" text="Chercher" onAction="#handleSearch" styleClass="search-button"/>
+
                 </HBox>
 
                 <!-- WebView pour afficher la carte -->
@@ -112,6 +113,7 @@
                             </ImageView>
                         </graphic>
                     </Button>
+
 
                 </HBox>
 
