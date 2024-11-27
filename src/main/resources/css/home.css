@@ -194,3 +194,56 @@
 .profil, .menu-button {
     -fx-margin-bottom: 10px;         /* Marge en bas pour chaque bouton */
 }
+.transport-button {
+    -fx-background-color: #f0f0f0; /* Couleur de fond gris clair */
+    -fx-text-fill: #333333; /* Couleur du texte ou icône sombre */
+    -fx-padding: 10; /* Espacement interne */
+    -fx-shape: "M 100, 50 A 50, 50 0 1, 1 99.9, 50.1 Z"; /* Cercle */
+    -fx-min-width: 40px; /* Taille fixe (largeur) */
+    -fx-min-height: 40px; /* Taille fixe (hauteur) */
+    -fx-max-width: 40px;
+    -fx-max-height: 40px;
+    -fx-border-color: #cccccc; /* Bordure grise discrète */
+    -fx-border-width: 1;
+    -fx-background-radius: 20; /* Cercle parfait */
+    -fx-cursor: hand; /* Curseur en mode clic */
+}
+
+.transport-button:hover {
+    -fx-background-color: #0078d7; /* Fond bleu au survol */
+    -fx-text-fill: white; /* Couleur de l'icône en blanc */
+}
+.search-field {
+    -fx-padding: 10; /* Espacement interne */
+    -fx-font-size: 14px; /* Taille du texte */
+    -fx-border-color: #cccccc; /* Bordure grise */
+    -fx-border-radius: 8; /* Coins arrondis */
+    -fx-background-radius: 8; /* Coins arrondis pour le fond */
+    -fx-background-color: white; /* Fond blanc */
+    -fx-min-height: 40px; /* Hauteur du champ */
+    -fx-max-height: 40px; /* Hauteur fixe */
+    -fx-prompt-text-fill: #aaaaaa; /* Texte d'indice grisé */
+     -fx-margin: 0 0 0 10;
+}
+
+.search-field:focused {
+    -fx-border-color: #0078d7; /* Couleur de la bordure en bleu lors du focus */
+    -fx-background-color: white; /* Garder le fond blanc */
+}
+.hbox-transport {
+    -fx-spacing: 10; /* Espacement entre les boutons */
+    -fx-alignment: center; /* Centrer les éléments */
+}
+
+.vbox-itinerary {
+    -fx-spacing: 10; /* Espacement entre les champs */
+    -fx-alignment: top-left; /* Alignement vers le haut gauche */
+    -fx-padding: 15 0 0 0; /* Décalage en haut de 20 pixels */
+
+}
+.button-icon {
+    -fx-fit-width: 20px; /* Largeur de l'icône */
+    -fx-fit-height: 20px; /* Hauteur de l'icône */
+    -fx-padding: 0; /* Pas d'espacement interne */
+}
+
