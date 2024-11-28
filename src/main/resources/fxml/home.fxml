@@ -24,7 +24,7 @@
 
                     <!-- HBox pour les boutons sur la même ligne -->
                     <HBox spacing="15">
-                        <Button fx:id="itineraryButton" onAction="#handleItinerary" styleClass="action-button">
+                        <Button fx:id="itineraryButton" onAction="#handleItinerary" styleClass="description-label">
                             <graphic>
                                 <ImageView fx:id="itineraryIcon" fitWidth="20" fitHeight="20">
                                     <Image url="@../images/itinerary-icon.png"/>
@@ -68,6 +68,49 @@
                 </VBox>
             </ScrollPane>
 
+            <!-- Ajout des champs de départ et d'arrivée à l'intérieur de locationVBox -->
+            <VBox fx:id="itineraryFieldsVBox" spacing="10" visible="false" managed="false" styleClass="vbox-itinerary">
+
+                <!-- HBox pour les boutons de sélection de mode de transport -->
+                <HBox spacing="10" alignment="CENTER" styleClass="hbox-transport">
+                    <Button fx:id="carModeButton" text="" onAction="#handleCarMode" styleClass="transport-button">
+                        <graphic>
+                            <ImageView fx:id="carIcon" fitWidth="20" fitHeight="20">
+                                <Image url="@../images/car-icon.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                    <Button fx:id="bikeModeButton" text="" onAction="#handleBikeMode" styleClass="transport-button">
+                        <graphic>
+                            <ImageView fx:id="bikeIcon" fitWidth="20" fitHeight="20">
+                                <Image url="@../images/bike-icon.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                    <Button fx:id="walkModeButton" text="" onAction="#handleWalkMode" styleClass="transport-button">
+                        <graphic>
+                            <ImageView fx:id="walkIcon" fitWidth="20" fitHeight="20">
+                                <Image url="@../images/walk-icon.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                    <Button fx:id="closeItineraryButton" text=""  onAction="#handleCloseItinerary" styleClass="transport-button">
+                        <graphic>
+                            <ImageView fx:id="closeIcon" fitWidth="20" fitHeight="20">
+                                <Image url="@../images/close-icon.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+                </HBox>
+
+                <!-- Champs pour les positions de départ et d'arrivée -->
+                <TextField fx:id="startField" promptText="Position de départ"  styleClass="search-field"/>
+                <TextField fx:id="endField" promptText="Position d'arrivée"  styleClass="search-field"/>
+
+                <!-- Bouton pour calculer l'itinéraire -->
+                <Button text="Calculer itinéraire" onAction="#handleCalculateItinerary" styleClass="search-button"/>
+            </VBox>
+
 
 
 
@@ -80,6 +123,8 @@
                 <HBox spacing="10">
                     <TextField fx:id="searchField" prefWidth="400" promptText="Rechercher une localisation..." onKeyTyped="#onSearchFieldKeyTyped" styleClass="search-field"/>
                     <Button fx:id="searchButton" text="Chercher" onAction="#handleSearch" styleClass="search-button"/>
+                    <!-- Nouveau bouton Itinéraire -->
+                    <Button fx:id="itineraryButtonhome" text="Itinéraire" onAction="#handleItinerary" styleClass="search-button"/>
                 </HBox>
 
                 <!-- WebView pour afficher la carte -->
@@ -115,6 +160,7 @@
                             </ImageView>
                         </graphic>
                     </Button>
+
 
                 </HBox>
 

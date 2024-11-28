@@ -35,7 +35,47 @@
         })
     });
 
+// Fonction pour dessiner une route sur la carte
+    function drawRoute(routeCoordinates) {
+        // Supprimer les couches de route existantes
+        const existingLayers = map.getLayers().getArray().filter(layer => layer.get('name') === 'routeLayer');
+        existingLayers.forEach(layer => map.removeLayer(layer));
 
+        // Convertir les coordonnées pour OpenLayers
+        var coordinates = routeCoordinates.map(coord => ol.proj.fromLonLat([coord[0], coord[1]]));
+
+        // Créer une géométrie de type ligne
+        var routeLine = new ol.geom.LineString(coordinates);
+
+        // Créer une source de vecteur pour la ligne
+        var vectorSource = new ol.source.Vector({
+            features: [new ol.Feature({ geometry: routeLine })]
+        });
+
+        // Définir le style de la ligne
+        var routeStyle = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: 'blue',
+                width: 4
+            })
+        });
+
+        // Créer une couche pour afficher la ligne
+        var routeLayer = new ol.layer.Vector({
+            source: vectorSource,
+            style: routeStyle
+        });
+
+        // Attribuer un nom pour pouvoir supprimer cette couche plus tard
+        routeLayer.set('name', 'routeLayer');
+
+        // Ajouter la couche à la carte
+        map.addLayer(routeLayer);
+
+        // Recentrer la vue sur la route
+        var routeExtent = routeLine.getExtent();
+        map.getView().fit(routeExtent, { padding: [50, 50, 50, 50], maxZoom: 14 });
+    }
 
 function addMarker(latitude, longitude) {
  // Supprimer les couches de marqueurs existantes

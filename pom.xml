@@ -128,6 +128,19 @@
             <artifactId>hadoop-client</artifactId>
             <version>${hadoop.version}</version>
         </dependency>
+        <!-- Jackson Databind pour le traitement des données JSON -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.18.1</version>
+        </dependency>
+
+        <!-- GraphHopper Web API pour utiliser l'API de calcul d'itinéraire -->
+        <dependency>
+            <groupId>com.graphhopper</groupId>
+            <artifactId>graphhopper-web-api</artifactId>
+            <version>10.0</version>
+        </dependency>
 
     </dependencies>
 
@@ -170,11 +183,11 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <executable>C:\Program Files\Java\jdk-21\bin\java.exe</executable>
+                    <executable>C:\jdk-21\bin\java.exe</executable>
                     <mainClass>com.example.MainApp</mainClass>
                     <options>
                         <option>--module-path</option>
-                        <option>${project.build.directory}/libs</option>
+                        <option>C:\javafx-sdk-23\lib</option>
                         <option>--add-modules</option>
                         <option>javafx.controls,javafx.fxml,javafx.web</option>
                     </options>

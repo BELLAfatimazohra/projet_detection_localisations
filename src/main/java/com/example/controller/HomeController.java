@@ -1,5 +1,6 @@
 
 package com.example.controller;
+import com.sun.webkit.WebPage;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import com.example.service.UserService;
@@ -13,10 +14,14 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
+import com.example.service.GraphHopperService;
+
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -72,6 +77,8 @@ public class HomeController {
     @FXML
     private Label welcomeLabel;
     @FXML
+    private Label loadingLabel;
+    @FXML
     private TextField searchField;
     @FXML
     private Label locationNameLabel;
@@ -98,14 +105,38 @@ public class HomeController {
     private VBox pharmacyVBox;
     @FXML
     private VBox mosqueVBox;
+
+    private final GraphHopperService graphHopperService = new GraphHopperService("61ea8b60-57e2-402d-a618-b5e4f7c0a87e");
+    private WebEngine webEngine;
+
     public HomeController() {
         this.geolocationService = new GeolocationService();
     }
+
+    // Déclaration des champs pour la position de départ et d'arrivée
+    @FXML
+    private VBox itineraryFieldsVBox;
+
+    @FXML
+    private TextField startField;
+
+    @FXML
+    private TextField endField;
+    @FXML
+    private ProgressIndicator loadingIndicator;
+
+    // Méthode qui sera appelée lorsque l'utilisateur clique sur le bouton "Itinéraire"
+
+
+
 
     @FXML
     private void hideAllVBoxes() {
         locationVBox.setVisible(false);
         locationVBox.setManaged(false);
+
+        itineraryFieldsVBox.setVisible(false);
+        itineraryFieldsVBox.setManaged(false);
 
         restaurantScrollPane.setVisible(false);
         restaurantScrollPane.setManaged(false);
@@ -115,6 +146,16 @@ public class HomeController {
 
         pharmacyScrollPane.setVisible(false);
         pharmacyScrollPane.setManaged(false);
+    }
+
+    @FXML
+    private void handleItinerary() {
+        // Cacher toutes les autres VBoxes
+        hideAllVBoxes();
+
+        // Afficher les champs de l'itinéraire
+        itineraryFieldsVBox.setVisible(true);
+        itineraryFieldsVBox.setManaged(true);
     }
     @FXML
     private void handleRestaurants(ActionEvent event) {
@@ -1058,13 +1099,13 @@ public class HomeController {
 
 
 
-    @FXML
+    /*
     private void handleItinerary() {
         // Logique pour afficher ou calculer l'itinéraire
         System.out.println("Itinéraire demandé pour : " + locationNameLabel.getText());
 
         // Vous pouvez ajouter ici du code pour afficher l'itinéraire dans WebView ou un autre élément
-    }
+    }*/
 
     @FXML
     private void handleSave() {
@@ -1140,6 +1181,130 @@ public class HomeController {
 
     public void handleTransports(ActionEvent actionEvent) {
     }
+
+
+
+    // Variable pour stocker le mode de transport sélectionné
+    private String selectedVehicle = "car"; // Par défaut, on commence avec le mode "car"
+    @FXML
+    private void handleCarMode() {
+        selectedVehicle = "car";
+    }
+
+    @FXML
+    private void handleBikeMode() {
+        selectedVehicle = "bike";
+    }
+
+    @FXML
+    private void handleWalkMode() {
+        selectedVehicle = "foot";
+    }
+
+
+    @FXML
+    private void handleCloseItinerary() {
+        // Masquer le VBox
+        itineraryFieldsVBox.setVisible(false);
+        itineraryFieldsVBox.setManaged(false);
+    }
+    @FXML
+    private void handleCalculateItinerary() {
+        // Afficher les indicateurs de chargement
+        loadingIndicator.setVisible(true);
+        loadingLabel.setVisible(true);
+
+        // Désactiver les champs
+        String startCoordinates = startField.getText();
+        String endCoordinates = endField.getText();
+
+        if (startCoordinates.isEmpty() || endCoordinates.isEmpty()) {
+            System.out.println("Veuillez remplir les deux champs.");
+            loadingIndicator.setVisible(false);
+            loadingLabel.setVisible(false);
+            return;
+        }
+
+
+
+        try {
+            double[] startCoords =getCoordinates(startCoordinates);
+            double[] endCoords =getCoordinates(endCoordinates);
+
+
+
+            System.out.println("Coordonnées de départ : " + startCoords[0] + ", " + startCoords[1]);
+            System.out.println("Coordonnées d'arrivée : " + endCoords[0] + ", " + endCoords[1]);
+            // Appeler GraphHopperService pour récupérer les points de l'itinéraire
+            String routeCoordinatesJS = graphHopperService.calculateRoute(startCoords[0], startCoords[1], endCoords[0], endCoords[1], selectedVehicle);
+
+
+            // Masquer les indicateurs de chargement
+            loadingIndicator.setVisible(false);
+            loadingLabel.setVisible(false);
+
+            // Réactiver les champs
+            startField.setDisable(false);
+            endField.setDisable(false);
+
+            // Injecter les points dans OpenLayers via WebEngine
+            webEngine.executeScript("drawRoute(" + routeCoordinatesJS + ");");
+
+        }catch (Exception e) {
+            loadingIndicator.setVisible(false);
+            loadingLabel.setVisible(false);
+            System.out.println("Erreur : " + e.getMessage());
+        }
+
+
+    }
+
+    private double[] getCoordinates(String query) {
+        try {
+            // Encoder la requête
+            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
+
+            // URL pour la requête Nominatim
+            String url = "https://nominatim.openstreetmap.org/search?q=" + encodedQuery + "&format=json&addressdetails=1&limit=1";
+
+            // Envoi de la requête
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                HttpGet request = new HttpGet(url);
+                try (CloseableHttpResponse response = httpClient.execute(request)) {
+                    // Vérifier le statut de la réponse
+                    if (response.getStatusLine().getStatusCode() == 200) {
+                        String jsonResponse = EntityUtils.toString(response.getEntity());
+                        JSONArray results = new JSONArray(jsonResponse);
+
+                        // Vérifier si des résultats sont disponibles
+                        if (results.length() > 0) {
+                            JSONObject location = results.getJSONObject(0);
+                            double latitude = location.optDouble("lat");
+                            double longitude = location.optDouble("lon");
+
+                            // Retourner les coordonnées
+                            return new double[]{latitude, longitude};
+                        } else {
+                            System.out.println("Aucun lieu trouvé pour : " + query);
+
+
+                        }
+                    } else {
+                        System.err.println("Erreur lors de la requête HTTP : " + response.getStatusLine());
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la recherche de la localisation : " + e.getMessage());
+        }
+        return null; // Retourner null si les coordonnées ne sont pas disponibles
+    }
+
+
 }
+
+
+
+
 
 
