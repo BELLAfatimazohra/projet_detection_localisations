@@ -268,91 +268,7 @@ public class HomeController {
 
         }
     }
-    public void showMosques() {
-        System.out.println("Affichage des mosquées.");
 
-        // Obtenir la localisation actuelle
-        GeolocationService geolocationService = new GeolocationService();
-        double[] coordinates = geolocationService.getLocationCoordinates();
-        double latitude = coordinates[0];
-        double longitude = coordinates[1];
-
-        // Modifier le rayon (5000 mètres ici pour tester une zone plus petite)
-        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:5000," + longitude + "," + latitude + ")[amenity=place_of_worship];out;";
-
-        try {
-            // Connexion à l'API Overpass
-            URL url = new URL(overpassUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-
-            int statusCode = connection.getResponseCode();  // Vérification du code de statut HTTP
-            System.out.println("Code de statut HTTP : " + statusCode);
-
-            if (statusCode == 200) {  // Vérifier si la réponse est OK
-                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
-                }
-                reader.close();
-
-                // Afficher la réponse brute pour vérifier les résultats
-                System.out.println("Réponse brute de Overpass : " + response.toString());
-
-                // Analyser la réponse JSON
-                JSONObject jsonResponse = new JSONObject(response.toString());
-                JSONArray elements = jsonResponse.getJSONArray("elements");
-
-                if (elements.length() > 0) {
-                    System.out.println("Mosquées trouvées :");
-
-                    // Créer une liste pour les mosquées à envoyer au JavaScript
-                    StringBuilder mosqueLocations = new StringBuilder("[");
-
-                    for (int i = 0; i < elements.length(); i++) {
-                        JSONObject mosque = elements.getJSONObject(i);
-                        String name = mosque.optJSONObject("tags").optString("name", "Nom inconnu");
-                        double lat = mosque.getDouble("lat");
-                        double lon = mosque.getDouble("lon");
-
-                        // Affichage des détails de la mosquée dans la console
-                        System.out.println("Nom : " + name);
-                        System.out.println("Latitude : " + lat);
-                        System.out.println("Longitude : " + lon);
-                        System.out.println("------------------------------");
-
-                        // Ajouter les données de la mosquée à la liste au format JSON
-                        if (i > 0) {
-                            mosqueLocations.append(",");
-                        }
-                        mosqueLocations.append("{")
-                                .append("\"name\": \"").append(name).append("\",")
-                                .append("\"lat\": ").append(lat).append(",")
-                                .append("\"lng\": ").append(lon)
-                                .append("}");
-                    }
-                    mosqueLocations.append("]");
-
-                    // Si le WebView est initialisé, mettre à jour la carte
-                    if (webView != null && webView.getEngine() != null) {
-                        webView.getEngine().executeScript("updateMapWithMosques(" + mosqueLocations.toString() + ");");
-                        System.out.println("Mosquées envoyées à la carte.");
-                    } else {
-                        System.out.println("WebView ou son moteur non initialisé.");
-                    }
-
-                } else {
-                    System.out.println("Aucune mosquée trouvée dans la zone.");
-                }
-            } else {
-                System.out.println("Erreur de connexion avec l'API Overpass, code de statut : " + statusCode);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
     void showHotels() {
         System.out.println("Affichage des hôtels.");
 
@@ -725,6 +641,193 @@ public class HomeController {
         }
     }
 
+
+
+
+
+    void showMosques() {
+        System.out.println("Affichage des mosques.");
+
+        if (webView != null && webView.getEngine() != null) {
+            Object markersArrayCheck = webView.getEngine().executeScript("Array.isArray(markersArray)");
+
+            if (markersArrayCheck != null && (Boolean) markersArrayCheck) {
+                Boolean isMarkersArrayEmpty = (Boolean) webView.getEngine().executeScript("markersArray.length === 0");
+
+                if (isMarkersArrayEmpty) {
+                    System.out.println("Tableau de marqueurs vide, géolocalisation...");
+                    GeolocationService geolocationService = new GeolocationService();
+                    double[] coordinates = geolocationService.getLocationCoordinates();
+                    double latitude = coordinates[0];
+                    double longitude = coordinates[1];
+
+                    System.out.println("Coordonnées de géolocalisation : Latitude = " + latitude + ", Longitude = " + longitude);
+                    fetchmosquesAroundLocation(latitude, longitude);
+                } else {
+                    System.out.println("Tableau de marqueurs non vide, utilisation des coordonnées du premier marqueur...");
+
+                    String script = "markersArray[0];";
+                    Object firstMarkerCoordinates = webView.getEngine().executeScript(script);
+
+                    if (firstMarkerCoordinates != null) {
+                        System.out.println("Coordonnées du premier marqueur récupérées : " + firstMarkerCoordinates);
+
+                        // Vérifier si c'est un JSObject
+                        if (firstMarkerCoordinates instanceof JSObject) {
+                            JSObject marker = (JSObject) firstMarkerCoordinates;
+
+                            // Extraire les coordonnées (latitude et longitude)
+                            Object latitudeObj = marker.getMember("lat");  // supposons que "lat" est le nom de la latitude
+                            Object longitudeObj = marker.getMember("lng"); // supposons que "lng" est le nom de la longitude
+
+                            if (latitudeObj instanceof Double && longitudeObj instanceof Double) {
+                                double latitude = (Double) latitudeObj;
+                                double longitude = (Double) longitudeObj;
+
+                                System.out.println("Coordonnées du premier marqueur : Latitude = " + latitude + ", Longitude = " + longitude);
+
+                                fetchmosquesAroundLocation( longitude,latitude);
+                            } else {
+                                System.out.println("Les coordonnées du marqueur ne sont pas dans le format attendu.");
+                            }
+                        } else {
+                            System.out.println("Les coordonnées du premier marqueur ne sont pas dans un objet valide.");
+                        }
+                    } else {
+                        System.out.println("Erreur lors de la récupération des coordonnées du premier marqueur.");
+                    }
+                }
+            } else {
+                System.out.println("markersArray n'est pas un tableau valide.");
+            }
+        } else {
+            System.out.println("WebView ou son moteur non initialisé.");
+        }
+    }
+    private void fetchmosquesAroundLocation(double latitude, double longitude) {
+        // Réduire le rayon pour une recherche plus précise (5 km)
+        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:5000," + longitude + "," + latitude + ")[amenity=place_of_worship][religion=islam];out;";
+
+        try {
+            // Connexion à l'API Overpass
+            URL url = new URL(overpassUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+
+            // Afficher la réponse brute pour vérifier les résultats
+            System.out.println("Réponse brute de Overpass : " + response.toString());
+
+            // Analyser la réponse JSON
+            JSONObject jsonResponse = new JSONObject(response.toString());
+            JSONArray elements = jsonResponse.getJSONArray("elements");
+
+            if (elements.length() > 0) {
+                System.out.println("mosques trouvés :");
+
+                // Créer une liste pour les hôtels à envoyer au JavaScript
+                StringBuilder  mosqueLocations = new StringBuilder("[");
+
+                // Vider le VBox avant d'ajouter de nouveaux hôtels
+                if (mosqueVBox != null) {
+                    mosqueVBox.getChildren().clear(); // Vider le VBox
+                }
+
+                for (int i = 0; i < elements.length(); i++) {
+                    JSONObject mosques= elements.getJSONObject(i);
+
+                    // Extraire le nom de l'hôtel et les tags
+                    JSONObject tags = mosques.optJSONObject("tags");
+                    String name = tags != null ? tags.optString("name", "Nom inconnu") : "Nom inconnu";
+                    String website = tags != null ? tags.optString("website", null) : null;
+
+                    // Construire une chaîne pour afficher toutes les informations utiles
+                    StringBuilder mosquesInfo = new StringBuilder();
+                    if (tags != null) {
+                        for (String key : tags.keySet()) {
+                            String value = tags.optString(key, "Non disponible");
+                            mosquesInfo.append(key.replace("addr:", "")).append(": ").append(value).append("\n");
+                        }
+                    }
+
+                    // Ajouter les données de l'hôtel à la liste au format JSON
+                    if (i > 0) {
+                        mosqueLocations.append(",");
+                    }
+                    mosqueLocations.append("{")
+                            .append("\"name\": \"").append(name).append("\",")
+                            .append("\"info\": \"").append(mosquesInfo.toString().replaceAll("\n", " | ")).append("\",")
+                            .append("\"lat\": ").append(mosques.optDouble("lat")).append(",")
+                            .append("\"lng\": ").append(mosques.optDouble("lon"))
+                            .append("}");
+
+
+                    HBox mosqueHBox = new HBox(10); // Espacement de 10 pixels entre les éléments
+                    mosqueHBox.setAlignment(Pos.CENTER_LEFT); // Alignement centré gauche
+                    mosqueHBox.setStyle("-fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-color: #f9f9f9;");
+
+                    // Label pour afficher les informations de l'hôtel
+                    Label mosqueLabel = new Label(name + "\n" + mosquesInfo.toString());
+                    mosqueLabel.setWrapText(true); // Permet le retour à la ligne automatique
+                    mosqueLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-max-width: 400px;");
+                    mosqueLabel.setMinHeight(200);
+
+                    // Boutons "Enregistrer" et "Itinéraire"
+                    Button saveButton = new Button("Enregistrer");
+                    saveButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-padding: 5 10;");
+                    saveButton.setOnAction(e -> {
+                        System.out.println("Hôtel enregistré : " + name);
+                        // Action d'enregistrement à définir
+                    });
+
+                    Button routeButton = new Button("Itinéraire");
+                    routeButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-padding: 5 10;");
+                    routeButton.setOnAction(e -> {
+                        System.out.println("Afficher l'itinéraire vers : " + name);
+                        // Action pour afficher l'itinéraire
+                    });
+
+                    // Ajouter un Spacer entre les informations et les boutons
+                    Region spacer = new Region();
+                    HBox.setHgrow(spacer, Priority.ALWAYS);
+
+                    // Créer une VBox pour ajouter les boutons
+                    VBox buttonsBox = new VBox(10, saveButton, routeButton);
+                    buttonsBox.setAlignment(Pos.TOP_RIGHT);
+
+                    // Ajouter les éléments dans le HBox
+                    mosqueHBox.getChildren().addAll(mosqueLabel, spacer, buttonsBox);
+
+                    // Ajouter l'HBox au VBox défini dans le FXML (restaurantVBox)
+                    if (mosqueVBox != null) {
+                        mosqueVBox.getChildren().add(mosqueHBox);
+                    }
+                }
+
+                mosqueLocations.append("]");
+
+                // Ajouter les marqueurs sur la carte via WebView
+                if (webView != null && webView.getEngine() != null) {
+                    webView.getEngine().executeScript("updateMapWithMosques(" + mosqueLocations.toString() + ");");
+                    System.out.println("Mosques envoyés à la carte.");
+                } else {
+                    System.out.println("WebView ou son moteur non initialisé.");
+                }
+
+            } else {
+                System.out.println("Aucun hôtel trouvé dans la zone.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 
 
