@@ -37,10 +37,16 @@
 
 // Fonction pour dessiner une route sur la carte
     function drawRoute(routeCoordinates) {
-        // Supprimer les couches de route existantes
-        const existingLayers = map.getLayers().getArray().filter(layer => layer.get('name') === 'routeLayer');
-        existingLayers.forEach(layer => map.removeLayer(layer));
+    if (!routeCoordinates || routeCoordinates.length === 0) {
+        console.error("Aucune donnée d'itinéraire reçue ou itinéraire vide.");
+        return;
+    }
 
+    // Supprimer les couches de route existantes
+    const existingLayers = map.getLayers().getArray().filter(layer => layer.get('name') === 'routeLayer');
+    existingLayers.forEach(layer => map.removeLayer(layer));
+
+    try {
         // Convertir les coordonnées pour OpenLayers
         var coordinates = routeCoordinates.map(coord => ol.proj.fromLonLat([coord[0], coord[1]]));
 
@@ -67,7 +73,7 @@
         });
 
         // Attribuer un nom pour pouvoir supprimer cette couche plus tard
-        routeLayer.set('name', 'routeLayer');
+        routeLayer. Set('name', 'routeLayer');
 
         // Ajouter la couche à la carte
         map.addLayer(routeLayer);
@@ -75,7 +81,15 @@
         // Recentrer la vue sur la route
         var routeExtent = routeLine.getExtent();
         map.getView().fit(routeExtent, { padding: [50, 50, 50, 50], maxZoom: 14 });
+
+        console. Log("Itinéraire dessiné avec succès !");
+    } catch (error) {
+        console.error("Erreur lors du tracé de l'itinéraire : ", error);
     }
+    <button onclick="drawRoute([[-7.1, 31.9], [-6.8, 33.5], [-5.8, 35.7]])">Tester l'itinéraire</button>
+
+}
+
 
 function addMarker(latitude, longitude) {
  // Supprimer les couches de marqueurs existantes

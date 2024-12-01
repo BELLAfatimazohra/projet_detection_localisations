@@ -73,14 +73,14 @@
 
                 <!-- HBox pour les boutons de sélection de mode de transport -->
                 <HBox spacing="10" alignment="CENTER" styleClass="hbox-transport">
-                    <Button fx:id="carModeButton" text="" onAction="#handleCarMode" styleClass="transport-button">
+                    <Button fx:id="carModeButton"  onAction="#handleCarMode" styleClass="transport-button">
                         <graphic>
                             <ImageView fx:id="carIcon" fitWidth="20" fitHeight="20">
                                 <Image url="@../images/car-icon.png"/>
                             </ImageView>
                         </graphic>
                     </Button>
-                    <Button fx:id="bikeModeButton" text="" onAction="#handleBikeMode" styleClass="transport-button">
+                    <Button fx:id="bikeModeButton" onAction="#handleBikeMode" styleClass="transport-button">
                         <graphic>
                             <ImageView fx:id="bikeIcon" fitWidth="20" fitHeight="20">
                                 <Image url="@../images/bike-icon.png"/>
