@@ -12,7 +12,7 @@ public class PolylineEncoder {
      *
      * @param encodedPoints La chaîne encodée représentant les points de l'itinéraire.
      * @param precision      La précision utilisée pour le décodage (généralement 1e5 pour GraphHopper).
-     * @return Une liste de points décodés sous forme de `GHPoint`.
+     * @return Une liste de points décodés sous forme de
      */
     public static List<GHPoint> decodePolyline(String encodedPoints, double precision) {
         List<GHPoint> decodedPoints = new ArrayList<>();
