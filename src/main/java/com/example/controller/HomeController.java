@@ -62,22 +62,10 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
 
-import static com.ibm.icu.text.PluralRules.Operand.e;
-
 public class HomeController {
 
     public ScrollPane transportScrollPane;
     public VBox transportVBox;
-    public Button carModeButton;
-    public ImageView carIcon;
-    public Button bikeModeButton;
-    public ImageView bikeIcon;
-    public Button walkModeButton;
-    public Button closeItineraryButton;
-    public ImageView walkIcon;
-    public ImageView closeIcon;
-    private WebEngine webEngine;  // Déclaration de webEngine comme variable d'instance
-
     @FXML
     private Button itineraryButton;
     @FXML
@@ -119,7 +107,7 @@ public class HomeController {
     private VBox mosqueVBox;
 
     private final GraphHopperService graphHopperService = new GraphHopperService("61ea8b60-57e2-402d-a618-b5e4f7c0a87e");
-
+    private WebEngine webEngine;
 
     public HomeController() {
         this.geolocationService = new GeolocationService();
@@ -282,13 +270,11 @@ public class HomeController {
         }
     }
 
-    @FXML
+
     public void initialize() {
-        // Vérification et initialisation de webEngine
         if (webView == null) {
             System.err.println("webView est null !");
         } else {
-
             // Initialisation de la session Spark
             spark = SparkSession.builder()
                     .appName("SearchLocationApp")
@@ -304,8 +290,6 @@ public class HomeController {
             } else {
                 System.err.println("Le fichier HTML de la carte est introuvable !");
             }
-
-
 
             // Ajouter un écouteur pour vérifier quand la carte est prête
             webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
@@ -1137,43 +1121,39 @@ public class HomeController {
             loadingLabel.setVisible(false);
             return;
         }
+
+
+
         try {
             double[] startCoords =getCoordinates(startCoordinates);
             double[] endCoords =getCoordinates(endCoordinates);
-            assert startCoords != null;
+
+
+
             System.out.println("Coordonnées de départ : " + startCoords[0] + ", " + startCoords[1]);
-            assert endCoords != null;
             System.out.println("Coordonnées d'arrivée : " + endCoords[0] + ", " + endCoords[1]);
             // Appeler GraphHopperService pour récupérer les points de l'itinéraire
             String routeCoordinatesJS = graphHopperService.calculateRoute(startCoords[0], startCoords[1], endCoords[0], endCoords[1], selectedVehicle);
+
+
             // Masquer les indicateurs de chargement
             loadingIndicator.setVisible(false);
             loadingLabel.setVisible(false);
+
             // Réactiver les champs
             startField.setDisable(false);
             endField.setDisable(false);
-            // Vérifiez que webEngine est initialisé avant d'appeler executeScript
-            if (webEngine == null) {
-                System.err.println("WebEngine n'est pas initialisé. Vérifiez l'initialisation.");
-                loadingIndicator.setVisible(false);
-                loadingLabel.setVisible(false);
-                return;
-            }
-            // Vérifier si la carte est prête
-            if (webEngine.getLoadWorker().getState() != Worker.State.SUCCEEDED) {
-                System.err.println("La carte n'est pas encore chargée.");
-                return;
-            }
-            if (webEngine.getLoadWorker().getState() == Worker.State.SUCCEEDED) {
-                webEngine.executeScript("drawRoute(" + routeCoordinatesJS + ");");
-            }else {
-                System.err.println("La carte n'est pas encore prête.");
-            }
+
+            // Injecter les points dans OpenLayers via WebEngine
+            webEngine.executeScript("drawRoute(" + routeCoordinatesJS + ");");
+
         }catch (Exception e) {
             loadingIndicator.setVisible(false);
             loadingLabel.setVisible(false);
             System.out.println("Erreur : " + e.getMessage());
         }
+
+
     }
 
     private double[] getCoordinates(String query) {

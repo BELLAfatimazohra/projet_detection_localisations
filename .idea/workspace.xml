@@ -4,9 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bfd8eb98-c0ee-44e5-8f2d-0e0580b5522a" name="Changes" comment="Merge remote-tracking branch 'origin/master' into fatima&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;src/main/java/com/example/controller/HomeController.java&#10;#&#9;src/main/resources/html/index.html">
+    <list default="true" id="bfd8eb98-c0ee-44e5-8f2d-0e0580b5522a" name="Changes" comment="comm">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/service/GraphHopperService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/service/PolylineEncoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/service/PolylineEncoder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependency-reduced-pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/dependency-reduced-pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/HomeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/controller/HomeController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/css/home.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/css/home.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/fxml/home.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/fxml/home.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/html/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/html/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -45,12 +50,12 @@
     &quot;assignee&quot;: &quot;BELLAfatimazohra&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/BELLAfatimazohra/projet_detection_localisations.git&quot;,
-    &quot;accountId&quot;: &quot;e8b64ec7-294b-439b-94e1-77a8a4d2bbc5&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/BELLAfatimazohra/projet_detection_localisations.git",
+    "accountId": "e8b64ec7-294b-439b-94e1-77a8a4d2bbc5"
   }
-}</component>
+}]]></component>
   <component name="HighlightingSettingsPerFile">
     <setting file="jar://$PROJECT_DIR$/../../../../../Program Files/Java/jdk-21/lib/src.zip!/java.base/java/io/ByteArrayInputStream.java" root0="SKIP_INSPECTION" />
   </component>
@@ -84,7 +89,7 @@
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/Wardia Toufaklim/Desktop/JAVA_PROJECT&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.21839081&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.maven.repository.indices&quot;,
@@ -344,23 +349,7 @@
       <option name="project" value="LOCAL" />
       <updated>1732228809991</updated>
     </task>
-    <task id="LOCAL-00030" summary="Merge remote-tracking branch 'origin/master' into fatima&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;src/main/java/com/example/controller/HomeController.java&#10;#&#9;src/main/resources/html/index.html">
-      <option name="closed" value="true" />
-      <created>1732796336589</created>
-      <option name="number" value="00030" />
-      <option name="presentableId" value="LOCAL-00030" />
-      <option name="project" value="LOCAL" />
-      <updated>1732796336589</updated>
-    </task>
-    <task id="LOCAL-00031" summary="Merge remote-tracking branch 'origin/master' into fatima&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;src/main/java/com/example/controller/HomeController.java&#10;#&#9;src/main/resources/html/index.html">
-      <option name="closed" value="true" />
-      <created>1733078737294</created>
-      <option name="number" value="00031" />
-      <option name="presentableId" value="LOCAL-00031" />
-      <option name="project" value="LOCAL" />
-      <updated>1733078737294</updated>
-    </task>
-    <option name="localTasksCounter" value="32" />
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -399,7 +388,6 @@
     <MESSAGE value="suivi" />
     <MESSAGE value="buttons" />
     <MESSAGE value="comm" />
-    <MESSAGE value="Merge remote-tracking branch 'origin/master' into fatima&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;src/main/java/com/example/controller/HomeController.java&#10;#&#9;src/main/resources/html/index.html" />
-    <option name="LAST_COMMIT_MESSAGE" value="Merge remote-tracking branch 'origin/master' into fatima&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;src/main/java/com/example/controller/HomeController.java&#10;#&#9;src/main/resources/html/index.html" />
+    <option name="LAST_COMMIT_MESSAGE" value="comm" />
   </component>
 </project>
