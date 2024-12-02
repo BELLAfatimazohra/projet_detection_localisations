@@ -8,15 +8,21 @@ import com.example.model.User;
 import com.example.database.DatabaseConnection;
 import com.example.service.GeolocationService;
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import com.example.service.GraphHopperService;
-
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
@@ -26,8 +32,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
+import javafx.stage.Stage;
 import netscape.javascript.JSObject;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -43,6 +51,7 @@ import org.apache.spark.sql.SparkSession;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -63,9 +72,24 @@ import java.util.*;
 import java.util.List;
 
 public class HomeController {
-
+    @FXML
+    public Label mosqueLabel;
+    @FXML
+    public Button savButton;
+    @FXML
+    public Button routeButton;
+    public HBox mosqueHBox;
+    public ScrollPane enregistreScrollPane;
+    public VBox enregistreVBox;
+    public ScrollPane profileScrollPane;
+    public VBox profileVBox;
+    @FXML
+    private  ScrollPane recherchrecenteScrollPane;
+    @FXML
+    private Button logoutButton;
     public ScrollPane transportScrollPane;
     public VBox transportVBox;
+    public VBox  recentSearchesVBox;
     @FXML
     private Button itineraryButton;
     @FXML
@@ -146,6 +170,18 @@ public class HomeController {
 
         pharmacyScrollPane.setVisible(false);
         pharmacyScrollPane.setManaged(false);
+
+        transportScrollPane.setVisible(false);
+        transportScrollPane.setManaged(false);
+
+        recherchrecenteScrollPane.setVisible(false);
+        recherchrecenteScrollPane.setManaged(false);
+
+        enregistreScrollPane.setVisible(false);
+        enregistreScrollPane.setManaged(false);
+
+        profileScrollPane.setVisible(false);
+        profileScrollPane.setManaged(false);
     }
 
     @FXML
@@ -167,6 +203,16 @@ public class HomeController {
         restaurantScrollPane.setManaged(true);
     }
     @FXML
+    public void handleTransports(ActionEvent actionEvent) {
+        showTransports();  // Cette méthode affiche les hôtels sur la carte
+        hideAllVBoxes();  // Masque tous les VBox et ScrollPanes
+
+        // Rendre visible le ScrollPane du restaurant (et donc son VBox)
+        transportScrollPane.setVisible(true);
+        transportScrollPane.setManaged(true);
+
+    }
+    @FXML
     public void handlePharmacies() {
         showPharmacies();  // Cette méthode affiche les pharmacies sur la carte
         hideAllVBoxes();  // Masque tous les VBox et ScrollPanes
@@ -185,45 +231,55 @@ public class HomeController {
         mosqueScrollPane.setVisible(true);
         mosqueScrollPane.setManaged(true);
     }
+
     private void getLocationNameFromCoordinates(double latitude, double longitude) {
-        // Utilisation de l'API Nominatim sans clé API
-        String apiUrl = String.format("https://nominatim.openstreetmap.org/reverse?lat=%f&lon=%f&format=json&addressdetails=1", latitude, longitude);
+        try {
+            // Encodage des paramètres pour éviter des problèmes avec les caractères spéciaux
+            String lat = URLEncoder.encode(String.valueOf(longitude), StandardCharsets.UTF_8);  // Inverser ici
+            String lon = URLEncoder.encode(String.valueOf(latitude), StandardCharsets.UTF_8);   // Inverser ici
 
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(apiUrl))
-                .build();
+            // Utilisation de l'API Nominatim sans clé API
+            String apiUrl = String.format("https://nominatim.openstreetmap.org/reverse?lat=%s&lon=%s&format=json&addressdetails=1", lat, lon);
 
-        client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(HttpResponse::body)
-                .thenAccept(response -> {
-                    try {
-                        System.out.println("Réponse JSON brute : " + response); // Afficher la réponse brute pour le débogage
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(apiUrl))
+                    .build();
 
-                        // Essayer d'analyser la réponse JSON
-                        JSONObject json = new JSONObject(response);
+            client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .thenApply(HttpResponse::body)
+                    .thenAccept(response -> {
+                        try {
+                            System.out.println("Réponse JSON brute : " + response); // Afficher la réponse brute pour le débogage
 
-                        // Utiliser optString pour éviter l'exception si la clé "display_name" est absente
-                        String locationName = json.optString("display_name", "Nom introuvable");
+                            // Essayer d'analyser la réponse JSON
+                            JSONObject json = new JSONObject(response);
 
-                        if ("Nom introuvable".equals(locationName)) {
-                            System.err.println("Erreur : Nom de localisation introuvable.");
-                        } else {
-                            System.out.println("Nom de localisation : " + locationName);
+                            // Extraire le nom de la ville depuis l'objet "address"
+                            String city = json.optJSONObject("address").optString("city", "Ville introuvable");
 
-                            // Appeler la fonction Wikipedia en lui passant le nom de la localisation
-                            getWikipediaDetails(locationName);
+                            if ("Ville introuvable".equals(city)) {
+                                System.err.println("Erreur : Ville introuvable.");
+                            } else {
+                                System.out.println("Ville : " + city);
+
+                                // Appeler la fonction Wikipedia avec le nom de la ville
+                                getWikipediaDetails(city);
+                            }
+
+                        } catch (JSONException e) {
+                            System.err.println("Erreur lors de l'analyse du JSON : " + e.getMessage());
                         }
-
-                    } catch (JSONException e) {
-                        System.err.println("Erreur lors de l'analyse du JSON : " + e.getMessage());
-                    }
-                })
-                .exceptionally(e -> {
-                    System.err.println("Erreur lors de la requête HTTP : " + e.getMessage());
-                    return null;
-                });
+                    })
+                    .exceptionally(e -> {
+                        System.err.println("Erreur lors de la requête HTTP : " + e.getMessage());
+                        return null;
+                    });
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la construction de l'URL : " + e.getMessage());
+        }
     }
+
 
     public void handleGetLocation() {
         // Récupérer les coordonnées
@@ -310,6 +366,206 @@ public class HomeController {
         }
     }
 
+
+
+    void showTransports() {
+        System.out.println("Affichage des Transports.");
+
+        if (webView != null && webView.getEngine() != null) {
+            Object markersArrayCheck = webView.getEngine().executeScript("Array.isArray(markersArray)");
+
+            if (markersArrayCheck != null && (Boolean) markersArrayCheck) {
+                Boolean isMarkersArrayEmpty = (Boolean) webView.getEngine().executeScript("markersArray.length === 0");
+
+                if (isMarkersArrayEmpty) {
+                    System.out.println("Tableau de marqueurs vide, géolocalisation...");
+                    GeolocationService geolocationService = new GeolocationService();
+                    double[] coordinates = geolocationService.getLocationCoordinates();
+                    double latitude = coordinates[0];
+                    double longitude = coordinates[1];
+
+                    System.out.println("Coordonnées de géolocalisation : Latitude = " + latitude + ", Longitude = " + longitude);
+                    fetchTransportsAroundLocation(latitude, longitude);
+                } else {
+                    System.out.println("Tableau de marqueurs non vide, utilisation des coordonnées du premier marqueur...");
+
+                    String script = "markersArray[0];";
+                    Object firstMarkerCoordinates = webView.getEngine().executeScript(script);
+
+                    if (firstMarkerCoordinates != null) {
+                        System.out.println("Coordonnées du premier marqueur récupérées : " + firstMarkerCoordinates);
+
+                        // Vérifier si c'est un JSObject
+                        if (firstMarkerCoordinates instanceof JSObject) {
+                            JSObject marker = (JSObject) firstMarkerCoordinates;
+
+                            // Extraire les coordonnées (latitude et longitude)
+                            Object latitudeObj = marker.getMember("lat");  // supposons que "lat" est le nom de la latitude
+                            Object longitudeObj = marker.getMember("lng"); // supposons que "lng" est le nom de la longitude
+
+                            if (latitudeObj instanceof Double && longitudeObj instanceof Double) {
+                                double latitude = (Double) latitudeObj;
+                                double longitude = (Double) longitudeObj;
+
+                                System.out.println("Coordonnées du premier marqueur : Latitude = " + latitude + ", Longitude = " + longitude);
+
+                                fetchTransportsAroundLocation( longitude,latitude);
+                            } else {
+                                System.out.println("Les coordonnées du marqueur ne sont pas dans le format attendu.");
+                            }
+                        } else {
+                            System.out.println("Les coordonnées du premier marqueur ne sont pas dans un objet valide.");
+                        }
+                    } else {
+                        System.out.println("Erreur lors de la récupération des coordonnées du premier marqueur.");
+                    }
+                }
+            } else {
+                System.out.println("markersArray n'est pas un tableau valide.");
+            }
+        } else {
+            System.out.println("WebView ou son moteur non initialisé.");
+        }
+    }
+
+    private void fetchTransportsAroundLocation(double latitude, double longitude) {
+        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];(node(around:20000," + longitude + "," + latitude + ")[amenity=taxi];node(around:20000," + latitude + "," + longitude + ")[railway=tram_stop];node(around:20000," + latitude + "," + longitude + ")[highway=bus_stop];);out;";
+
+        try {
+            URL url = new URL(overpassUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+
+            JSONObject jsonResponse = new JSONObject(response.toString());
+            JSONArray elements = jsonResponse.getJSONArray("elements");
+
+            if (elements.length() > 0) {
+                System.out.println("Transports trouvés :");
+
+                StringBuilder transportsLocations = new StringBuilder("[");
+
+                if (transportVBox != null) {
+                    transportVBox.getChildren().clear();
+                }
+
+                for (int i = 0; i < elements.length(); i++) {
+                    JSONObject transport = elements.getJSONObject(i);
+
+                    JSONObject tags = transport.optJSONObject("tags");
+                    String name = tags != null ? tags.optString("name", "Nom inconnu") : "Nom inconnu";
+
+                    if (name.equals("Nom inconnu")) {
+                        continue;
+                    }
+
+                    StringBuilder transportInfo = new StringBuilder();
+                    if (tags != null) {
+                        for (String key : tags.keySet()) {
+                            if (!key.equals("amenity") && !key.equals("name")) {
+                                String value = tags.optString(key, "Non disponible");
+                                transportInfo.append(key).append(": ").append(value).append("\n");
+                            }
+                        }
+                    }
+
+                    if (i > 0) {
+                        transportsLocations.append(",");
+                    }
+                    transportsLocations.append("{")
+                            .append("\"name\": \"").append(name).append("\",")
+                            .append("\"info\": \"").append(transportInfo.toString().replaceAll("\n", " | ")).append("\",")
+                            .append("\"lat\": ").append(transport.optDouble("lat")).append(",")
+                            .append("\"lng\": ").append(transport.optDouble("lon"))
+                            .append("}");
+
+                    HBox transportHBox = new HBox(8);
+                    transportHBox.setAlignment(Pos.CENTER_LEFT);
+                    transportHBox.setStyle("-fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-color: #f9f9f9;");
+
+                    Label transportLabel = new Label(name + "\n" + transportInfo.toString());
+                    transportLabel.setWrapText(true);
+                    transportLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-max-width: 500px; -fx-text-fill: #333;");
+
+                    Region spacer = new Region();
+                    HBox.setHgrow(spacer, Priority.ALWAYS);
+
+                    // Bouton "Enregistrer" avec style circulaire
+                    Button saveButton = new Button();
+                    Image saveImage = new Image(getClass().getResource("/images/save-icon.png").toString());
+                    ImageView saveImageView = new ImageView(saveImage);
+                    saveImageView.setFitWidth(20);
+                    saveImageView.setFitHeight(20);
+                    saveButton.setGraphic(saveImageView);
+                    saveButton.setStyle(
+                            "-fx-background-color: #f9f9f9; " +
+                                    "-fx-background-radius: 50%; " +
+                                    "-fx-border-color: #ccc; " +
+                                    "-fx-border-width: 1px; " +
+                                    "-fx-border-radius: 50%; " +
+                                    "-fx-cursor: hand;"
+                    );
+                    saveButton.setOnAction(event -> {
+                        System.out.println("Bouton Enregistrer cliqué pour : " + name);
+                        // Logique d'enregistrement ici
+                    });
+
+                    // Bouton "Itinéraire" avec style circulaire
+                    Button routeButton = new Button();
+                    Image routeImage = new Image(getClass().getResource("/images/itinerary-icon.png").toString());
+                    ImageView routeImageView = new ImageView(routeImage);
+                    routeImageView.setFitWidth(20);
+                    routeImageView.setFitHeight(20);
+                    routeButton.setGraphic(routeImageView);
+                    routeButton.setStyle(
+                            "-fx-background-color: #f9f9f9; " +
+                                    "-fx-background-radius: 50%; " +
+                                    "-fx-border-color: #ccc; " +
+                                    "-fx-border-width: 1px; " +
+                                    "-fx-border-radius: 50%; " +
+                                    "-fx-cursor: hand;"
+                    );
+                    routeButton.setOnAction(event -> {
+                        System.out.println("Bouton Itinéraire cliqué pour : " + name);
+                        // Logique de calcul d'itinéraire ici
+                    });
+
+                    VBox buttonsBox = new VBox(10, saveButton, routeButton);
+                    buttonsBox.setAlignment(Pos.TOP_RIGHT);
+
+                    transportHBox.getChildren().addAll(transportLabel, spacer, buttonsBox);
+
+                    if (transportVBox != null) {
+                        transportVBox.getChildren().add(transportHBox);
+                    }
+                }
+
+                transportsLocations.append("]");
+
+                if (webView != null && webView.getEngine() != null) {
+                    webView.getEngine().executeScript("updateMapWithTransports(" + transportsLocations.toString() + ");");
+                    System.out.println("Transports envoyés à la carte.");
+                } else {
+                    System.out.println("WebView ou son moteur non initialisé.");
+                }
+            } else {
+                System.out.println("Aucun transport trouvé dans la zone.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
     void showHotels() {
         System.out.println("Affichage des hôtels.");
 
@@ -374,7 +630,6 @@ public class HomeController {
         String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:5000," + longitude + "," + latitude + ")[tourism=hotel];out;";
 
         try {
-            // Connexion à l'API Overpass
             URL url = new URL(overpassUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
@@ -387,113 +642,131 @@ public class HomeController {
             }
             reader.close();
 
-            // Afficher la réponse brute pour vérifier les résultats
-            System.out.println("Réponse brute de Overpass : " + response.toString());
-
-            // Analyser la réponse JSON
             JSONObject jsonResponse = new JSONObject(response.toString());
             JSONArray elements = jsonResponse.getJSONArray("elements");
 
             if (elements.length() > 0) {
-                System.out.println("Hôtels trouvés :");
+                System.out.println("Hotels trouvées :");
 
-                // Créer une liste pour les hôtels à envoyer au JavaScript
-                StringBuilder hotelLocations = new StringBuilder("[");
+                StringBuilder hotelsLocations = new StringBuilder("[");
 
-                // Vider le VBox avant d'ajouter de nouveaux hôtels
                 if (restaurantVBox != null) {
-                    restaurantVBox.getChildren().clear(); // Vider le VBox
+                    restaurantVBox.getChildren().clear();
                 }
 
-                // Parcourir les résultats des hôtels
                 for (int i = 0; i < elements.length(); i++) {
                     JSONObject hotel = elements.getJSONObject(i);
 
-                    // Extraire le nom de l'hôtel et les tags
                     JSONObject tags = hotel.optJSONObject("tags");
                     String name = tags != null ? tags.optString("name", "Nom inconnu") : "Nom inconnu";
-                    String website = tags != null ? tags.optString("website", null) : null;
 
-                    // Construire une chaîne pour afficher toutes les informations utiles
+                    if (name.equals("Nom inconnu")) {
+                        continue;
+                    }
+
                     StringBuilder hotelInfo = new StringBuilder();
                     if (tags != null) {
                         for (String key : tags.keySet()) {
-                            String value = tags.optString(key, "Non disponible");
-                            hotelInfo.append(key.replace("addr:", "")).append(": ").append(value).append("\n");
+                            if (!key.equals("amenity") && !key.equals("name")) {
+                                String value = tags.optString(key, "Non disponible");
+                                hotelInfo.append(key).append(": ").append(value).append("\n");
+                            }
                         }
                     }
 
-                    // Ajouter les données de l'hôtel à la liste au format JSON
                     if (i > 0) {
-                        hotelLocations.append(",");
+                        hotelsLocations.append(",");
                     }
-                    hotelLocations.append("{")
+                    hotelsLocations.append("{")
                             .append("\"name\": \"").append(name).append("\",")
                             .append("\"info\": \"").append(hotelInfo.toString().replaceAll("\n", " | ")).append("\",")
                             .append("\"lat\": ").append(hotel.optDouble("lat")).append(",")
                             .append("\"lng\": ").append(hotel.optDouble("lon"))
                             .append("}");
 
-                    // Créer un HBox pour l'hôtel
-                    HBox hotelHBox = new HBox(10); // Espacement de 10 pixels entre les éléments
-                    hotelHBox.setAlignment(Pos.CENTER_LEFT); // Alignement centré gauche
+                    // Créer un HBox pour afficher les informations
+                    HBox hotelHBox = new HBox(8);
+                    hotelHBox.setAlignment(Pos.TOP_LEFT);
                     hotelHBox.setStyle("-fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-color: #f9f9f9;");
 
-                    // Label pour afficher les informations de l'hôtel
-                    Label hotelLabel = new Label(name + "\n" + hotelInfo.toString());
-                    hotelLabel.setWrapText(true); // Permet le retour à la ligne automatique
-                    hotelLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-max-width: 400px;");
-                    hotelLabel.setMinHeight(200);
+                    // Ajoutez toutes les informations sous forme de texte
+                    Text hotelText = new Text("Nom : " + name + "\nInformations : \n" + hotelInfo.toString());
+                    hotelText.setStyle("-fx-font-size: 14px; -fx-text-fill: #333;");
+                    hotelText.setWrappingWidth(400); // Limitez la largeur pour éviter des débordements
 
-                    // Boutons "Enregistrer" et "Itinéraire"
-                    Button saveButton = new Button("Enregistrer");
-                    saveButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-padding: 5 10;");
-                    saveButton.setOnAction(e -> {
-                        System.out.println("Hôtel enregistré : " + name);
-                        // Action d'enregistrement à définir
+                    // Créer un HBox pour les boutons et les aligner en bas
+                    VBox buttonsBox = new VBox(10);
+                    buttonsBox.setAlignment(Pos.TOP_LEFT); // Les boutons seront à gauche sous le texte
+
+                    // Bouton "Enregistrer"
+                    Button saveButton = new Button();
+                    Image saveImage = new Image(getClass().getResource("/images/save-icon.png").toString());
+                    ImageView saveImageView = new ImageView(saveImage);
+                    saveImageView.setFitWidth(20);
+                    saveImageView.setFitHeight(20);
+                    saveButton.setGraphic(saveImageView);
+                    saveButton.setStyle(
+                            "-fx-background-color: #f9f9f9; " +
+                                    "-fx-background-radius: 50%; " +
+                                    "-fx-border-color: #ccc; " +
+                                    "-fx-border-width: 1px; " +
+                                    "-fx-border-radius: 50%; " +
+                                    "-fx-cursor: hand;"
+                    );
+                    saveButton.setOnAction(event -> {
+                        System.out.println("Bouton Enregistrer cliqué pour : " + name);
+                        // Logique d'enregistrement ici
                     });
 
-                    Button routeButton = new Button("Itinéraire");
-                    routeButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-padding: 5 10;");
-                    routeButton.setOnAction(e -> {
-                        System.out.println("Afficher l'itinéraire vers : " + name);
-                        // Action pour afficher l'itinéraire
+                    // Bouton "Itinéraire"
+                    Button routeButton = new Button();
+                    Image routeImage = new Image(getClass().getResource("/images/itinerary-icon.png").toString());
+                    ImageView routeImageView = new ImageView(routeImage);
+                    routeImageView.setFitWidth(20);
+                    routeImageView.setFitHeight(20);
+                    routeButton.setGraphic(routeImageView);
+                    routeButton.setStyle(
+                            "-fx-background-color: #f9f9f9; " +
+                                    "-fx-background-radius: 50%; " +
+                                    "-fx-border-color: #ccc; " +
+                                    "-fx-border-width: 1px; " +
+                                    "-fx-border-radius: 50%; " +
+                                    "-fx-cursor: hand;"
+                    );
+                    routeButton.setOnAction(event -> {
+                        System.out.println("Bouton Itinéraire cliqué pour : " + name);
+                        // Logique de calcul d'itinéraire ici
                     });
 
-                    // Ajouter un Spacer entre les informations et les boutons
-                    Region spacer = new Region();
-                    HBox.setHgrow(spacer, Priority.ALWAYS);
+                    // Ajoutez les boutons à la VBox
+                    buttonsBox.getChildren().addAll(saveButton, routeButton);
 
-                    // Créer une VBox pour ajouter les boutons
-                    VBox buttonsBox = new VBox(10, saveButton, routeButton);
-                    buttonsBox.setAlignment(Pos.TOP_RIGHT);
+                    // Ajoutez le texte et les boutons dans le HBox
+                    hotelHBox.getChildren().addAll(hotelText, buttonsBox);
 
-                    // Ajouter les éléments dans le HBox
-                    hotelHBox.getChildren().addAll(hotelLabel, spacer, buttonsBox);
-
-                    // Ajouter l'HBox au VBox défini dans le FXML (restaurantVBox)
+                    // Ajoutez le HBox à la VBox principale
                     if (restaurantVBox != null) {
                         restaurantVBox.getChildren().add(hotelHBox);
                     }
                 }
 
-                hotelLocations.append("]");
+                hotelsLocations.append("]");
 
-                // Ajouter les marqueurs sur la carte via WebView
                 if (webView != null && webView.getEngine() != null) {
-                    webView.getEngine().executeScript("updateMapWithRestaurants(" + hotelLocations.toString() + ");");
-                    System.out.println("Hôtels envoyés à la carte.");
+                    webView.getEngine().executeScript("updateMapWithRestaurants(" + hotelsLocations.toString() + ");");
+                    System.out.println("Pharmacies envoyées à la carte.");
                 } else {
                     System.out.println("WebView ou son moteur non initialisé.");
                 }
-
             } else {
-                System.out.println("Aucun hôtel trouvé dans la zone.");
+                System.out.println("Aucune pharmacie trouvée dans la zone.");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+
 
 
 
@@ -562,7 +835,6 @@ public class HomeController {
         String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:5000," + longitude + "," + latitude + ")[amenity=pharmacy];out;";
 
         try {
-            // Connexion à l'API Overpass
             URL url = new URL(overpassUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
@@ -575,115 +847,129 @@ public class HomeController {
             }
             reader.close();
 
-            // Afficher la réponse brute pour vérifier les résultats
-            System.out.println("Réponse brute de Overpass : " + response.toString());
-
-            // Analyser la réponse JSON
             JSONObject jsonResponse = new JSONObject(response.toString());
             JSONArray elements = jsonResponse.getJSONArray("elements");
 
             if (elements.length() > 0) {
-                System.out.println("pharmacies trouvés :");
+                System.out.println("Pharmacies trouvées :");
 
-                // Créer une liste pour les hôtels à envoyer au JavaScript
-                StringBuilder  pharmacyLocations = new StringBuilder("[");
+                StringBuilder pharmaciesLocations = new StringBuilder("[");
 
-                // Vider le VBox avant d'ajouter de nouveaux hôtels
                 if (pharmacyVBox != null) {
-                    pharmacyVBox.getChildren().clear(); // Vider le VBox
+                    pharmacyVBox.getChildren().clear();
                 }
 
                 for (int i = 0; i < elements.length(); i++) {
-                    JSONObject pharmacies = elements.getJSONObject(i);
+                    JSONObject pharmacy = elements.getJSONObject(i);
 
-                    // Extraire le nom de l'hôtel et les tags
-                    JSONObject tags = pharmacies.optJSONObject("tags");
+                    JSONObject tags = pharmacy.optJSONObject("tags");
                     String name = tags != null ? tags.optString("name", "Nom inconnu") : "Nom inconnu";
-                    String website = tags != null ? tags.optString("website", null) : null;
 
-                    // Construire une chaîne pour afficher toutes les informations utiles
-                    StringBuilder pharmaciesInfo = new StringBuilder();
+                    if (name.equals("Nom inconnu")) {
+                        continue;
+                    }
+
+                    StringBuilder pharmacyInfo = new StringBuilder();
                     if (tags != null) {
                         for (String key : tags.keySet()) {
-                            String value = tags.optString(key, "Non disponible");
-                           pharmaciesInfo.append(key.replace("addr:", "")).append(": ").append(value).append("\n");
+                            if (!key.equals("amenity") && !key.equals("name")) {
+                                String value = tags.optString(key, "Non disponible");
+                                pharmacyInfo.append(key).append(": ").append(value).append("\n");
+                            }
                         }
                     }
 
-                    // Ajouter les données de l'hôtel à la liste au format JSON
                     if (i > 0) {
-                       pharmacyLocations.append(",");
+                        pharmaciesLocations.append(",");
                     }
-                    pharmacyLocations.append("{")
+                    pharmaciesLocations.append("{")
                             .append("\"name\": \"").append(name).append("\",")
-                            .append("\"info\": \"").append(pharmaciesInfo.toString().replaceAll("\n", " | ")).append("\",")
-                            .append("\"lat\": ").append(pharmacies.optDouble("lat")).append(",")
-                            .append("\"lng\": ").append(pharmacies.optDouble("lon"))
+                            .append("\"info\": \"").append(pharmacyInfo.toString().replaceAll("\n", " | ")).append("\",")
+                            .append("\"lat\": ").append(pharmacy.optDouble("lat")).append(",")
+                            .append("\"lng\": ").append(pharmacy.optDouble("lon"))
                             .append("}");
 
+                    // Créer un HBox pour afficher les informations
+                    HBox pharmacyHBox = new HBox(8);
+                    pharmacyHBox.setAlignment(Pos.TOP_LEFT);
+                    pharmacyHBox.setStyle("-fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-color: #f9f9f9;");
 
-                    HBox pharmacyHBox = new HBox(10); // Espacement de 10 pixels entre les éléments
-                    pharmacyHBox.setAlignment(Pos.CENTER_LEFT); // Alignement centré gauche
-                   pharmacyHBox.setStyle("-fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-color: #f9f9f9;");
+                    // Ajoutez toutes les informations sous forme de texte
+                    Text pharmacyText = new Text("Nom : " + name + "\nInformations : \n" + pharmacyInfo.toString());
+                    pharmacyText.setStyle("-fx-font-size: 14px; -fx-text-fill: #333;");
+                    pharmacyText.setWrappingWidth(400); // Limitez la largeur pour éviter des débordements
 
-                    // Label pour afficher les informations de l'hôtel
-                    Label pharmacyLabel = new Label(name + "\n" + pharmaciesInfo.toString());
-                    pharmacyLabel.setWrapText(true); // Permet le retour à la ligne automatique
-                    pharmacyLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-max-width: 400px;");
-                    pharmacyLabel.setMinHeight(200);
+                    // Créer un HBox pour les boutons et les aligner en bas
+                    VBox buttonsBox = new VBox(10);
+                    buttonsBox.setAlignment(Pos.TOP_LEFT); // Les boutons seront à gauche sous le texte
 
-                    // Boutons "Enregistrer" et "Itinéraire"
-                    Button saveButton = new Button("Enregistrer");
-                    saveButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-padding: 5 10;");
-                    saveButton.setOnAction(e -> {
-                        System.out.println("Hôtel enregistré : " + name);
-                        // Action d'enregistrement à définir
+                    // Bouton "Enregistrer"
+                    Button saveButton = new Button();
+                    Image saveImage = new Image(getClass().getResource("/images/save-icon.png").toString());
+                    ImageView saveImageView = new ImageView(saveImage);
+                    saveImageView.setFitWidth(20);
+                    saveImageView.setFitHeight(20);
+                    saveButton.setGraphic(saveImageView);
+                    saveButton.setStyle(
+                            "-fx-background-color: #f9f9f9; " +
+                                    "-fx-background-radius: 50%; " +
+                                    "-fx-border-color: #ccc; " +
+                                    "-fx-border-width: 1px; " +
+                                    "-fx-border-radius: 50%; " +
+                                    "-fx-cursor: hand;"
+                    );
+                    saveButton.setOnAction(event -> {
+                        System.out.println("Bouton Enregistrer cliqué pour : " + name);
+                        // Logique d'enregistrement ici
                     });
 
-                    Button routeButton = new Button("Itinéraire");
-                    routeButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-padding: 5 10;");
-                    routeButton.setOnAction(e -> {
-                        System.out.println("Afficher l'itinéraire vers : " + name);
-                        // Action pour afficher l'itinéraire
+                    // Bouton "Itinéraire"
+                    Button routeButton = new Button();
+                    Image routeImage = new Image(getClass().getResource("/images/itinerary-icon.png").toString());
+                    ImageView routeImageView = new ImageView(routeImage);
+                    routeImageView.setFitWidth(20);
+                    routeImageView.setFitHeight(20);
+                    routeButton.setGraphic(routeImageView);
+                    routeButton.setStyle(
+                            "-fx-background-color: #f9f9f9; " +
+                                    "-fx-background-radius: 50%; " +
+                                    "-fx-border-color: #ccc; " +
+                                    "-fx-border-width: 1px; " +
+                                    "-fx-border-radius: 50%; " +
+                                    "-fx-cursor: hand;"
+                    );
+                    routeButton.setOnAction(event -> {
+                        System.out.println("Bouton Itinéraire cliqué pour : " + name);
+                        // Logique de calcul d'itinéraire ici
                     });
 
-                    // Ajouter un Spacer entre les informations et les boutons
-                    Region spacer = new Region();
-                    HBox.setHgrow(spacer, Priority.ALWAYS);
+                    // Ajoutez les boutons à la VBox
+                    buttonsBox.getChildren().addAll(saveButton, routeButton);
 
-                    // Créer une VBox pour ajouter les boutons
-                    VBox buttonsBox = new VBox(10, saveButton, routeButton);
-                    buttonsBox.setAlignment(Pos.TOP_RIGHT);
+                    // Ajoutez le texte et les boutons dans le HBox
+                    pharmacyHBox.getChildren().addAll(pharmacyText, buttonsBox);
 
-                    // Ajouter les éléments dans le HBox
-                   pharmacyHBox.getChildren().addAll(pharmacyLabel, spacer, buttonsBox);
-
-                    // Ajouter l'HBox au VBox défini dans le FXML (restaurantVBox)
+                    // Ajoutez le HBox à la VBox principale
                     if (pharmacyVBox != null) {
                         pharmacyVBox.getChildren().add(pharmacyHBox);
                     }
                 }
 
-                pharmacyLocations.append("]");
+                pharmaciesLocations.append("]");
 
-                // Ajouter les marqueurs sur la carte via WebView
                 if (webView != null && webView.getEngine() != null) {
-                    webView.getEngine().executeScript("updateMapWithPharmacies(" + pharmacyLocations.toString() + ");");
-                    System.out.println("Hôtels envoyés à la carte.");
+                    webView.getEngine().executeScript("updateMapWithPharmacies(" + pharmaciesLocations.toString() + ");");
+                    System.out.println("Pharmacies envoyées à la carte.");
                 } else {
                     System.out.println("WebView ou son moteur non initialisé.");
                 }
-
             } else {
-                System.out.println("Aucun hôtel trouvé dans la zone.");
+                System.out.println("Aucune pharmacie trouvée dans la zone.");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-
-
 
 
     void showMosques() {
@@ -747,10 +1033,8 @@ public class HomeController {
     }
     private void fetchmosquesAroundLocation(double latitude, double longitude) {
         // Réduire le rayon pour une recherche plus précise (5 km)
-        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:5000," + longitude + "," + latitude + ")[amenity=place_of_worship][religion=islam];out;";
-
+        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:5000," + longitude + "," + latitude + ")[amenity=place_of_worship];out;";
         try {
-            // Connexion à l'API Overpass
             URL url = new URL(overpassUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
@@ -763,123 +1047,129 @@ public class HomeController {
             }
             reader.close();
 
-            // Afficher la réponse brute pour vérifier les résultats
-            System.out.println("Réponse brute de Overpass : " + response.toString());
-
-            // Analyser la réponse JSON
             JSONObject jsonResponse = new JSONObject(response.toString());
             JSONArray elements = jsonResponse.getJSONArray("elements");
 
             if (elements.length() > 0) {
-                System.out.println("mosques trouvés :");
+                System.out.println("Mosques trouvées :");
 
-                // Créer une liste pour les hôtels à envoyer au JavaScript
-                StringBuilder  mosqueLocations = new StringBuilder("[");
+                StringBuilder mosquesLocations = new StringBuilder("[");
 
-                // Vider le VBox avant d'ajouter de nouveaux hôtels
                 if (mosqueVBox != null) {
-                    mosqueVBox.getChildren().clear(); // Vider le VBox
+                    mosqueVBox.getChildren().clear();
                 }
 
                 for (int i = 0; i < elements.length(); i++) {
-                    JSONObject mosques= elements.getJSONObject(i);
+                    JSONObject mosque = elements.getJSONObject(i);
 
-                    // Extraire le nom de l'hôtel et les tags
-                    JSONObject tags = mosques.optJSONObject("tags");
+                    JSONObject tags = mosque.optJSONObject("tags");
                     String name = tags != null ? tags.optString("name", "Nom inconnu") : "Nom inconnu";
-                    String website = tags != null ? tags.optString("website", null) : null;
 
-                    // Construire une chaîne pour afficher toutes les informations utiles
-                    StringBuilder mosquesInfo = new StringBuilder();
+                    if (name.equals("Nom inconnu")) {
+                        continue;
+                    }
+
+                    StringBuilder mosqueInfo = new StringBuilder();
                     if (tags != null) {
                         for (String key : tags.keySet()) {
-                            String value = tags.optString(key, "Non disponible");
-                            mosquesInfo.append(key.replace("addr:", "")).append(": ").append(value).append("\n");
+                            if (!key.equals("amenity") && !key.equals("name")) {
+                                String value = tags.optString(key, "Non disponible");
+                                mosqueInfo.append(key).append(": ").append(value).append("\n");
+                            }
                         }
                     }
 
-                    // Ajouter les données de l'hôtel à la liste au format JSON
                     if (i > 0) {
-                        mosqueLocations.append(",");
+                        mosquesLocations.append(",");
                     }
-                    mosqueLocations.append("{")
+                    mosquesLocations.append("{")
                             .append("\"name\": \"").append(name).append("\",")
-                            .append("\"info\": \"").append(mosquesInfo.toString().replaceAll("\n", " | ")).append("\",")
-                            .append("\"lat\": ").append(mosques.optDouble("lat")).append(",")
-                            .append("\"lng\": ").append(mosques.optDouble("lon"))
+                            .append("\"info\": \"").append(mosqueInfo.toString().replaceAll("\n", " | ")).append("\",")
+                            .append("\"lat\": ").append(mosque.optDouble("lat")).append(",")
+                            .append("\"lng\": ").append(mosque.optDouble("lon"))
                             .append("}");
 
-
-                    HBox mosqueHBox = new HBox(10); // Espacement de 10 pixels entre les éléments
-                    mosqueHBox.setAlignment(Pos.CENTER_LEFT); // Alignement centré gauche
+                    // Créer un HBox pour afficher les informations
+                    HBox mosqueHBox = new HBox(8);
+                    mosqueHBox.setAlignment(Pos.TOP_LEFT);
                     mosqueHBox.setStyle("-fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-color: #f9f9f9;");
 
-                    // Label pour afficher les informations de l'hôtel
-                    Label mosqueLabel = new Label(name + "\n" + mosquesInfo.toString());
-                    mosqueLabel.setWrapText(true); // Permet le retour à la ligne automatique
-                    mosqueLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-max-width: 400px;");
-                    mosqueLabel.setMinHeight(200);
+                    // Ajoutez toutes les informations sous forme de texte
+                    Text mosqueText = new Text("Nom : " + name + "\nInformations : \n" + mosqueInfo.toString());
+                    mosqueText.setStyle("-fx-font-size: 14px; -fx-text-fill: #333;");
+                    mosqueText.setWrappingWidth(400); // Limitez la largeur pour éviter des débordements
 
-                    // Boutons "Enregistrer" et "Itinéraire"
-                    Button saveButton = new Button("Enregistrer");
-                    saveButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-padding: 5 10;");
-                    saveButton.setOnAction(e -> {
-                        System.out.println("Hôtel enregistré : " + name);
-                        // Action d'enregistrement à définir
+                    // Créer un HBox pour les boutons et les aligner en bas
+                    VBox buttonsBox = new VBox(10);
+                    buttonsBox.setAlignment(Pos.TOP_LEFT); // Les boutons seront à gauche sous le texte
+
+                    // Bouton "Enregistrer"
+                    Button saveButton = new Button();
+                    Image saveImage = new Image(getClass().getResource("/images/save-icon.png").toString());
+                    ImageView saveImageView = new ImageView(saveImage);
+                    saveImageView.setFitWidth(20);
+                    saveImageView.setFitHeight(20);
+                    saveButton.setGraphic(saveImageView);
+                    saveButton.setStyle(
+                            "-fx-background-color: #f9f9f9; " +
+                                    "-fx-background-radius: 50%; " +
+                                    "-fx-border-color: #ccc; " +
+                                    "-fx-border-width: 1px; " +
+                                    "-fx-border-radius: 50%; " +
+                                    "-fx-cursor: hand;"
+                    );
+                    saveButton.setOnAction(event -> {
+                        System.out.println("Bouton Enregistrer cliqué pour : " + name);
+                        // Logique d'enregistrement ici
                     });
 
-                    Button routeButton = new Button("Itinéraire");
-                    routeButton.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-padding: 5 10;");
-                    routeButton.setOnAction(e -> {
-                        System.out.println("Afficher l'itinéraire vers : " + name);
-                        // Action pour afficher l'itinéraire
+                    // Bouton "Itinéraire"
+                    Button routeButton = new Button();
+                    Image routeImage = new Image(getClass().getResource("/images/itinerary-icon.png").toString());
+                    ImageView routeImageView = new ImageView(routeImage);
+                    routeImageView.setFitWidth(20);
+                    routeImageView.setFitHeight(20);
+                    routeButton.setGraphic(routeImageView);
+                    routeButton.setStyle(
+                            "-fx-background-color: #f9f9f9; " +
+                                    "-fx-background-radius: 50%; " +
+                                    "-fx-border-color: #ccc; " +
+                                    "-fx-border-width: 1px; " +
+                                    "-fx-border-radius: 50%; " +
+                                    "-fx-cursor: hand;"
+                    );
+                    routeButton.setOnAction(event -> {
+                        System.out.println("Bouton Itinéraire cliqué pour : " + name);
+                        // Logique de calcul d'itinéraire ici
                     });
 
-                    // Ajouter un Spacer entre les informations et les boutons
-                    Region spacer = new Region();
-                    HBox.setHgrow(spacer, Priority.ALWAYS);
+                    // Ajoutez les boutons à la VBox
+                    buttonsBox.getChildren().addAll(saveButton, routeButton);
 
-                    // Créer une VBox pour ajouter les boutons
-                    VBox buttonsBox = new VBox(10, saveButton, routeButton);
-                    buttonsBox.setAlignment(Pos.TOP_RIGHT);
+                    // Ajoutez le texte et les boutons dans le HBox
+                    mosqueHBox.getChildren().addAll(mosqueText, buttonsBox);
 
-                    // Ajouter les éléments dans le HBox
-                    mosqueHBox.getChildren().addAll(mosqueLabel, spacer, buttonsBox);
-
-                    // Ajouter l'HBox au VBox défini dans le FXML (restaurantVBox)
+                    // Ajoutez le HBox à la VBox principale
                     if (mosqueVBox != null) {
                         mosqueVBox.getChildren().add(mosqueHBox);
                     }
                 }
 
-                mosqueLocations.append("]");
+                mosquesLocations.append("]");
 
-                // Ajouter les marqueurs sur la carte via WebView
                 if (webView != null && webView.getEngine() != null) {
-                    webView.getEngine().executeScript("updateMapWithMosques(" + mosqueLocations.toString() + ");");
-                    System.out.println("Mosques envoyés à la carte.");
+                    webView.getEngine().executeScript("updateMapWithMosques(" + mosquesLocations.toString() + ");");
+                    System.out.println("Pharmacies envoyées à la carte.");
                 } else {
                     System.out.println("WebView ou son moteur non initialisé.");
                 }
-
             } else {
-                System.out.println("Aucun hôtel trouvé dans la zone.");
+                System.out.println("Aucune pharmacie trouvée dans la zone.");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1097,16 +1387,6 @@ public class HomeController {
     }
 
 
-
-
-    /*
-    private void handleItinerary() {
-        // Logique pour afficher ou calculer l'itinéraire
-        System.out.println("Itinéraire demandé pour : " + locationNameLabel.getText());
-
-        // Vous pouvez ajouter ici du code pour afficher l'itinéraire dans WebView ou un autre élément
-    }*/
-
     @FXML
     private void handleSave() {
         String name = locationNameLabel.getText();
@@ -1155,32 +1435,36 @@ public class HomeController {
             System.err.println("L'utilisateur n'existe pas dans la base de données.");
         }
     }
-    @FXML
-    private void handleprofile() {
-        System.out.println("Le bouton Profil a été cliqué !");
-        // Logique spécifique pour le bouton Profil
-    }
 
-    @FXML
-    private void handleadresseenredgistre() {
-        System.out.println("Le bouton Adresse Enregistrée a été cliqué !");
-        // Logique spécifique pour le bouton Adresse Enregistrée
-    }
 
     @FXML
     private void handleLogout() {
         System.out.println("Le bouton Logout a été cliqué !");
-        // Logique spécifique pour la déconnexion
+
+        // Rediriger vers la page de connexion
+        goToLoginPage();  // Cette méthode redirige vers la page de connexion
     }
 
-    @FXML
-    private void handlerecherherecente() {
-        System.out.println("Le bouton Recherche Récente a été cliqué !");
-        // Logique spécifique pour la recherche récente
+    private void goToLoginPage() {
+        // Rediriger vers la page de connexion
+        Stage currentStage = (Stage) logoutButton.getScene().getWindow();  // Obtenir la fenêtre actuelle
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));  // Charger le fichier FXML de la page de connexion
+        Parent root;
+        try {
+            root = loader.load();
+            Scene scene = new Scene(root);
+            currentStage.setScene(scene);  // Appliquer la nouvelle scène (page de connexion)
+            currentStage.show();
+            System.out.println("Redirection vers la page de connexion.");
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Erreur lors de la redirection vers la page de connexion.");
+        }
     }
 
-    public void handleTransports(ActionEvent actionEvent) {
-    }
+
+
+
 
 
 
@@ -1299,6 +1583,212 @@ public class HomeController {
         }
         return null; // Retourner null si les coordonnées ne sont pas disponibles
     }
+
+
+    public void handleRecentSearches(ActionEvent actionEvent) {
+         // Cette méthode affiche les hôtels sur la carte
+        hideAllVBoxes();  // Masque tous les VBox et ScrollPanes
+
+        // Rendre visible le ScrollPane du restaurant (et donc son VBox)
+        recherchrecenteScrollPane.setVisible(true);
+        recherchrecenteScrollPane.setManaged(true);
+        displayRecentSearches();
+
+    }
+    private void displayRecentSearches() {
+        // Effacer les anciens éléments affichés
+        recentSearchesVBox.getChildren().clear();
+
+        // Récupérer le username de l'utilisateur connecté
+        String username = welcomeLabel.getText().replace("Bienvenue, ", "").replace(" !", "");
+        int userId = getUserIdByUsername(username);
+
+        if (userId != -1) {
+            // Récupérer les recherches récentes
+            List<Map<String, String>> recentSearches = getRecentSearches(userId);
+
+            // Créer un ScrollPane pour ajouter du défilement
+            ScrollPane scrollPane = new ScrollPane();
+            scrollPane.setFitToWidth(true);  // S'assurer que le contenu du ScrollPane s'adapte à la largeur
+            scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS); // Activer la barre de défilement horizontale si nécessaire
+            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS); // Activer la barre de défilement verticale si nécessaire
+
+            // Organiser le contenu dans un VBox
+            VBox vbox = new VBox(10); // Espacement de 10px entre chaque élément
+
+            // Ajouter les recherches dynamiquement au VBox
+            for (Map<String, String> search : recentSearches) {
+                String term = search.get("term");
+                String date = search.get("date");
+
+                // Créer une étiquette pour chaque recherche
+                HBox searchHBox = new HBox(15); // Espacement de 15px entre le terme et la date
+                searchHBox.setStyle("-fx-padding: 8px; -fx-background-color: #f9f9f9; -fx-border-radius: 10px; -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 5, 0, 0, 3);");
+
+                // Termes de recherche
+                Label termLabel = new Label(term);
+                termLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #4CAF50; -fx-font-weight: bold;");
+
+                // Date de recherche
+                Label dateLabel = new Label("(" + date + ")");
+                dateLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #888; -fx-font-style: italic;");
+
+                // Ajouter les labels à l'HBox
+                searchHBox.getChildren().addAll(termLabel, dateLabel);
+
+                // Ajouter l'HBox au VBox
+                vbox.getChildren().add(searchHBox);
+            }
+
+            // Ajouter le VBox au ScrollPane
+            scrollPane.setContent(vbox);
+
+            // Remplacer l'ancien VBox par le ScrollPane dans le conteneur principal
+            recentSearchesVBox.getChildren().add(scrollPane);
+
+        } else {
+            System.out.println("Utilisateur non trouvé.");
+        }
+    }
+
+
+
+    public List<Map<String, String>> getRecentSearches(int userId) {
+        List<Map<String, String>> recentSearches = new ArrayList<>();
+        String query = "SELECT NAME, MAX(SEARCHED_AT) AS SEARCHED_AT " +
+                "FROM SEARCH_HISTORY " +
+                "WHERE user_id = ? " +
+                "GROUP BY NAME " +
+                "ORDER BY SEARCHED_AT DESC";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, userId);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                Map<String, String> search = new HashMap<>();
+                search.put("term", resultSet.getString("NAME"));
+                search.put("date", resultSet.getTimestamp("SEARCHED_AT").toString());
+                recentSearches.add(search);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return recentSearches;
+    }
+
+
+
+
+    public void handleadresseenredgistre(ActionEvent actionEvent) {
+        // Cette méthode affiche les hôtels sur la carte
+        hideAllVBoxes();  // Masque tous les VBox et ScrollPanes
+
+        // Rendre visible le ScrollPane du restaurant (et donc son VBox)
+        enregistreScrollPane.setVisible(true);
+        enregistreScrollPane.setManaged(true);
+        displayenregistres();
+
+    }
+    private void displayenregistres() {
+        // Effacer les anciens éléments affichés
+        enregistreVBox.getChildren().clear();
+
+        // Récupérer le username de l'utilisateur connecté
+        String username = welcomeLabel.getText().replace("Bienvenue, ", "").replace(" !", "");
+        int userId = getUserIdByUsername(username);
+
+        if (userId != -1) {
+            // Récupérer les recherches récentes
+            List<Map<String, String>> enregistres = getenregistres(userId);
+
+            // Créer un ScrollPane pour ajouter du défilement
+            ScrollPane scrollPane = new ScrollPane();
+            scrollPane.setFitToWidth(true);  // S'assurer que le contenu du ScrollPane s'adapte à la largeur
+            scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS); // Activer la barre de défilement horizontale si nécessaire
+            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS); // Activer la barre de défilement verticale si nécessaire
+
+            // Organiser le contenu dans un VBox
+            VBox vbox = new VBox(10); // Espacement de 10px entre chaque élément
+
+            // Ajouter les recherches dynamiquement au VBox
+            for (Map<String, String> search : enregistres) {
+                String term = search.get("term");
+                String date = search.get("date");
+
+                // Créer une étiquette pour chaque recherche
+                HBox enregistreHBox = new HBox(15); // Espacement de 15px entre le terme et la date
+                enregistreHBox.setStyle("-fx-padding: 8px; -fx-background-color: #f9f9f9; -fx-border-radius: 10px; -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 5, 0, 0, 3);");
+
+                // Termes de recherche
+                Label termLabel = new Label(term);
+                termLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #4CAF50; -fx-font-weight: bold;");
+
+                // Date de recherche
+                Label dateLabel = new Label("(" + date + ")");
+                dateLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #888; -fx-font-style: italic;");
+
+                // Ajouter les labels à l'HBox
+                enregistreHBox.getChildren().addAll(termLabel, dateLabel);
+
+                // Ajouter l'HBox au VBox
+                vbox.getChildren().add(enregistreHBox);
+            }
+
+            // Ajouter le VBox au ScrollPane
+            scrollPane.setContent(vbox);
+
+            // Remplacer l'ancien VBox par le ScrollPane dans le conteneur principal
+            enregistreVBox.getChildren().add(scrollPane);
+
+        } else {
+            System.out.println("Utilisateur non trouvé.");
+        }
+    }
+
+
+
+    public List<Map<String, String>> getenregistres(int userId) {
+        List<Map<String, String>> enregistres = new ArrayList<>();
+        String query = "SELECT NAME,CREATED_AT " +
+                "FROM lOCATIONS " +
+                "WHERE user_id = ? " +
+                "ORDER BY CREATED_AT DESC";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, userId);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                Map<String, String> search = new HashMap<>();
+                search.put("term", resultSet.getString("NAME"));
+                search.put("date", resultSet.getTimestamp("CREATED_AT").toString());
+                enregistres.add(search);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return enregistres;
+    }
+    @FXML
+    private void handleprofile() {
+        System.out.println("Le bouton Profil a été cliqué !");
+        // Cette méthode affiche les hôtels sur la carte
+        hideAllVBoxes();  // Masque tous les VBox et ScrollPanes
+
+        // Rendre visible le ScrollPane du restaurant (et donc son VBox)
+        profileScrollPane.setVisible(true);
+        profileScrollPane.setManaged(true);
+        displayprofile();
+    }
+
+    private void displayprofile() {
+    }
+
 
 
 }

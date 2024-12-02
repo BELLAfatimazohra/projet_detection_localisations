@@ -137,26 +137,48 @@ function updateMap(locations) {
             name: location.name
         });
 
-        // Style du marqueur
-        var iconStyle = new ol.style.Style({
-            image: new ol.style.Icon({
-                anchor: [0.5, 1],
-                src: '../images/marker.png', // Chemin de l'icône du marqueur
-                scale: 0.1
-            })
-        });
-        marker.setStyle(iconStyle);
+        // Créer un Canvas pour dessiner un point rouge
+        var canvas = document.createElement('canvas');
+        var ctx = canvas.getContext('2d');
+        var size = 32; // Taille de l'icône
+        canvas.width = size;
+        canvas.height = size;
 
-        // Source et couche de vecteur pour le marqueur
-        var vectorSource = new ol.source.Vector({
-            features: [marker]
-        });
-        var markerLayer = new ol.layer.Vector({
-            source: vectorSource
-        });
+        // Dessiner l'icône principale du marqueur (image)
+        var img = new Image();
+        img.src = '../images/marker.png'; // Icône principale du marqueur
+        img.onload = function() {
+            ctx.drawImage(img, 0, 0, size, size);
 
-        // Ajouter la couche de marqueur à la carte
-        map.addLayer(markerLayer);
+            // Ajouter un cercle rouge en bas de l'icône
+            ctx.beginPath();
+            ctx.arc(size / 2, size - 5, 5, 0, Math.PI * 2, false); // Cercle rouge
+            ctx.fillStyle = 'red';
+            ctx.fill();
+
+            // Créer un style avec le Canvas
+            var iconStyle = new ol.style.Style({
+                image: new ol.style.Icon({
+                    anchor: [0.5, 1],
+                    img: canvas, // Utiliser le Canvas comme image
+                    imgSize: [size, size] // Taille de l'icône
+                })
+            });
+
+            // Appliquer le style au marqueur
+            marker.setStyle(iconStyle);
+
+            // Source et couche de vecteur pour le marqueur
+            var vectorSource = new ol.source.Vector({
+                features: [marker]
+            });
+            var markerLayer = new ol.layer.Vector({
+                source: vectorSource
+            });
+
+            // Ajouter la couche de marqueur à la carte
+            map.addLayer(markerLayer);
+        };
 
         // Ajouter les coordonnées de la location dans le tableau markersArray
         markersArray.push({ lat: location.lat, lng: location.lng });
@@ -179,6 +201,8 @@ function updateMap(locations) {
         console.log("Le tableau des marqueurs contient : ", markersArray.length, " éléments.");
     }
 }
+
+
 // Fonction qui retourne les coordonnées du premier marqueur
 function getFirstMarkerCoordinates() {
     if (markersArray.length > 0) {
@@ -212,8 +236,8 @@ function updateMapWithRestaurants(restaurants) {
         var iconStyle = new ol.style.Style({
             image: new ol.style.Icon({
                 anchor: [0.5, 1],
-                src: '../images/bed-solid.png', // Assurez-vous que l'image du marqueur existe
-                scale: 0.03
+                src: '../images/hotell.png', // Assurez-vous que l'image du marqueur existe
+                scale: 0.1
             })
         });
         marker.setStyle(iconStyle);
@@ -260,7 +284,7 @@ function updateMapWithPharmacies(pharmacies) {
         var iconStyle = new ol.style.Style({
             image: new ol.style.Icon({
                 anchor: [0.5, 1],
-                src: '../images/marker_phar.png', // Assurez-vous que l'image du marqueur existe
+                src: '../images/pharmaciess.png', // Assurez-vous que l'image du marqueur existe
                 scale: 0.1
             })
         });
@@ -308,8 +332,8 @@ function updateMapWithMosques(mosques) {
         var iconStyle = new ol.style.Style({
             image: new ol.style.Icon({
                 anchor: [0.5, 1],
-                src: '../images/mosques-icon.png', // Assurez-vous que l'image existe
-                scale: 0.02
+                src: '../images/mosquee.png', // Assurez-vous que l'image existe
+                scale: 0.1
             })
         });
         marker.setStyle(iconStyle);
@@ -331,6 +355,56 @@ function updateMapWithMosques(mosques) {
     // Si des mosquées sont présentes, recentrer la carte sur la première mosquée
     if (mosques.length > 0) {
         var firstCoords = ol.proj.fromLonLat([mosques[0].lng, mosques[0].lat]);
+        map.getView().setCenter(firstCoords);
+        map.getView().setZoom(12);
+    }
+}
+
+
+
+  function updateMapWithTransports(transports) {
+    // Supprimer toutes les couches de type Vector existantes
+    const existingLayers = map.getLayers().getArray().filter(layer => layer instanceof ol.layer.Vector);
+    existingLayers.forEach(layer => map.removeLayer(layer));
+
+    // Ajouter un marqueur pour chaque mosquée
+    transports.forEach(function(transport) {
+        // Coordonner de chaque mosquée (latitude et longitude)
+        var coords = ol.proj.fromLonLat([transport.lng, transport.lat]);
+
+        // Créer le marqueur avec son nom
+        var marker = new ol.Feature({
+            geometry: new ol.geom.Point(coords),
+            name: transport.name // Nom de la mosquée pour une éventuelle info-bulle
+        });
+
+        // Définir l'icône du marqueur
+        var iconStyle = new ol.style.Style({
+            image: new ol.style.Icon({
+                anchor: [0.5, 1],
+                src: '../images/transportee.png', // Assurez-vous que l'image existe
+                scale: 0.1
+            })
+        });
+        marker.setStyle(iconStyle);
+
+        // Ajouter le marqueur dans une source de vecteur
+        var vectorSource = new ol.source.Vector({
+            features: [marker]
+        });
+
+        // Créer une couche de vecteur pour le marqueur
+        var markerLayer = new ol.layer.Vector({
+            source: vectorSource
+        });
+
+        // Ajouter la couche de marqueur à la carte
+        map.addLayer(markerLayer);
+    });
+
+    // Si des mosquées sont présentes, recentrer la carte sur la première mosquée
+    if (transports.length > 0) {
+        var firstCoords = ol.proj.fromLonLat([transports[0].lng, transports[0].lat]);
         map.getView().setCenter(firstCoords);
         map.getView().setZoom(12);
     }
