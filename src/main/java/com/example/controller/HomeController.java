@@ -1,5 +1,8 @@
 
 package com.example.controller;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.graphhopper.util.shapes.GHPoint;
 import com.sun.webkit.WebPage;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -20,7 +23,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
-import com.example.service.GraphHopperService;
+
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.control.ScrollPane;
@@ -37,6 +40,7 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import netscape.javascript.JSObject;
+import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -130,7 +134,7 @@ public class HomeController {
     @FXML
     private VBox mosqueVBox;
 
-    private final GraphHopperService graphHopperService = new GraphHopperService("61ea8b60-57e2-402d-a618-b5e4f7c0a87e");
+
     private WebEngine webEngine;
 
     public HomeController() {
@@ -1492,56 +1496,7 @@ public class HomeController {
         itineraryFieldsVBox.setVisible(false);
         itineraryFieldsVBox.setManaged(false);
     }
-    @FXML
-    private void handleCalculateItinerary() {
-        // Afficher les indicateurs de chargement
-        loadingIndicator.setVisible(true);
-        loadingLabel.setVisible(true);
 
-        // Désactiver les champs
-        String startCoordinates = startField.getText();
-        String endCoordinates = endField.getText();
-
-        if (startCoordinates.isEmpty() || endCoordinates.isEmpty()) {
-            System.out.println("Veuillez remplir les deux champs.");
-            loadingIndicator.setVisible(false);
-            loadingLabel.setVisible(false);
-            return;
-        }
-
-
-
-        try {
-            double[] startCoords =getCoordinates(startCoordinates);
-            double[] endCoords =getCoordinates(endCoordinates);
-
-
-
-            System.out.println("Coordonnées de départ : " + startCoords[0] + ", " + startCoords[1]);
-            System.out.println("Coordonnées d'arrivée : " + endCoords[0] + ", " + endCoords[1]);
-            // Appeler GraphHopperService pour récupérer les points de l'itinéraire
-            String routeCoordinatesJS = graphHopperService.calculateRoute(startCoords[0], startCoords[1], endCoords[0], endCoords[1], selectedVehicle);
-
-
-            // Masquer les indicateurs de chargement
-            loadingIndicator.setVisible(false);
-            loadingLabel.setVisible(false);
-
-            // Réactiver les champs
-            startField.setDisable(false);
-            endField.setDisable(false);
-
-            // Injecter les points dans OpenLayers via WebEngine
-            webEngine.executeScript("drawRoute(" + routeCoordinatesJS + ");");
-
-        }catch (Exception e) {
-            loadingIndicator.setVisible(false);
-            loadingLabel.setVisible(false);
-            System.out.println("Erreur : " + e.getMessage());
-        }
-
-
-    }
 
     private double[] getCoordinates(String query) {
         try {
@@ -1774,19 +1729,228 @@ public class HomeController {
         }
         return enregistres;
     }
-    @FXML
-    private void handleprofile() {
-        System.out.println("Le bouton Profil a été cliqué !");
-        // Cette méthode affiche les hôtels sur la carte
-        hideAllVBoxes();  // Masque tous les VBox et ScrollPanes
 
-        // Rendre visible le ScrollPane du restaurant (et donc son VBox)
+    public void handleProfileDisplay(ActionEvent actionEvent) {
+        // Masquer les autres éléments et afficher le ScrollPane du profil
+        hideAllVBoxes();
         profileScrollPane.setVisible(true);
         profileScrollPane.setManaged(true);
-        displayprofile();
+        displayUserProfile();
     }
 
-    private void displayprofile() {
+    private void displayUserProfile() {
+        // Effacer les anciens éléments affichés
+        profileVBox.getChildren().clear();
+
+        // Créer un titre pour les informations personnelles
+        Label titleLabel = new Label("Les Infos Personnelles");
+        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 10px;");
+        profileVBox.getChildren().add(titleLabel);
+
+        // Récupérer le username de l'utilisateur connecté
+        String username = welcomeLabel.getText().replace("Bienvenue, ", "").replace(" !", "");
+        Map<String, String> userInfo = getUserInfoByUsername(username);
+
+        if (!userInfo.isEmpty()) {
+            // Afficher les informations de l'utilisateur
+            Label userInfoLabel = new Label("Nom complet : " + userInfo.get("username") + "\n" +
+                    "Email : " + userInfo.get("email"));
+            userInfoLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-padding: 10px;");
+            userInfoLabel.setMaxWidth(400); // Limite la largeur maximale du label
+            profileVBox.getChildren().add(userInfoLabel);
+
+            // Ajouter un titre pour les fonctionnalités
+            Label featuresTitle = new Label("Fonctionnalités Disponibles");
+            featuresTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 10px;");
+            profileVBox.getChildren().add(featuresTitle);
+
+            // Ajouter la liste des fonctionnalités
+            List<String> features = getAppFeatures(); // Méthode pour obtenir les fonctionnalités
+            for (String feature : features) {
+                Text featureText = new Text("• " + feature);
+                featureText.setStyle("-fx-font-size: 14px; -fx-text-fill: #4CAF50; -fx-padding: 5px;");
+                featureText.setWrappingWidth(400); // Limite la largeur pour éviter des débordements horizontaux
+                profileVBox.getChildren().add(featureText);
+            }
+        } else {
+            // Ajouter un message d'erreur si l'utilisateur n'est pas trouvé
+            Label errorLabel = new Label("Utilisateur non trouvé.");
+            errorLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: red; -fx-padding: 10px;");
+            profileVBox.getChildren().add(errorLabel);
+        }
+
+        // Afficher ou cacher le ScrollPane
+        profileScrollPane.setVisible(true);
+        profileScrollPane.setManaged(true);
+    }
+
+    private List<String> getAppFeatures() {
+        // Liste des fonctionnalités disponibles (vous pouvez les rendre dynamiques)
+        return Arrays.asList(
+                "la rechreche et la detection des localisations ",
+                "Afficher des lieux comme les pharmacies ,les hopitaux...",
+                "La consultation des recherches recentes et les lieux visites  ",
+                "rechercher des itineraires "
+
+
+
+
+
+        );
+    }
+
+    public Map<String, String> getUserInfoByUsername(String username) {
+        Map<String, String> userInfo = new HashMap<>();
+        String query = "SELECT id, username, email FROM users WHERE username = ?";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, username);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                userInfo.put("id", String.valueOf(resultSet.getInt("id")));
+                userInfo.put("username", resultSet.getString("username"));
+                userInfo.put("email", resultSet.getString("email"));
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return userInfo;
+    }
+
+
+
+
+
+
+    public String calculateRoute(double startLat, double startLon, double endLat, double endLon, String vehicle) throws IOException {
+        String API_URL = "https://graphhopper.com/api/1/route";
+        String apiKey= "0f5d7a61-cd15-4cb7-a179-8319fdf9912f";
+        String url = String.format(Locale.ENGLISH,
+                "%s?point=%f,%f&point=%f,%f&type=json&locale=en&vehicle=%s&key=%s",
+                API_URL, startLat, startLon, endLat, endLon, vehicle, apiKey
+        );
+        System.out.println("URL API GraphHopper : " + url);
+
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            HttpGet request = new HttpGet(url);
+
+            // Envoyer la requête et récupérer la réponse
+            HttpEntity entity = client.execute(request).getEntity();
+            String responseString = EntityUtils.toString(entity);
+
+            System.out.println("Réponse complète de l'API : " + responseString);
+
+            // Traiter la réponse JSON pour extraire les coordonnées
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode rootNode = mapper.readTree(responseString);
+            JsonNode pathNode = rootNode.path("paths");
+
+            if (pathNode.isArray() && pathNode.size() > 0) {
+                JsonNode path = pathNode.get(0);
+
+
+                // Extraire le temps (en millisecondes)
+                long travelTimeMillis = path.path("time").asLong();
+                System.out.println("Durée estimée du trajet (millisecondes) : " + travelTimeMillis);
+
+                // Convertir en minutes pour plus de lisibilité
+                long travelTimeMinutes = travelTimeMillis / 60000;
+                System.out.println("Durée estimée du trajet (minutes) : " + travelTimeMinutes);
+
+                return decodePolylineForJS(path);
+            } else {
+                throw new RuntimeException("Aucune route trouvée.");
+            }
+        }
+    }
+
+    public String decodePolylineForJS(JsonNode path) {
+        String encodedPoints = path.path("points").asText();
+        /* System.out.println("Points encodés (Polyline) : " + encodedPoints);*/
+
+        // Décoder la polyline
+        List<GHPoint> decodedPoints = com.example.service.PolylineEncoder.decodePolyline(encodedPoints, 1e5);
+        System.out.println("Nombre de points décodés : " + decodedPoints.size());
+
+        // Créer la chaîne formatée pour JavaScript
+        StringBuilder routeCoordinates = new StringBuilder("[");
+        for (GHPoint point : decodedPoints) {
+            // Inverser les coordonnées : latitude en premier
+            routeCoordinates.append("[").append(point.lat).append(",").append(point.lon).append("],");
+           /* System.out.println(String.format("Point décodé - Latitude : %f, Longitude : %f", point.lat, point.lon));*/
+        }
+
+        // Supprimer la dernière virgule
+        if (routeCoordinates.length() > 1) {
+            routeCoordinates.setLength(routeCoordinates.length() - 1);
+        }
+        routeCoordinates.append("]");
+
+        /*  System.out.println("Coordonnées au format JavaScript : " + routeCoordinates);*/
+        return routeCoordinates.toString();
+    }
+
+    @FXML
+    private void handleCalculateItinerary() {
+        // Afficher les indicateurs de chargement
+        loadingIndicator.setVisible(true);
+        loadingLabel.setVisible(true);
+
+        // Désactiver les champs
+        String startCoordinates = startField.getText();
+        String endCoordinates = endField.getText();
+
+        if (startCoordinates.isEmpty() || endCoordinates.isEmpty()) {
+            System.out.println("Veuillez remplir les deux champs.");
+            loadingIndicator.setVisible(false);
+            loadingLabel.setVisible(false);
+            return;
+        }
+
+
+
+        try {
+            double[] startCoords =getCoordinates(startCoordinates);
+            double[] endCoords =getCoordinates(endCoordinates);
+
+
+
+            System.out.println("Coordonnées de départ : " + startCoords[0] + ", " + startCoords[1]);
+            System.out.println("Coordonnées d'arrivée : " + endCoords[0] + ", " + endCoords[1]);
+            // Appeler pour récupérer les points de l'itinéraire
+            String routeCoordinatesJS =calculateRoute(startCoords[0], startCoords[1], endCoords[0], endCoords[1], selectedVehicle);
+
+
+            // Masquer les indicateurs de chargement
+            loadingIndicator.setVisible(false);
+            loadingLabel.setVisible(false);
+
+            // Réactiver les champs
+            startField.setDisable(false);
+            endField.setDisable(false);
+
+            // Afficher le contenu de routeCoordinatesJS dans la console
+            System.out.println("Route Coordinates (JS format): " + routeCoordinatesJS);
+
+            /* System.out.println("un teste ici" + routeCoordinatesJS);*/
+            // Injecter les points dans OpenLayers via WebEngine
+
+
+            webView.getEngine().executeScript("drawRouteOnMap(" + routeCoordinatesJS + ");");
+
+
+        }catch (Exception e) {
+            loadingIndicator.setVisible(false);
+            loadingLabel.setVisible(false);
+            System.out.println("Erreur : " + e.getMessage());
+        }
+
+
     }
 
 
