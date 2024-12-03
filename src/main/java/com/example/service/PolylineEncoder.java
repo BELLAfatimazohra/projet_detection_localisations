@@ -1,7 +1,6 @@
 package com.example.service;
 
 import com.graphhopper.util.shapes.GHPoint;
-
 import java.util.ArrayList;
 import java.util.List;
 

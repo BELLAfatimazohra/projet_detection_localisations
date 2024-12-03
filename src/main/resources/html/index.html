@@ -217,6 +217,53 @@ function getFirstMarkerCoordinates() {
 
 
 
+function drawRouteOnMap(apiRouteCoordinates) {
+    // Supprimer les couches d'itinéraires existantes
+    const existingRouteLayers = map.getLayers().getArray().filter(layer => layer.get('name') === 'routeLayer');
+    existingRouteLayers.forEach(layer => map.removeLayer(layer));
+
+    // Convertir les coordonnées [latitude, longitude] en [longitude, latitude] pour OpenLayers
+    var convertedCoordinates = apiRouteCoordinates.map(coord => ol.proj.fromLonLat([coord[1], coord[0]]));
+
+    // Créer une géométrie de type ligne
+    var routeLine = new ol.geom.LineString(convertedCoordinates);
+
+    // Créer une source de vecteur pour la ligne
+    var vectorSource = new ol.source.Vector({
+        features: [new ol.Feature({ geometry: routeLine })]
+    });
+
+    // Définir le style de la ligne
+    var routeStyle = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: 'blue', // Couleur de l'itinéraire
+            width: 4       // Épaisseur de la ligne
+        })
+    });
+
+    // Créer une couche pour afficher la ligne
+    var routeLayer = new ol.layer.Vector({
+        source: vectorSource,
+        style: routeStyle
+    });
+
+    // Attribuer un nom pour identifier la couche plus tard
+    routeLayer.set('name', 'routeLayer');
+
+    // Ajouter la couche d'itinéraire à la carte
+    map.addLayer(routeLayer);
+
+    // Recentrer la vue sur l'itinéraire
+    var routeExtent = routeLine.getExtent();
+    map.getView().fit(routeExtent, { padding: [50, 50, 50, 50], maxZoom: 14 });
+
+    console.log("Itinéraire tracé avec succès.");}
+
+
+
+
+
+
     // Fonction pour mettre à jour la carte avec les marqueurs des restaurants
 function updateMapWithRestaurants(restaurants) {
     // Supprimer toutes les couches de type Vector existantes

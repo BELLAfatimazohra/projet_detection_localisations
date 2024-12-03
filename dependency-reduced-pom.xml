@@ -29,11 +29,11 @@
         <artifactId>javafx-maven-plugin</artifactId>
         <version>0.0.8</version>
         <configuration>
-          <executable>C:\jdk-21\bin\java.exe</executable>
+          <executable>C:\Program Files\Java\jdk-21\bin\java.exe</executable>
           <mainClass>com.example.MainApp</mainClass>
           <options>
             <option>--module-path</option>
-            <option>C:\javafx-sdk-23\lib</option>
+            <option>${project.build.directory}/libs</option>
             <option>--add-modules</option>
             <option>javafx.controls,javafx.fxml,javafx.web</option>
           </options>

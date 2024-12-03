@@ -84,7 +84,7 @@
 
             <ScrollPane fx:id="profileScrollPane" prefWidth="400" fitToWidth="true" fitToHeight="true" visible="false" managed="false">
                 <VBox fx:id="profileVBox" spacing="15" prefWidth="400" style="-fx-background-color: #f0f0f0;">
-                    <Label text="Recherches Recentes" styleClass="title-label"/>
+
                 </VBox>
             </ScrollPane>
 
@@ -191,7 +191,7 @@
 
             <!-- Profil et menu -->
             <VBox minWidth="50" maxWidth="100" spacing="10" alignment="top_center" >
-                <Button fx:id="profil" onAction="#handleprofile" styleClass="profil">
+                <Button fx:id="profil" onAction="#handleProfileDisplay" styleClass="profil">
                     <graphic>
                         <ImageView fx:id="profil_image" fitWidth="20" fitHeight="20">
                             <Image url="@../images/user.png"/>
