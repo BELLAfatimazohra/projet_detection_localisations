@@ -1,5 +1,8 @@
 
 package com.example.controller;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.graphhopper.util.shapes.GHPoint;
 import com.sun.webkit.WebPage;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -15,7 +18,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
-import com.example.service.GraphHopperService;
+
 
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
@@ -29,6 +32,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
+import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -61,8 +65,21 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.service.PolylineEncoder;
+import com.graphhopper.util.shapes.GHPoint;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 public class HomeController {
+
 
     public ScrollPane transportScrollPane;
     public VBox transportVBox;
@@ -106,7 +123,7 @@ public class HomeController {
     @FXML
     private VBox mosqueVBox;
 
-    private final GraphHopperService graphHopperService = new GraphHopperService("61ea8b60-57e2-402d-a618-b5e4f7c0a87e");
+    @FXML
     private WebEngine webEngine;
 
     public HomeController() {
@@ -270,7 +287,7 @@ public class HomeController {
         }
     }
 
-
+@FXML
     public void initialize() {
         if (webView == null) {
             System.err.println("webView est null !");
@@ -835,6 +852,8 @@ public class HomeController {
                             jsonArray.append("]");
 
                             webView.getEngine().executeScript("updateMap(" + jsonArray.toString() + ");");
+                              System.out.println("Coordonnées de teeeeeeeeeeest  : " + jsonArray.toString());
+
 
                             Dataset<Row> locationsDF = spark.read().json(spark.createDataset(Collections.singletonList(jsonArray.toString()), org.apache.spark.sql.Encoders.STRING()));
                             locationsDF.show();
@@ -1105,6 +1124,76 @@ public class HomeController {
         itineraryFieldsVBox.setVisible(false);
         itineraryFieldsVBox.setManaged(false);
     }
+
+
+    public String calculateRoute(double startLat, double startLon, double endLat, double endLon, String vehicle) throws IOException {
+        String API_URL = "https://graphhopper.com/api/1/route";
+        String apiKey= "0f5d7a61-cd15-4cb7-a179-8319fdf9912f";
+        String url = String.format(Locale.ENGLISH,
+                "%s?point=%f,%f&point=%f,%f&type=json&locale=en&vehicle=%s&key=%s",
+                API_URL, startLat, startLon, endLat, endLon, vehicle, apiKey
+        );
+        System.out.println("URL API GraphHopper : " + url);
+
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            HttpGet request = new HttpGet(url);
+
+            // Envoyer la requête et récupérer la réponse
+            HttpEntity entity = client.execute(request).getEntity();
+            String responseString = EntityUtils.toString(entity);
+
+            System.out.println("Réponse complète de l'API : " + responseString);
+
+            // Traiter la réponse JSON pour extraire les coordonnées
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode rootNode = mapper.readTree(responseString);
+            JsonNode pathNode = rootNode.path("paths");
+
+            if (pathNode.isArray() && pathNode.size() > 0) {
+                JsonNode path = pathNode.get(0);
+
+
+                // Extraire le temps (en millisecondes)
+                long travelTimeMillis = path.path("time").asLong();
+                System.out.println("Durée estimée du trajet (millisecondes) : " + travelTimeMillis);
+
+                // Convertir en minutes pour plus de lisibilité
+                long travelTimeMinutes = travelTimeMillis / 60000;
+                System.out.println("Durée estimée du trajet (minutes) : " + travelTimeMinutes);
+
+                return decodePolylineForJS(path);
+            } else {
+                throw new RuntimeException("Aucune route trouvée.");
+            }
+        }
+    }
+
+    public String decodePolylineForJS(JsonNode path) {
+        String encodedPoints = path.path("points").asText();
+        /* System.out.println("Points encodés (Polyline) : " + encodedPoints);*/
+
+        // Décoder la polyline
+        List<GHPoint> decodedPoints = com.example.service.PolylineEncoder.decodePolyline(encodedPoints, 1e5);
+        System.out.println("Nombre de points décodés : " + decodedPoints.size());
+
+        // Créer la chaîne formatée pour JavaScript
+        StringBuilder routeCoordinates = new StringBuilder("[");
+        for (GHPoint point : decodedPoints) {
+            // Inverser les coordonnées : latitude en premier
+            routeCoordinates.append("[").append(point.lat).append(",").append(point.lon).append("],");
+            /*System.out.println(String.format("Point décodé - Latitude : %f, Longitude : %f", point.lat, point.lon));*/
+        }
+
+        // Supprimer la dernière virgule
+        if (routeCoordinates.length() > 1) {
+            routeCoordinates.setLength(routeCoordinates.length() - 1);
+        }
+        routeCoordinates.append("]");
+
+        /*  System.out.println("Coordonnées au format JavaScript : " + routeCoordinates);*/
+        return routeCoordinates.toString();
+    }
+
     @FXML
     private void handleCalculateItinerary() {
         // Afficher les indicateurs de chargement
@@ -1132,8 +1221,8 @@ public class HomeController {
 
             System.out.println("Coordonnées de départ : " + startCoords[0] + ", " + startCoords[1]);
             System.out.println("Coordonnées d'arrivée : " + endCoords[0] + ", " + endCoords[1]);
-            // Appeler GraphHopperService pour récupérer les points de l'itinéraire
-            String routeCoordinatesJS = graphHopperService.calculateRoute(startCoords[0], startCoords[1], endCoords[0], endCoords[1], selectedVehicle);
+            // Appeler pour récupérer les points de l'itinéraire
+            String routeCoordinatesJS =calculateRoute(startCoords[0], startCoords[1], endCoords[0], endCoords[1], selectedVehicle);
 
 
             // Masquer les indicateurs de chargement
@@ -1144,8 +1233,15 @@ public class HomeController {
             startField.setDisable(false);
             endField.setDisable(false);
 
+            // Afficher le contenu de routeCoordinatesJS dans la console
+            System.out.println("Route Coordinates (JS format): " + routeCoordinatesJS);
+
+           /* System.out.println("un teste ici" + routeCoordinatesJS);*/
             // Injecter les points dans OpenLayers via WebEngine
-            webEngine.executeScript("drawRoute(" + routeCoordinatesJS + ");");
+
+
+                webView.getEngine().executeScript("drawRouteOnMap(" + routeCoordinatesJS + ");");
+
 
         }catch (Exception e) {
             loadingIndicator.setVisible(false);
@@ -1155,6 +1251,11 @@ public class HomeController {
 
 
     }
+
+
+
+
+
 
     private double[] getCoordinates(String query) {
         try {
@@ -1198,6 +1299,8 @@ public class HomeController {
     }
 
 
+    public void handleRecentSearches(ActionEvent actionEvent) {
+    }
 }
 
 
