@@ -22,11 +22,7 @@
             <version>4.5.14</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.18.1</version>
-        </dependency>
+
         <!-- GraphHopper Web API pour utiliser l'API de calcul d'itinéraire -->
         <dependency>
             <groupId>com.graphhopper</groupId>

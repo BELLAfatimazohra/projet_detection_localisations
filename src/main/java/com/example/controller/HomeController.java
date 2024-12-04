@@ -87,6 +87,8 @@ public class HomeController {
     public VBox enregistreVBox;
     public ScrollPane profileScrollPane;
     public VBox profileVBox;
+    public Button closeButton;
+    public ImageView closIcon;
     @FXML
     private  ScrollPane recherchrecenteScrollPane;
     @FXML
@@ -518,7 +520,7 @@ public class HomeController {
                     );
                     saveButton.setOnAction(event -> {
                         System.out.println("Bouton Enregistrer cliqué pour : " + name);
-                        // Logique d'enregistrement ici
+                        storeLocationInDatabase(name);
                     });
 
                     // Bouton "Itinéraire" avec style circulaire
@@ -719,7 +721,7 @@ public class HomeController {
                     );
                     saveButton.setOnAction(event -> {
                         System.out.println("Bouton Enregistrer cliqué pour : " + name);
-                        // Logique d'enregistrement ici
+                        storeLocationInDatabase(name);
                     });
 
                     // Bouton "Itinéraire"
@@ -924,7 +926,7 @@ public class HomeController {
                     );
                     saveButton.setOnAction(event -> {
                         System.out.println("Bouton Enregistrer cliqué pour : " + name);
-                        // Logique d'enregistrement ici
+                        storeLocationInDatabase(name);
                     });
 
                     // Bouton "Itinéraire"
@@ -1124,7 +1126,8 @@ public class HomeController {
                     );
                     saveButton.setOnAction(event -> {
                         System.out.println("Bouton Enregistrer cliqué pour : " + name);
-                        // Logique d'enregistrement ici
+                        storeLocationInDatabase(name);
+
                     });
 
                     // Bouton "Itinéraire"
@@ -1144,6 +1147,7 @@ public class HomeController {
                     );
                     routeButton.setOnAction(event -> {
                         System.out.println("Bouton Itinéraire cliqué pour : " + name);
+
                         // Logique de calcul d'itinéraire ici
                     });
 
@@ -1498,6 +1502,7 @@ public class HomeController {
     }
 
 
+
     private double[] getCoordinates(String query) {
         try {
             // Encoder la requête
@@ -1551,7 +1556,7 @@ public class HomeController {
 
     }
     private void displayRecentSearches() {
-        // Effacer les anciens éléments affichés
+        // Effacer les anciens éléments affichés dans le VBox existant
         recentSearchesVBox.getChildren().clear();
 
         // Récupérer le username de l'utilisateur connecté
@@ -1560,52 +1565,102 @@ public class HomeController {
 
         if (userId != -1) {
             // Récupérer les recherches récentes
-            List<Map<String, String>> recentSearches = getRecentSearches(userId);
+            List<Map<String, String>> enregistres = getRecentSearches(userId);
 
-            // Créer un ScrollPane pour ajouter du défilement
-            ScrollPane scrollPane = new ScrollPane();
-            scrollPane.setFitToWidth(true);  // S'assurer que le contenu du ScrollPane s'adapte à la largeur
-            scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS); // Activer la barre de défilement horizontale si nécessaire
-            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS); // Activer la barre de défilement verticale si nécessaire
+            // Créer un conteneur HBox pour le titre et le bouton de fermeture
+            HBox headerBox = new HBox(10); // Espacement de 10px entre les éléments
+            headerBox.setStyle("-fx-alignment: center-left; -fx-padding: 15px;");
 
-            // Organiser le contenu dans un VBox
-            VBox vbox = new VBox(10); // Espacement de 10px entre chaque élément
+            // Ajouter un titre "Recherches Récentes" aligné à gauche
+            Label titleLabel = new Label("Recherches Récentes");
+            titleLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #333;");
+            HBox.setHgrow(titleLabel, Priority.ALWAYS); // Permet au titre de prendre tout l'espace disponible à gauche
+            headerBox.getChildren().add(titleLabel);
+
+            // Ajouter un espace entre le titre et le bouton
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS); // Le spacer occupe tout l'espace restant entre le titre et le bouton
+            headerBox.getChildren().add(spacer);
+
+            // Créer le bouton de fermeture avec une icône
+            Button closeButton = new Button();
+            Image closeImage = new Image(getClass().getResource("/images/close-icon.png").toString());
+            ImageView closeImageView = new ImageView(closeImage);
+            closeImageView.setFitWidth(20);
+            closeImageView.setFitHeight(20);
+            closeButton.setGraphic(closeImageView);
+            closeButton.setStyle(
+                    "-fx-background-radius: 50%; " +
+                            "-fx-border-color: #ccc; " +
+                            "-fx-border-width: 1px; " +
+                            "-fx-border-radius: 50%; " +
+                            "-fx-cursor: hand;"
+            );
+
+            // Action du bouton de fermeture
+            closeButton.setOnAction(event -> {
+                recherchrecenteScrollPane.setVisible(false);
+                recherchrecenteScrollPane.setManaged(false);
+            });
+
+            // Ajouter le bouton de fermeture à droite de l'HBox
+            headerBox.getChildren().add(closeButton);
+
+            // Ajouter la HBox au VBox principal
+            recentSearchesVBox.getChildren().add(headerBox);
 
             // Ajouter les recherches dynamiquement au VBox
-            for (Map<String, String> search : recentSearches) {
+            for (Map<String, String> search : enregistres) {
                 String term = search.get("term");
                 String date = search.get("date");
 
-                // Créer une étiquette pour chaque recherche
-                HBox searchHBox = new HBox(15); // Espacement de 15px entre le terme et la date
-                searchHBox.setStyle("-fx-padding: 8px; -fx-background-color: #f9f9f9; -fx-border-radius: 10px; -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 5, 0, 0, 3);");
+                // Supprimer les secondes et tout ce qui suit
+                String truncatedDate = date.length() > 16 ? date.substring(0, 16) : date;
+
+                // Créer une HBox pour afficher chaque recherche
+                HBox enregistreHBox = new HBox(20); // Espacement de 20px entre le terme et la date
+                enregistreHBox.setStyle("-fx-padding: 5px; -fx-background-color: #ffffff; -fx-border-radius: 10px; -fx-border-color: #f0f0f0; -fx-border-width: 1px;");
 
                 // Termes de recherche
                 Label termLabel = new Label(term);
-                termLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #4CAF50; -fx-font-weight: bold;");
+                termLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00796b; -fx-font-weight: bold;");
+                termLabel.setWrapText(true);
 
                 // Date de recherche
-                Label dateLabel = new Label("(" + date + ")");
-                dateLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #888; -fx-font-style: italic;");
+                Label dateLabel = new Label("(" + truncatedDate + ")");
+                dateLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #757575; -fx-font-style: italic;");
+                dateLabel.setWrapText(true);
 
                 // Ajouter les labels à l'HBox
-                searchHBox.getChildren().addAll(termLabel, dateLabel);
+                enregistreHBox.getChildren().addAll(termLabel, dateLabel);
 
                 // Ajouter l'HBox au VBox
-                vbox.getChildren().add(searchHBox);
+                recentSearchesVBox.getChildren().add(enregistreHBox);
             }
 
-            // Ajouter le VBox au ScrollPane
-            scrollPane.setContent(vbox);
+            recentSearchesVBox.setPrefWidth(600); // Ajuster la largeur
+            recentSearchesVBox.setMaxWidth(Double.MAX_VALUE);
 
-            // Remplacer l'ancien VBox par le ScrollPane dans le conteneur principal
-            recentSearchesVBox.getChildren().add(scrollPane);
+            // Créer un ScrollPane
+            ScrollPane scrollPane = new ScrollPane();
+            scrollPane.setContent(recentSearchesVBox);
+            scrollPane.setFitToWidth(true);
+            scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+
+            recherchrecenteScrollPane.setContent(scrollPane);
+            recherchrecenteScrollPane.setVisible(true);
+            recherchrecenteScrollPane.setManaged(true);
 
         } else {
-            System.out.println("Utilisateur non trouvé.");
+            Label errorLabel = new Label("Utilisateur non trouvé.");
+            errorLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: red; -fx-padding: 10px; -fx-font-weight: bold;");
+            recentSearchesVBox.getChildren().add(errorLabel);
+
+            recherchrecenteScrollPane.setVisible(false);
+            recherchrecenteScrollPane.setManaged(false);
         }
     }
-
 
 
     public List<Map<String, String>> getRecentSearches(int userId) {
@@ -1647,8 +1702,14 @@ public class HomeController {
         displayenregistres();
 
     }
+    @FXML
+    private void handleClose() {
+        System.out.println("Close button clicked");
+       enregistreScrollPane.setVisible(false);
+        enregistreScrollPane.setManaged(false);
+    }
     private void displayenregistres() {
-        // Effacer les anciens éléments affichés
+        // Effacer les anciens éléments affichés dans le VBox existant
         enregistreVBox.getChildren().clear();
 
         // Récupérer le username de l'utilisateur connecté
@@ -1659,49 +1720,103 @@ public class HomeController {
             // Récupérer les recherches récentes
             List<Map<String, String>> enregistres = getenregistres(userId);
 
-            // Créer un ScrollPane pour ajouter du défilement
-            ScrollPane scrollPane = new ScrollPane();
-            scrollPane.setFitToWidth(true);  // S'assurer que le contenu du ScrollPane s'adapte à la largeur
-            scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS); // Activer la barre de défilement horizontale si nécessaire
-            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS); // Activer la barre de défilement verticale si nécessaire
+            // Créer un conteneur HBox pour le titre et le bouton de fermeture
+            HBox headerBox = new HBox(10); // Espacement de 10px entre les éléments
+            headerBox.setStyle("-fx-alignment: center-left; -fx-padding: 15px;");
 
-            // Organiser le contenu dans un VBox
-            VBox vbox = new VBox(10); // Espacement de 10px entre chaque élément
+            // Ajouter un titre "Recherches Récentes" aligné à gauche
+            Label titleLabel = new Label("Lieux Visités");
+            titleLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #333;");
+            HBox.setHgrow(titleLabel, Priority.ALWAYS); // Permet au titre de prendre tout l'espace disponible à gauche
+            headerBox.getChildren().add(titleLabel);
+
+            // Ajouter un espace entre le titre et le bouton
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS); // Le spacer occupe tout l'espace restant entre le titre et le bouton
+            headerBox.getChildren().add(spacer);
+
+            // Créer le bouton de fermeture avec une icône
+            Button closeButton = new Button();
+            Image closeImage = new Image(getClass().getResource("/images/close-icon.png").toString());
+            ImageView closeImageView = new ImageView(closeImage);
+            closeImageView.setFitWidth(20);
+            closeImageView.setFitHeight(20);
+            closeButton.setGraphic(closeImageView);
+            closeButton.setStyle(
+                    "-fx-background-radius: 50%; " +
+                            "-fx-border-color: #ccc; " +
+                            "-fx-border-width: 1px; " +
+                            "-fx-border-radius: 50%; " +
+                            "-fx-cursor: hand;"
+            );
+
+            // Action du bouton de fermeture
+            closeButton.setOnAction(event -> {
+                enregistreScrollPane.setVisible(false);
+                enregistreScrollPane.setManaged(false);
+            });
+
+            // Ajouter le bouton de fermeture à droite de l'HBox
+            headerBox.getChildren().add(closeButton);
+
+            // Ajouter la HBox au VBox principal
+            enregistreVBox.getChildren().add(headerBox);
 
             // Ajouter les recherches dynamiquement au VBox
             for (Map<String, String> search : enregistres) {
                 String term = search.get("term");
                 String date = search.get("date");
 
-                // Créer une étiquette pour chaque recherche
-                HBox enregistreHBox = new HBox(15); // Espacement de 15px entre le terme et la date
-                enregistreHBox.setStyle("-fx-padding: 8px; -fx-background-color: #f9f9f9; -fx-border-radius: 10px; -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 5, 0, 0, 3);");
+                // Supprimer les secondes et tout ce qui suit
+                String truncatedDate = date.length() > 16 ? date.substring(0, 16) : date;
+
+                // Créer une HBox pour afficher chaque recherche
+                HBox enregistreHBox = new HBox(20); // Espacement de 20px entre le terme et la date
+                enregistreHBox.setStyle("-fx-padding: 5px; -fx-background-color: #ffffff; -fx-border-radius: 10px; -fx-border-color: #f0f0f0; -fx-border-width: 1px;");
 
                 // Termes de recherche
                 Label termLabel = new Label(term);
-                termLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #4CAF50; -fx-font-weight: bold;");
+                termLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00796b; -fx-font-weight: bold;");
+                termLabel.setWrapText(true);
 
                 // Date de recherche
-                Label dateLabel = new Label("(" + date + ")");
-                dateLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #888; -fx-font-style: italic;");
+                Label dateLabel = new Label("(" + truncatedDate + ")");
+                dateLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #757575; -fx-font-style: italic;");
+                dateLabel.setWrapText(true);
 
                 // Ajouter les labels à l'HBox
                 enregistreHBox.getChildren().addAll(termLabel, dateLabel);
 
                 // Ajouter l'HBox au VBox
-                vbox.getChildren().add(enregistreHBox);
+                enregistreVBox.getChildren().add(enregistreHBox);
             }
 
-            // Ajouter le VBox au ScrollPane
-            scrollPane.setContent(vbox);
+            enregistreVBox.setPrefWidth(600); // Ajuster la largeur
+            enregistreVBox.setMaxWidth(Double.MAX_VALUE);
 
-            // Remplacer l'ancien VBox par le ScrollPane dans le conteneur principal
-            enregistreVBox.getChildren().add(scrollPane);
+            // Créer un ScrollPane
+            ScrollPane scrollPane = new ScrollPane();
+            scrollPane.setContent(enregistreVBox);
+            scrollPane.setFitToWidth(true);
+            scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+
+            enregistreScrollPane.setContent(scrollPane);
+            enregistreScrollPane.setVisible(true);
+            enregistreScrollPane.setManaged(true);
 
         } else {
-            System.out.println("Utilisateur non trouvé.");
+            Label errorLabel = new Label("Utilisateur non trouvé.");
+            errorLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: red; -fx-padding: 10px; -fx-font-weight: bold;");
+            enregistreVBox.getChildren().add(errorLabel);
+
+            enregistreScrollPane.setVisible(false);
+            enregistreScrollPane.setManaged(false);
         }
     }
+
+
+
 
 
 

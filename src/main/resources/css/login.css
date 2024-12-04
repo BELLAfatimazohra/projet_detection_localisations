@@ -1,27 +1,57 @@
+/* Style général pour le VBox */
+.vbox {
+    -fx-alignment: center; /* Centrer tous les éléments du VBox */
+    -fx-padding: 40px; /* Espacement intérieur général */
+    -fx-background-size: cover; /* Couvre toute la zone */
+    -fx-background-position: center; /* Centrer l'image */
+    -fx-background-repeat: no-repeat; /* Ne pas répéter l'image */
+    -fx-opacity: 1; /* Opacité par défaut */
+    -fx-transition: -fx-opacity 0.5s ease-in; /* Transition d'opacité */
+    -fx-background-color: rgba(0, 0, 0, 0.5); /* Ajout d'un fond semi-transparent pour mieux voir l'image */
+}
+
+/* Stackpane avec image de fond */
+.stackpane-background {
+    -fx-background-image: url("images/bac.png");
+    -fx-background-size: cover;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+    -fx-background-color: rgba(0, 0, 0, 0.3); /* Ajouter une légère teinte sombre */
+}
+
+/* Animation d'apparition du VBox */
+.vbox.visible {
+    -fx-opacity: 1; /* Opacité à 1 lors de la visibilité */
+}
+
 /* Style pour le message de bienvenue */
 .welcome-message {
-    -fx-font-size: 24px; /* Taille de la police augmentée pour plus de visibilité */
+    -fx-font-size: 30px; /* Taille de la police */
     -fx-font-weight: bold; /* Épaisseur de la police */
-    -fx-text-fill: #2c3e50; /* Couleur du texte */
-    -fx-margin-bottom: 30px; /* Espace en bas du message */
+    -fx-text-fill: #ffffff; /* Couleur du texte */
+    -fx-margin-bottom: 30px; /* Espacement en bas */
     -fx-alignment: center; /* Centrer le texte */
+    -fx-text-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 5, 0, 0, 5); /* Ombre douce pour le texte */
 }
 
 /* Style pour les TextField */
 .text-field {
     -fx-pref-width: 250px; /* Largeur des champs de texte */
     -fx-pref-height: 40px; /* Hauteur des champs de texte */
-    -fx-padding: 10px; /* Espacement intérieur */
+    -fx-padding: 10px 30px 10px 10px; /* Padding à droite pour l'icône */
     -fx-border-color: #ccc; /* Couleur de la bordure */
     -fx-border-radius: 5px; /* Coins arrondis */
     -fx-font-size: 14px; /* Taille de la police */
-    -fx-background-color: #ffffff; /* Couleur de fond pour plus de clarté */
-    -fx-transition: -fx-border-color 0.3s; /* Transition pour la couleur de la bordure */
+    -fx-background-color: #ffffff; /* Couleur de fond */
+    -fx-effect: innershadow(gaussian, #aaa, 8, 0, 0, 2); /* Ombre interne légère */
+    -fx-transition: -fx-border-color 0.3s, -fx-background-color 0.3s; /* Transition douce */
 }
 
+/* Change the border color and background when the field is focused */
 .text-field:focused {
-    -fx-border-color: #3498db; /* Couleur de la bordure lors du focus */
-    -fx-background-color: #f0f8ff; /* Couleur de fond lors du focus pour indiquer l'interaction */
+    -fx-border-color: #3498db; /* Bordure bleue lors du focus */
+    -fx-background-color: #e6f7ff; /* Fond bleu clair lors du focus */
+    -fx-effect: innershadow(gaussian, #3498db, 6, 0, 0, 2); /* Ombre interne bleue */
 }
 
 /* Style pour les Buttons */
@@ -31,15 +61,18 @@
     -fx-text-fill: white; /* Couleur du texte */
     -fx-border: none; /* Pas de bordure */
     -fx-background-radius: 5px; /* Coins arrondis */
-    -fx-font-size: 16px; /* Taille de la police pour une meilleure lisibilité */
+    -fx-font-size: 16px; /* Taille de la police */
     -fx-cursor: hand; /* Curseur pointer pour indiquer que c'est cliquable */
-    -fx-transition: -fx-background-color 0.3s, -fx-transform 0.3s; /* Transitions pour le survol */
+    -fx-transition: -fx-background-color 0.3s, -fx-scale-x 0.3s, -fx-scale-y 0.3s; /* Transition fluide */
+    -fx-effect: dropshadow(gaussian, #2c3e50, 10, 0, 0, 4); /* Ombre portée */
 }
 
+/* Au survol du bouton */
 .button:hover {
     -fx-background-color: #2980b9; /* Couleur de fond au survol */
-    -fx-scale-x: 1.05; /* Agrandir légèrement le bouton sur l'axe X */
-    -fx-scale-y: 1.05; /* Agrandir légèrement le bouton sur l'axe Y */
+    -fx-scale-x: 1.05; /* Agrandir légèrement sur l'axe X */
+    -fx-scale-y: 1.05; /* Agrandir légèrement sur l'axe Y */
+    -fx-effect: dropshadow(gaussian, #2c3e50, 12, 0, 0, 5); /* Ombre plus prononcée au survol */
 }
 
 /* Style pour les messages d'erreur */
@@ -48,27 +81,60 @@
     -fx-text-fill: red; /* Couleur du texte d'erreur */
     -fx-visibility: hidden; /* Masquer par défaut */
     -fx-padding: 5px; /* Espacement intérieur */
+    -fx-font-style: italic; /* Police italique pour un style distinct */
 }
 
-/* Style pour afficher l'erreur lorsqu'elle est active */
+/* Affichage de l'erreur lorsqu'elle est active */
 .errorLabel.visible {
     -fx-visibility: visible; /* Rendre visible lorsque nécessaire */
 }
 
-/* Style général pour le VBox */
-.vbox {
-    -fx-alignment: center; /* Centrer tous les éléments du VBox */
-    -fx-padding: 20px; /* Espacement intérieur général */
-    -fx-background-color: #ecf0f1; /* Couleur de fond générale pour l'application */
+/* Pour le bouton d'inscription (signup) */
+#signupButton {
+    -fx-font-size: 14px; /* Taille de la police pour le bouton d'inscription */
+    -fx-text-fill: #3498db; /* Couleur du texte */
+    -fx-background-color: transparent; /* Fond transparent */
+    -fx-border: 1px solid #3498db; /* Bordure bleu clair */
+    -fx-background-radius: 5px; /* Coins arrondis */
+    -fx-cursor: hand; /* Curseur pointer pour indiquer que c'est cliquable */
 }
 
-/* Styles de transition pour le VBox lors de l'affichage */
-.vbox {
-    -fx-opacity: 0; /* Opacité par défaut */
-    -fx-transition: -fx-opacity 0.5s ease-in; /* Transition d'opacité */
+/* Au survol du bouton d'inscription */
+#signupButton:hover {
+    -fx-text-fill: #2980b9; /* Changer la couleur du texte lors du survol */
+    -fx-border-color: #2980b9; /* Changer la couleur de la bordure lors du survol */
 }
 
-/* Animation d'apparition du VBox */
-.vbox.visible {
-    -fx-opacity: 1; /* Opacité à 1 lors de la visibilité */
+/* Style pour les TextField et PasswordField avec l'icône */
+.text-field, .password-field {
+    -fx-pref-width: 250px; /* Largeur des champs de texte */
+    -fx-pref-height: 40px; /* Hauteur des champs de texte */
+    -fx-padding: 10px 30px 10px 10px; /* Padding à droite pour l'icône */
+    -fx-border-color: #ccc; /* Couleur de la bordure */
+    -fx-border-radius: 5px; /* Coins arrondis */
+    -fx-font-size: 14px; /* Taille de la police */
+    -fx-background-color: #ffffff; /* Couleur de fond */
+    -fx-effect: innershadow(gaussian, #aaa, 8, 0, 0, 2); /* Ombre interne légère */
+    -fx-transition: -fx-border-color 0.3s, -fx-background-color 0.3s; /* Transition douce */
+}
+
+/* Focus pour le PasswordField */
+.password-field:focused {
+    -fx-border-color: #3498db; /* Bordure bleue lors du focus */
+    -fx-background-color: #e6f7ff; /* Fond bleu clair lors du focus */
+    -fx-effect: innershadow(gaussian, #3498db, 6, 0, 0, 2); /* Ombre interne bleue */
+}
+/* Style de l'image avec transition et agrandissement */
+/* Style initial de l'image */
+#backgroundImage {
+    -fx-opacity: 1;
+    -fx-fit-width: 150px;
+    -fx-fit-height: 150px;
+    -fx-transition: -fx-fit-width 0.5s ease, -fx-fit-height 0.5s ease;
+}
+
+/* Agrandissement au survol */
+#backgroundImage:hover {
+    -fx-fit-width: 170px;  /* Agrandissement de l'image */
+    -fx-fit-height: 170px; /* Agrandissement de l'image */
 }
