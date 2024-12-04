@@ -35,10 +35,16 @@
         })
     });
 
+
+
+
 function drawRouteOnMap(apiRouteCoordinates) {
     // Supprimer les couches d'itinéraires existantes
     const existingRouteLayers = map.getLayers().getArray().filter(layer => layer.get('name') === 'routeLayer');
     existingRouteLayers.forEach(layer => map.removeLayer(layer));
+
+    const existingMarkerLayers = map.getLayers().getArray().filter(layer => layer.get('name') === 'markerLayer');
+    existingMarkerLayers.forEach(layer => map.removeLayer(layer));
 
     // Convertir les coordonnées [latitude, longitude] en [longitude, latitude] pour OpenLayers
     var convertedCoordinates = apiRouteCoordinates.map(coord => ol.proj.fromLonLat([coord[1], coord[0]]));
@@ -71,12 +77,44 @@ function drawRouteOnMap(apiRouteCoordinates) {
     // Ajouter la couche d'itinéraire à la carte
     map.addLayer(routeLayer);
 
+    const startPoint = convertedCoordinates[0]; // Position de départ
+    const endPoint = convertedCoordinates[convertedCoordinates.length - 1]; // Position d'arrivée
+
+ const markerSource = new ol.source.Vector({
+        features: [
+            new ol.Feature({
+                geometry: new ol.geom.Point(startPoint),
+
+            }),
+            new ol.Feature({
+                geometry: new ol.geom.Point(endPoint),
+
+            })
+        ]
+    });
+     const markerLayer = new ol.layer.Vector({
+        source: markerSource,
+        style: new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 6,
+                fill: new ol.style.Fill({ color: 'green' }),
+                stroke: new ol.style.Stroke({ color: 'white', width: 2 })
+            })
+        })
+    });
+
+    markerLayer.set('name', 'markerLayer');
+    map.addLayer(markerLayer);
+
     // Recentrer la vue sur l'itinéraire
     var routeExtent = routeLine.getExtent();
     map.getView().fit(routeExtent, { padding: [50, 50, 50, 50], maxZoom: 14 });
+// Centrer sur les marqueurs si nécessaire
+    const markerExtent = markerSource.getExtent();
+    console.log("Étendue des marqueurs :", markerExtent);
 
+    console.log("Itinéraire et marqueurs tracés avec succès.");
     console.log("Itinéraire tracé avec succès.");}
-
 
 
 function addMarker(latitude, longitude) {
@@ -87,6 +125,7 @@ function addMarker(latitude, longitude) {
         console.error("Latitude ou longitude non définie pour addMarker");
         return;
     }
+
     console.log("Ajout d'un marqueur aux coordonnées : ", latitude, longitude);
     var coords = ol.proj.fromLonLat([longitude, latitude]);
 
@@ -213,57 +252,6 @@ function getFirstMarkerCoordinates() {
         return null;
     }
 }
-
-
-
-
-function drawRouteOnMap(apiRouteCoordinates) {
-    // Supprimer les couches d'itinéraires existantes
-    const existingRouteLayers = map.getLayers().getArray().filter(layer => layer.get('name') === 'routeLayer');
-    existingRouteLayers.forEach(layer => map.removeLayer(layer));
-
-    // Convertir les coordonnées [latitude, longitude] en [longitude, latitude] pour OpenLayers
-    var convertedCoordinates = apiRouteCoordinates.map(coord => ol.proj.fromLonLat([coord[1], coord[0]]));
-
-    // Créer une géométrie de type ligne
-    var routeLine = new ol.geom.LineString(convertedCoordinates);
-
-    // Créer une source de vecteur pour la ligne
-    var vectorSource = new ol.source.Vector({
-        features: [new ol.Feature({ geometry: routeLine })]
-    });
-
-    // Définir le style de la ligne
-    var routeStyle = new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: 'blue', // Couleur de l'itinéraire
-            width: 4       // Épaisseur de la ligne
-        })
-    });
-
-    // Créer une couche pour afficher la ligne
-    var routeLayer = new ol.layer.Vector({
-        source: vectorSource,
-        style: routeStyle
-    });
-
-    // Attribuer un nom pour identifier la couche plus tard
-    routeLayer.set('name', 'routeLayer');
-
-    // Ajouter la couche d'itinéraire à la carte
-    map.addLayer(routeLayer);
-
-    // Recentrer la vue sur l'itinéraire
-    var routeExtent = routeLine.getExtent();
-    map.getView().fit(routeExtent, { padding: [50, 50, 50, 50], maxZoom: 14 });
-
-    console.log("Itinéraire tracé avec succès.");}
-
-
-
-
-
-
     // Fonction pour mettre à jour la carte avec les marqueurs des restaurants
 function updateMapWithRestaurants(restaurants) {
     // Supprimer toutes les couches de type Vector existantes

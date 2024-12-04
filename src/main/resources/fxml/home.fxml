@@ -93,6 +93,7 @@
 
                 <!-- HBox pour les boutons de sélection de mode de transport -->
                 <HBox spacing="10" alignment="CENTER" styleClass="hbox-transport">
+                    <VBox alignment="CENTER" spacing="5">
                     <Button fx:id="carModeButton"  onAction="#handleCarMode" styleClass="transport-button">
                         <graphic>
                             <ImageView fx:id="carIcon" fitWidth="20" fitHeight="20">
@@ -100,6 +101,9 @@
                             </ImageView>
                         </graphic>
                     </Button>
+                    <Label fx:id="carDurationLabel" text=" " />
+                    </VBox>
+                    <VBox alignment="CENTER" spacing="5">
                     <Button fx:id="bikeModeButton" onAction="#handleBikeMode" styleClass="transport-button">
                         <graphic>
                             <ImageView fx:id="bikeIcon" fitWidth="20" fitHeight="20">
@@ -107,6 +111,9 @@
                             </ImageView>
                         </graphic>
                     </Button>
+                    <Label fx:id="bikeDurationLabel" text=" " />
+                    </VBox>
+                    <VBox alignment="CENTER" spacing="5">
                     <Button fx:id="walkModeButton" text="" onAction="#handleWalkMode" styleClass="transport-button">
                         <graphic>
                             <ImageView fx:id="walkIcon" fitWidth="20" fitHeight="20">
@@ -114,6 +121,9 @@
                             </ImageView>
                         </graphic>
                     </Button>
+                    <Label fx:id="walkDurationLabel" text=" " />
+                    </VBox>
+                    <VBox alignment="CENTER" spacing="5">
                     <Button fx:id="closeItineraryButton" text=""  onAction="#handleCloseItinerary" styleClass="transport-button">
                         <graphic>
                             <ImageView fx:id="closeIcon" fitWidth="20" fitHeight="20">
@@ -121,6 +131,8 @@
                             </ImageView>
                         </graphic>
                     </Button>
+                        <Label text="" style="-fx-font-size: 14px;" />
+                    </VBox>
                 </HBox>
 
                 <!-- Champs pour les positions de départ et d'arrivée -->
@@ -128,7 +140,7 @@
                 <TextField fx:id="endField" promptText="Position d'arrivée"  styleClass="search-field"/>
 
                 <!-- Bouton pour calculer l'itinéraire -->
-                <Button text="Calculer itinéraire" onAction="#handleCalculateItinerary" styleClass="search-button"/>
+                <!--<Button text="Calculer itinéraire" onAction="#handleCalculateItinerary" styleClass="search-button"/>-->
             </VBox>
 
 
