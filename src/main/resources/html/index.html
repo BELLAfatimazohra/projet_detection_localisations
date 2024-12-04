@@ -386,18 +386,18 @@ function updateMapWithMosques(mosques) {
         var iconStyle = new ol.style.Style({
             image: new ol.style.Icon({
                 anchor: [0.5, 1],
-                src: '../images/mosquee.png', // Assurez-vous que l'image existe
+                src: '../images/mosquee.png', // Assurez-vous que l'image du marqueur existe
                 scale: 0.1
             })
         });
         marker.setStyle(iconStyle);
 
-        // Ajouter le marqueur dans une source de vecteur
+        // Créer une source de vecteur pour ce marqueur spécifique
         var vectorSource = new ol.source.Vector({
             features: [marker]
         });
 
-        // Créer une couche de vecteur pour le marqueur
+        // Créer une couche de vecteur pour ce marqueur spécifique
         var markerLayer = new ol.layer.Vector({
             source: vectorSource
         });

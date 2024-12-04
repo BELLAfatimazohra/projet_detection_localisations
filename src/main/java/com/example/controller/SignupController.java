@@ -97,4 +97,21 @@ public class SignupController {
         stage.setScene(loginScene);
         stage.show();
     }
+
+    public void handleLoginRedirect(ActionEvent actionEvent) throws IOException {
+        // Charger la page de login
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
+        Parent loginRoot = loader.load();
+
+        // Créer une nouvelle scène pour la page de login
+        Scene loginScene = new Scene(loginRoot);
+
+        // Récupérer la fenêtre actuelle
+        Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
+
+        // Changer la scène pour la page de login
+        stage.setScene(loginScene);
+        stage.show();
+    }
+
 }

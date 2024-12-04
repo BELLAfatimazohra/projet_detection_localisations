@@ -133,12 +133,7 @@ public class HomeController {
     private VBox pharmacyVBox;
     @FXML
     private VBox mosqueVBox;
-    @FXML
-    private Label carDurationLabel;
-    @FXML
-    private Label bikeDurationLabel;
-    @FXML
-    private Label walkDurationLabel;
+
 
     private WebEngine webEngine;
 
@@ -1471,20 +1466,78 @@ public class HomeController {
         }
     }
 
+
+
+
+
+
+
+    // Variable pour stocker le mode de transport sélectionné
+    private String selectedVehicle = "car"; // Par défaut, on commence avec le mode "car"
+    @FXML
+    private void handleCarMode() {
+        selectedVehicle = "car";
+    }
+
+    @FXML
+    private void handleBikeMode() {
+        selectedVehicle = "bike";
+    }
+
+    @FXML
+    private void handleWalkMode() {
+        selectedVehicle = "foot";
+    }
+
+
     @FXML
     private void handleCloseItinerary() {
         // Masquer le VBox
         itineraryFieldsVBox.setVisible(false);
         itineraryFieldsVBox.setManaged(false);
-
-        // Masquer la barre latérale si elle existe (par exemple un Pane, VBox, ou autre conteneur)
-
-
-        // Supprimer l'itinéraire de la carte (via le WebEngine de WebView)
-
     }
 
 
+    private double[] getCoordinates(String query) {
+        try {
+            // Encoder la requête
+            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
+
+            // URL pour la requête Nominatim
+            String url = "https://nominatim.openstreetmap.org/search?q=" + encodedQuery + "&format=json&addressdetails=1&limit=1";
+
+            // Envoi de la requête
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                HttpGet request = new HttpGet(url);
+                try (CloseableHttpResponse response = httpClient.execute(request)) {
+                    // Vérifier le statut de la réponse
+                    if (response.getStatusLine().getStatusCode() == 200) {
+                        String jsonResponse = EntityUtils.toString(response.getEntity());
+                        JSONArray results = new JSONArray(jsonResponse);
+
+                        // Vérifier si des résultats sont disponibles
+                        if (results.length() > 0) {
+                            JSONObject location = results.getJSONObject(0);
+                            double latitude = location.optDouble("lat");
+                            double longitude = location.optDouble("lon");
+
+                            // Retourner les coordonnées
+                            return new double[]{latitude, longitude};
+                        } else {
+                            System.out.println("Aucun lieu trouvé pour : " + query);
+
+
+                        }
+                    } else {
+                        System.err.println("Erreur lors de la requête HTTP : " + response.getStatusLine());
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la recherche de la localisation : " + e.getMessage());
+        }
+        return null; // Retourner null si les coordonnées ne sont pas disponibles
+    }
 
 
     public void handleRecentSearches(ActionEvent actionEvent) {
@@ -1553,6 +1606,8 @@ public class HomeController {
         }
     }
 
+
+
     public List<Map<String, String>> getRecentSearches(int userId) {
         List<Map<String, String>> recentSearches = new ArrayList<>();
         String query = "SELECT NAME, MAX(SEARCHED_AT) AS SEARCHED_AT " +
@@ -1578,6 +1633,8 @@ public class HomeController {
         }
         return recentSearches;
     }
+
+
 
 
     public void handleadresseenredgistre(ActionEvent actionEvent) {
@@ -1764,6 +1821,12 @@ public class HomeController {
 
         return userInfo;
     }
+
+
+
+
+
+
     public String calculateRoute(double startLat, double startLon, double endLat, double endLon, String vehicle) throws IOException {
         String API_URL = "https://graphhopper.com/api/1/route";
         String apiKey= "0f5d7a61-cd15-4cb7-a179-8319fdf9912f";
@@ -1831,43 +1894,9 @@ public class HomeController {
         /*  System.out.println("Coordonnées au format JavaScript : " + routeCoordinates);*/
         return routeCoordinates.toString();
     }
-    // Variable pour stocker le mode de transport sélectionné
-    private String selectedVehicle = "car"; // Par défaut, on commence avec le mode "car"
-    @FXML
-    private void handleCarMode() {
-        selectedVehicle = "car";
-        calculateAndDisplayItinerary();
-    }
 
     @FXML
-    private void handleBikeMode() {
-        selectedVehicle = "bike";
-        calculateAndDisplayItinerary();
-    }
-
-    @FXML
-    private void handleWalkMode() {
-        selectedVehicle = "foot";
-        calculateAndDisplayItinerary();
-    }
-    private String formatTravelTime(long milliseconds) {
-        long totalMinutes = milliseconds / 60000;
-        long hours = totalMinutes / 60;
-        long minutes = totalMinutes % 60;
-
-        if (hours >= 24) {
-            long days = hours / 24;
-            hours = hours % 24;
-            return days + " jour" + (days > 1 ? "s" : "") + (hours > 0 ? " " + hours + "h" : "");
-        } else if (hours > 0) {
-            return hours + "h" + (minutes > 0 ? minutes : "");
-        } else {
-            return minutes + " min";
-        }
-    }
-
-
-    private void calculateAndDisplayItinerary(){
+    private void handleCalculateItinerary() {
         // Afficher les indicateurs de chargement
         loadingIndicator.setVisible(true);
         loadingLabel.setVisible(true);
@@ -1882,23 +1911,21 @@ public class HomeController {
             loadingLabel.setVisible(false);
             return;
         }
+
+
+
         try {
             double[] startCoords =getCoordinates(startCoordinates);
             double[] endCoords =getCoordinates(endCoordinates);
+
+
+
             System.out.println("Coordonnées de départ : " + startCoords[0] + ", " + startCoords[1]);
             System.out.println("Coordonnées d'arrivée : " + endCoords[0] + ", " + endCoords[1]);
-
-            // Calculer les durées pour chaque mode
-            long carTime = extractTravelTime(startCoords[0], startCoords[1], endCoords[0], endCoords[1], "car");
-            long bikeTime = extractTravelTime(startCoords[0], startCoords[1], endCoords[0], endCoords[1], "bike");
-            long walkTime = extractTravelTime(startCoords[0], startCoords[1], endCoords[0], endCoords[1], "foot");
-
-            // Mettre à jour les labels
-            carDurationLabel.setText(formatTravelTime(carTime));
-            bikeDurationLabel.setText(formatTravelTime(bikeTime));
-            walkDurationLabel.setText(formatTravelTime(walkTime));
             // Appeler pour récupérer les points de l'itinéraire
             String routeCoordinatesJS =calculateRoute(startCoords[0], startCoords[1], endCoords[0], endCoords[1], selectedVehicle);
+
+
             // Masquer les indicateurs de chargement
             loadingIndicator.setVisible(false);
             loadingLabel.setVisible(false);
@@ -1915,8 +1942,6 @@ public class HomeController {
 
 
             webView.getEngine().executeScript("drawRouteOnMap(" + routeCoordinatesJS + ");");
-            // Ajouter des marqueurs pour le départ et l'arrivée
-            // Ajouter des marqueurs pour le départ et l'arrivée **après** avoir tracé l'itinéraire
 
 
         }catch (Exception e) {
@@ -1928,71 +1953,6 @@ public class HomeController {
 
     }
 
-    private long extractTravelTime(double startLat, double startLon, double endLat, double endLon, String vehicle) throws IOException {
-        String API_URL = "https://graphhopper.com/api/1/route";
-        String apiKey = "0f5d7a61-cd15-4cb7-a179-8319fdf9912f";
-        String url = String.format(Locale.ENGLISH,
-                "%s?point=%f,%f&point=%f,%f&type=json&locale=en&vehicle=%s&key=%s",
-                API_URL, startLat, startLon, endLat, endLon, vehicle, apiKey
-        );
-
-        try (CloseableHttpClient client = HttpClients.createDefault()) {
-            HttpGet request = new HttpGet(url);
-            HttpEntity entity = client.execute(request).getEntity();
-            String responseString = EntityUtils.toString(entity);
-
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode rootNode = mapper.readTree(responseString);
-            JsonNode pathNode = rootNode.path("paths");
-
-            if (pathNode.isArray() && pathNode.size() > 0) {
-                JsonNode path = pathNode.get(0);
-                return path.path("time").asLong(); // Retourner le temps en millisecondes
-            } else {
-                throw new RuntimeException("Aucune route trouvée.");
-            }
-        }}
-
-    private double[] getCoordinates(String query) {
-        try {
-            // Encoder la requête
-            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
-
-            // URL pour la requête Nominatim
-            String url = "https://nominatim.openstreetmap.org/search?q=" + encodedQuery + "&format=json&addressdetails=1&limit=1";
-
-            // Envoi de la requête
-            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-                HttpGet request = new HttpGet(url);
-                try (CloseableHttpResponse response = httpClient.execute(request)) {
-                    // Vérifier le statut de la réponse
-                    if (response.getStatusLine().getStatusCode() == 200) {
-                        String jsonResponse = EntityUtils.toString(response.getEntity());
-                        JSONArray results = new JSONArray(jsonResponse);
-
-                        // Vérifier si des résultats sont disponibles
-                        if (results.length() > 0) {
-                            JSONObject location = results.getJSONObject(0);
-                            double latitude = location.optDouble("lat");
-                            double longitude = location.optDouble("lon");
-
-                            // Retourner les coordonnées
-                            return new double[]{latitude, longitude};
-                        } else {
-                            System.out.println("Aucun lieu trouvé pour : " + query);
-
-
-                        }
-                    } else {
-                        System.err.println("Erreur lors de la requête HTTP : " + response.getStatusLine());
-                    }
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Erreur lors de la recherche de la localisation : " + e.getMessage());
-        }
-        return null; // Retourner null si les coordonnées ne sont pas disponibles
-    }
 
 
 }

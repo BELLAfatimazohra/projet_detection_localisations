@@ -10,6 +10,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -18,6 +19,7 @@ import javafx.concurrent.Task;
 import java.io.IOException;
 
 public class LoginController {
+    public ImageView backgroundImage;
     @FXML
     private TextField usernameField;
     @FXML

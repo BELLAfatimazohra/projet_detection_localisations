@@ -15,5 +15,8 @@
 
     <Button text="S'inscrire" onAction="#handleSignup" styleClass="button-signup"/>
 
+    <!-- Lien vers la page de connexion -->
+    <Hyperlink text="Déjà un compte ? Connectez-vous ici" onAction="#handleLoginRedirect" styleClass="login-link"/>
+
     <Label fx:id="errorLabel" textFill="red" styleClass="error-label"/>
 </VBox>
