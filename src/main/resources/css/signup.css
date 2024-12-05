@@ -1,74 +1,50 @@
-/* Style pour le message de bienvenue */
-.welcome-message {
-    -fx-font-size: 24px; /* Taille de la police pour plus de visibilité */
-    -fx-font-weight: bold; /* Épaisseur de la police */
-    -fx-text-fill: #2c3e50; /* Couleur du texte */
-    -fx-margin-bottom: 30px; /* Espace en bas du message */
-    -fx-alignment: center; /* Centrer le texte */
+.title {
+    -fx-font-size: 28px; /* Taille du texte */
+    -fx-font-weight: bold; /* Gras pour le texte */
+    -fx-text-fill: #2c3e50; /* Couleur du texte (un bleu sombre élégant) */
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 5, 0.3, 0, 3); /* Ombre pour un effet 3D */
+    -fx-padding: 10px; /* Espacement autour du texte */
+    -fx-underline: true; /* Ligne sous le texte pour mettre l'accent */
+    -fx-font-family: 'Arial', sans-serif; /* Police moderne */
 }
 
-/* Style pour les TextField */
+
 .text-field {
-    -fx-pref-width: 250px; /* Largeur des champs de texte */
-    -fx-pref-height: 40px; /* Hauteur des champs de texte */
-    -fx-padding: 10px; /* Espacement intérieur */
-    -fx-border-color: #ccc; /* Couleur de la bordure */
-    -fx-border-radius: 5px; /* Coins arrondis */
-    -fx-font-size: 14px; /* Taille de la police */
-    -fx-background-color: #ffffff; /* Couleur de fond pour plus de clarté */
-    -fx-transition: -fx-border-color 0.3s; /* Transition pour la couleur de la bordure */
+    -fx-pref-width: 280px;
+    -fx-pref-height: 40px;
+    -fx-font-size: 14px;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #ccc;
+    -fx-border-radius: 5px;
 }
 
 .text-field:focused {
-    -fx-border-color: #3498db; /* Couleur de la bordure lors du focus */
-    -fx-background-color: #f0f8ff; /* Couleur de fond lors du focus pour indiquer l'interaction */
+    -fx-border-color: #3498db;
+    -fx-border-width: 2px;
 }
 
-/* Style pour les Buttons */
 .button-signup {
-    -fx-padding: 12px 24px; /* Espacement intérieur */
-    -fx-background-color: #3498db; /* Couleur de fond */
-    -fx-text-fill: white; /* Couleur du texte */
-    -fx-border: none; /* Pas de bordure */
-    -fx-background-radius: 5px; /* Coins arrondis */
-    -fx-font-size: 16px; /* Taille de la police pour une meilleure lisibilité */
-    -fx-cursor: hand; /* Curseur pointer pour indiquer que c'est cliquable */
-    -fx-transition: -fx-background-color 0.3s, -fx-transform 0.3s; /* Transitions pour le survol */
+    -fx-background-color: #2980b9;
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-pref-width: 280px;
+    -fx-pref-height: 45px;
+    -fx-background-radius: 5px;
+    -fx-cursor: hand;
 }
 
 .button-signup:hover {
-    -fx-background-color: #2980b9; /* Couleur de fond au survol */
-    -fx-scale-x: 1.05; /* Agrandir légèrement le bouton sur l'axe X */
-    -fx-scale-y: 1.05; /* Agrandir légèrement le bouton sur l'axe Y */
+    -fx-background-color: #3498db;
 }
 
-/* Style pour les messages d'erreur */
-.errorLabel {
-    -fx-font-size: 14px; /* Taille de la police pour l'erreur */
-    -fx-text-fill: red; /* Couleur du texte d'erreur */
-    -fx-visibility: hidden; /* Masquer par défaut */
-    -fx-padding: 5px; /* Espacement intérieur */
+.login-link {
+    -fx-text-fill: #2980b9;
+    -fx-font-size: 14px;
 }
 
-/* Style pour afficher l'erreur lorsqu'elle est active */
-.errorLabel.visible {
-    -fx-visibility: visible; /* Rendre visible lorsque nécessaire */
-}
-
-/* Style général pour le VBox */
-.vbox {
-    -fx-alignment: center; /* Centrer tous les éléments du VBox */
-    -fx-padding: 20px; /* Espacement intérieur général */
-    -fx-background-color: #ecf0f1; /* Couleur de fond générale pour l'application */
-}
-
-/* Styles de transition pour le VBox lors de l'affichage */
-.vbox {
-    -fx-opacity: 0; /* Opacité par défaut */
-    -fx-transition: -fx-opacity 0.5s ease-in; /* Transition d'opacité */
-}
-
-/* Animation d'apparition du VBox */
-.vbox.visible {
-    -fx-opacity: 1; /* Opacité à 1 lors de la visibilité */
+.error-label {
+    -fx-text-fill: red;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
 }

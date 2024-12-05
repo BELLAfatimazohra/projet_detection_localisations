@@ -13,14 +13,13 @@
         <Label text="Bienvenue dans votre application !" styleClass="welcome-message"/>
         <TextField fx:id="usernameField" promptText="Username" styleClass="text-field"/>
         <PasswordField fx:id="passwordField" promptText="Password" styleClass="password-field"/>
+        <!-- Indicateur de chargement -->
+        <ProgressIndicator fx:id="loadingIndicator" visible="false" />
         <Button text="Login" onAction="#handleLogin" styleClass="button"/>
         <Label fx:id="errorLabel" textFill="red" styleClass="errorLabel"/>
         <Button fx:id="signupButton" text="S'inscrire" onAction="#handleSignup" styleClass="button"/>
     </VBox>
 
-    <!-- ImageView positionnée en bas à droite -->
-    <ImageView fx:id="backgroundImage" fitWidth="100" fitHeight="100" StackPane.alignment="BOTTOM_RIGHT">
-        <Image url="@../images/cott.png"/>
-    </ImageView>
+
 
 </StackPane>

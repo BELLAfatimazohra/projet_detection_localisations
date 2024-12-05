@@ -1,22 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
 
-<VBox alignment="CENTER" spacing="10" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.example.controller.SignupController" stylesheets="@../css/signup.css">
 
-    <Label text="Inscription" styleClass="title"/>
+<StackPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.controller.SignupController"
+           stylesheets="@../css/signup.css"
+           style="-fx-background-image: url('images/cott.jpg'); -fx-background-size: cover; -fx-background-position: center; -fx-background-repeat: no-repeat;">
 
-    <TextField fx:id="usernameField" promptText="Nom d'utilisateur" styleClass="text-field"/>
-    <TextField fx:id="emailField" promptText="Email" styleClass="text-field"/>
-    <PasswordField fx:id="passwordField" promptText="Mot de passe" styleClass="text-field"/>
-    <PasswordField fx:id="confirmPasswordField" promptText="Confirmer le mot de passe" styleClass="text-field"/>
+    <VBox alignment="CENTER" spacing="15" styleClass="vbox">
+        <Label text="Inscription" styleClass="title"/>
+        <TextField fx:id="usernameField" promptText="Nom d'utilisateur" styleClass="text-field"/>
+        <TextField fx:id="emailField" promptText="Email" styleClass="text-field"/>
+        <PasswordField fx:id="passwordField" promptText="Mot de passe" styleClass="text-field"/>
+        <PasswordField fx:id="confirmPasswordField" promptText="Confirmer le mot de passe" styleClass="text-field"/>
 
-    <Button text="S'inscrire" onAction="#handleSignup" styleClass="button-signup"/>
+        <Button text="S'inscrire" onAction="#handleSignup" styleClass="button-signup"/>
 
-    <!-- Lien vers la page de connexion -->
-    <Hyperlink text="Déjà un compte ? Connectez-vous ici" onAction="#handleLoginRedirect" styleClass="login-link"/>
+        <Hyperlink text="Déjà un compte ? Connectez-vous ici" onAction="#handleLoginRedirect" styleClass="login-link"/>
 
-    <Label fx:id="errorLabel" textFill="red" styleClass="error-label"/>
-</VBox>
+        <Label fx:id="errorLabel" textFill="red" styleClass="error-label"/>
+    </VBox>
+
+</StackPane>

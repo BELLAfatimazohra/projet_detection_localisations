@@ -199,7 +199,6 @@
                 <Label fx:id="loadingLabel" text="Chargement..." visible="false" style="-fx-text-fill: blue;" />
             </VBox>
 
-            <!-- Profil et menu -->
             <VBox minWidth="50" maxWidth="100" spacing="10" alignment="top_center" >
                 <Button fx:id="profil" onAction="#handleProfileDisplay" styleClass="profil">
                     <graphic>
@@ -237,7 +236,6 @@
                     </graphic>
                 </Button>
             </VBox>
-
         </HBox>
     </children>
 </AnchorPane>

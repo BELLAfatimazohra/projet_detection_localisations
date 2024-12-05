@@ -4,20 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bfd8eb98-c0ee-44e5-8f2d-0e0580b5522a" name="Changes" comment="iti">
+    <list default="true" id="bfd8eb98-c0ee-44e5-8f2d-0e0580b5522a" name="Changes" comment="madrt walooo">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/HomeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/controller/HomeController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/controller/LoginController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/SignupController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/controller/SignupController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/css/login.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/css/login.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/css/home.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/css/home.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/css/signup.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/css/signup.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/fxml/home.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/fxml/home.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/fxml/login.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/fxml/login.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/fxml/signup.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/fxml/signup.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/html/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/html/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/images/rest.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/images/restaurants-icon.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/images/restt.png" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -83,24 +78,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.HelloApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Application.MainApp.executor&quot;: &quot;Run&quot;,
-    &quot;Application.TileExporter.executor&quot;: &quot;Run&quot;,
-    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/INFO/Desktop/IdeaProjects/projet_detection_localisations&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.21839081&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;vcs.Git&quot;,
-    &quot;two.files.diff.last.used.file&quot;: &quot;C:/Users/INFO/Desktop/IdeaProjects/projet_detection_localisations/src/main/resources/tiles.mbtiles&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.HelloApplication.executor": "Run",
+    "Application.MainApp.executor": "Run",
+    "Application.TileExporter.executor": "Run",
+    "DefaultHtmlFileTemplate": "HTML File",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/INFO/Desktop/IdeaProjects/TP_java/tp8",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.21839081",
+    "settings.editor.selected.configurable": "vcs.Git",
+    "two.files.diff.last.used.file": "C:/Users/INFO/Desktop/IdeaProjects/projet_detection_localisations/src/main/resources/tiles.mbtiles"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CreateClassDialog.RecentsKey">
       <recent name="com.example.service" />
@@ -370,7 +365,15 @@
       <option name="project" value="LOCAL" />
       <updated>1733245474488</updated>
     </task>
-    <option name="localTasksCounter" value="32" />
+    <task id="LOCAL-00032" summary="madrt walooo">
+      <option name="closed" value="true" />
+      <created>1733345479255</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1733345479255</updated>
+    </task>
+    <option name="localTasksCounter" value="33" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -385,7 +388,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="test de connexion avec la base de donnees oracle" />
     <MESSAGE value="akkkhiran dart la connexion avec la base de donnes" />
     <MESSAGE value="page d'acceuil" />
     <MESSAGE value="testb wsf" />
@@ -410,7 +412,8 @@
     <MESSAGE value="comm" />
     <MESSAGE value="commm" />
     <MESSAGE value="iti" />
-    <option name="LAST_COMMIT_MESSAGE" value="iti" />
+    <MESSAGE value="madrt walooo" />
+    <option name="LAST_COMMIT_MESSAGE" value="madrt walooo" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
