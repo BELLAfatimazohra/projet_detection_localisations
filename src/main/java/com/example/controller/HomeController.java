@@ -89,6 +89,15 @@ public class HomeController {
     public VBox profileVBox;
     public Button closeButton;
     public ImageView closIcon;
+    public ProgressIndicator loadingIndicator;
+    public Label walkDurationLabel;
+    public Button walkModeButton;
+    public Button bikeModeButton;
+    public Button carModeButton;
+    public Label carDurationLabel;
+    public Label bikeDurationLabel;
+    public Button closeButtonpro;
+    public Button detectLocationButton;
     @FXML
     private  ScrollPane recherchrecenteScrollPane;
     @FXML
@@ -152,9 +161,8 @@ public class HomeController {
 
     @FXML
     private TextField endField;
-    @FXML
-    private ProgressIndicator loadingIndicator;
-
+    private double[] selectedEndCoordinates;
+    private double[] selectedStartCoordinates;
     // Méthode qui sera appelée lorsque l'utilisateur clique sur le bouton "Itinéraire"
 
 
@@ -189,11 +197,27 @@ public class HomeController {
         profileScrollPane.setVisible(false);
         profileScrollPane.setManaged(false);
     }
+    private void resetItineraryFields() {
+        // Effacer les champs de départ et d'arrivée
+        startField.clear();
+        endField.clear();
 
+        // Réinitialiser les labels de durée
+        carDurationLabel.setText(" ");
+        bikeDurationLabel.setText(" ");
+        walkDurationLabel.setText(" ");
+
+        // Réinitialiser la sélection du mode de transport
+        selectedVehicle = null;
+
+        // Cacher les indicateurs de chargement si visibles
+
+    }
     @FXML
     private void handleItinerary() {
         // Cacher toutes les autres VBoxes
         hideAllVBoxes();
+        resetItineraryFields();
 
         // Afficher les champs de l'itinéraire
         itineraryFieldsVBox.setVisible(true);
@@ -261,16 +285,50 @@ public class HomeController {
                             // Essayer d'analyser la réponse JSON
                             JSONObject json = new JSONObject(response);
 
-                            // Extraire le nom de la ville depuis l'objet "address"
-                            String city = json.optJSONObject("address").optString("city", "Ville introuvable");
+                            // Extraire les différents éléments d'adresse
+                            String city = json.optJSONObject("address").optString("city", null);
+                            String county = json.optJSONObject("address").optString("county", null);
+                            String country = json.optJSONObject("address").optString("country", null);
+                            String displayName = json.optString("display_name", "Nom de la localisation introuvable");
 
-                            if ("Ville introuvable".equals(city)) {
-                                System.err.println("Erreur : Ville introuvable.");
+                            if (city == null) {
+                                // Si la ville n'est pas trouvée, vérifier le comté
+                                if (county != null) {
+                                    System.out.println("Comté : " + county);
+
+                                    // Diviser le 'county' par des espaces et extraire la troisième chaîne
+                                    String[] countyParts = county.split(" "); // Séparer par les espaces
+                                    if (countyParts.length >= 3) {
+                                        String thirdPartOfCounty = countyParts[2].trim();  // Extraire la troisième partie
+                                        System.out.println("Troisième partie du comté : " + thirdPartOfCounty);
+                                        // Recherche avec la troisième partie du comté
+                                        getWikipediaDetails(thirdPartOfCounty);
+                                    } else {
+                                        // Si la troisième partie n'existe pas, on peut faire une recherche avec l'intégralité du comté
+                                        getWikipediaDetails(county);  // Recherche avec l'intégralité du comté
+                                    }
+                                } else if (country != null) {
+                                    System.out.println("Pays : " + country);
+
+                                    // Diviser le 'country' par des espaces et extraire la troisième chaîne
+                                    String[] countryParts = country.split(" "); // Séparer par les espaces
+                                    if (countryParts.length >= 3) {
+                                        String thirdPartOfCountry = countryParts[2].trim();  // Extraire la troisième partie
+                                        System.out.println("Troisième partie du pays : " + thirdPartOfCountry);
+                                        // Recherche avec la troisième partie du pays
+                                        getWikipediaDetails(thirdPartOfCountry);
+                                    } else {
+                                        // Si la troisième partie n'existe pas, on peut faire une recherche avec l'intégralité du pays
+                                        getWikipediaDetails(country);  // Recherche avec l'intégralité du pays
+                                    }
+                                } else {
+                                    // Si aucun élément n'est trouvé, utiliser "display_name"
+                                    System.out.println("Localisation complète : " + displayName);
+                                    getWikipediaDetails(displayName);  // Recherche avec l'adresse complète
+                                }
                             } else {
                                 System.out.println("Ville : " + city);
-
-                                // Appeler la fonction Wikipedia avec le nom de la ville
-                                getWikipediaDetails(city);
+                                getWikipediaDetails(city);  // Recherche avec la ville
                             }
 
                         } catch (JSONException e) {
@@ -285,6 +343,9 @@ public class HomeController {
             System.err.println("Erreur lors de la construction de l'URL : " + e.getMessage());
         }
     }
+
+
+
 
 
     public void handleGetLocation() {
@@ -435,7 +496,10 @@ public class HomeController {
     }
 
     private void fetchTransportsAroundLocation(double latitude, double longitude) {
-        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];(node(around:20000," + longitude + "," + latitude + ")[amenity=taxi];node(around:20000," + latitude + "," + longitude + ")[railway=tram_stop];node(around:20000," + latitude + "," + longitude + ")[highway=bus_stop];);out;";
+        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];" +
+                "(node(around:10000," + longitude + "," + latitude + ")[amenity=taxi];" +
+                "node(around:10000," + latitude + "," + longitude + ")[railway=tram_stop];" +
+                "node(around:10000," + latitude + "," + longitude + ")[highway=bus_stop];);out;";
 
         try {
             URL url = new URL(overpassUrl);
@@ -453,14 +517,14 @@ public class HomeController {
             JSONObject jsonResponse = new JSONObject(response.toString());
             JSONArray elements = jsonResponse.getJSONArray("elements");
 
+            if (transportVBox != null) {
+                transportVBox.getChildren().clear();
+            }
+
             if (elements.length() > 0) {
                 System.out.println("Transports trouvés :");
 
                 StringBuilder transportsLocations = new StringBuilder("[");
-
-                if (transportVBox != null) {
-                    transportVBox.getChildren().clear();
-                }
 
                 for (int i = 0; i < elements.length(); i++) {
                     JSONObject transport = elements.getJSONObject(i);
@@ -503,7 +567,7 @@ public class HomeController {
                     Region spacer = new Region();
                     HBox.setHgrow(spacer, Priority.ALWAYS);
 
-                    // Bouton "Enregistrer" avec style circulaire
+                    // Bouton "Enregistrer"
                     Button saveButton = new Button();
                     Image saveImage = new Image(getClass().getResource("/images/save-icon.png").toString());
                     ImageView saveImageView = new ImageView(saveImage);
@@ -523,7 +587,7 @@ public class HomeController {
                         storeLocationInDatabase(name);
                     });
 
-                    // Bouton "Itinéraire" avec style circulaire
+                    // Bouton "Itinéraire"
                     Button routeButton = new Button();
                     Image routeImage = new Image(getClass().getResource("/images/itinerary-icon.png").toString());
                     ImageView routeImageView = new ImageView(routeImage);
@@ -541,6 +605,18 @@ public class HomeController {
                     routeButton.setOnAction(event -> {
                         System.out.println("Bouton Itinéraire cliqué pour : " + name);
                         // Logique de calcul d'itinéraire ici
+                        hideAllVBoxes();
+                        resetItineraryFields(); // Réinitialise la VBox
+                        itineraryFieldsVBox.setVisible(true); // Affiche la VBox d'itinéraire
+                        itineraryFieldsVBox.setManaged(true);
+
+                        // Remplir le champ de destination avec le nom de la mosquée sélectionnée
+                        endField.setText(name);
+
+                        selectedEndCoordinates = new double[]{transport.optDouble("lat"), transport.optDouble("lon")};
+
+                        // Effacer le champ de départ (à remplir par l'utilisateur)
+                        startField.clear();
                     });
 
                     VBox buttonsBox = new VBox(10, saveButton, routeButton);
@@ -562,12 +638,19 @@ public class HomeController {
                     System.out.println("WebView ou son moteur non initialisé.");
                 }
             } else {
+                // Aucun transport trouvé
                 System.out.println("Aucun transport trouvé dans la zone.");
+                if (transportVBox != null) {
+                    Label noTransportLabel = new Label("Aucun transport trouvé dans cette zone.");
+                    noTransportLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #ff0000;");
+                    transportVBox.getChildren().add(noTransportLabel);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 
 
 
@@ -633,7 +716,7 @@ public class HomeController {
     }
     private void fetchHotelsAroundLocation(double latitude, double longitude) {
         // Réduire le rayon pour une recherche plus précise (5 km)
-        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:5000," + longitude + "," + latitude + ")[tourism=hotel];out;";
+        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:1000," + longitude + "," + latitude + ")[tourism=hotel];out;";
 
         try {
             URL url = new URL(overpassUrl);
@@ -741,7 +824,17 @@ public class HomeController {
                     );
                     routeButton.setOnAction(event -> {
                         System.out.println("Bouton Itinéraire cliqué pour : " + name);
-                        // Logique de calcul d'itinéraire ici
+                        hideAllVBoxes();
+                        resetItineraryFields(); // Réinitialise la VBox
+                        itineraryFieldsVBox.setVisible(true); // Affiche la VBox d'itinéraire
+                        itineraryFieldsVBox.setManaged(true);
+
+                        // Remplir le champ de destination avec le nom de la mosquée sélectionnée
+                        endField.setText(name);
+                        selectedEndCoordinates = new double[]{hotel.optDouble("lat"), hotel.optDouble("lon")};
+
+                        // Effacer le champ de départ (à remplir par l'utilisateur)
+                        startField.clear();
                     });
 
                     // Ajoutez les boutons à la VBox
@@ -838,7 +931,7 @@ public class HomeController {
     }
     private void fetchpharmaciesAroundLocation(double latitude, double longitude) {
         // Réduire le rayon pour une recherche plus précise (5 km)
-        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:5000," + longitude + "," + latitude + ")[amenity=pharmacy];out;";
+        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:1000," + longitude + "," + latitude + ")[amenity=pharmacy];out;";
 
         try {
             URL url = new URL(overpassUrl);
@@ -946,7 +1039,18 @@ public class HomeController {
                     );
                     routeButton.setOnAction(event -> {
                         System.out.println("Bouton Itinéraire cliqué pour : " + name);
-                        // Logique de calcul d'itinéraire ici
+                        hideAllVBoxes();
+                        resetItineraryFields(); // Réinitialise la VBox
+                        itineraryFieldsVBox.setVisible(true); // Affiche la VBox d'itinéraire
+                        itineraryFieldsVBox.setManaged(true);
+
+                        // Remplir le champ de destination avec le nom de la mosquée sélectionnée
+                        endField.setText(name);
+                        // Remplir le champ de destination avec un format précis
+                        selectedEndCoordinates = new double[]{pharmacy.optDouble("lat"), pharmacy.optDouble("lon")};
+
+                        // Effacer le champ de départ (à remplir par l'utilisateur)
+                        startField.clear();
                     });
 
                     // Ajoutez les boutons à la VBox
@@ -1039,7 +1143,7 @@ public class HomeController {
     }
     private void fetchmosquesAroundLocation(double latitude, double longitude) {
         // Réduire le rayon pour une recherche plus précise (5 km)
-        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:5000," + longitude + "," + latitude + ")[amenity=place_of_worship];out;";
+        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:7000," + longitude + "," +latitude + ")[amenity=place_of_worship];out;";
         try {
             URL url = new URL(overpassUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -1147,7 +1251,22 @@ public class HomeController {
                     );
                     routeButton.setOnAction(event -> {
                         System.out.println("Bouton Itinéraire cliqué pour : " + name);
+                        hideAllVBoxes();
+                        resetItineraryFields(); // Réinitialise la VBox
+                        itineraryFieldsVBox.setVisible(true); // Affiche la VBox d'itinéraire
+                        itineraryFieldsVBox.setManaged(true);
 
+                        // Remplir le champ de destination avec le nom de la mosquée sélectionnée
+                        endField.setText(name);
+
+                        // Effacer le champ de départ (à remplir par l'utilisateur)
+                        startField.clear();
+
+                        // Sauvegarder les coordonnées exactes pour l'itinéraire
+                        selectedEndCoordinates = new double[]{mosque.optDouble("lat"), mosque.optDouble("lon")};
+
+                        // Effacer le champ de départ (à remplir par l'utilisateur)
+                        startField.clear();
                         // Logique de calcul d'itinéraire ici
                     });
 
@@ -1477,72 +1596,12 @@ public class HomeController {
 
 
     // Variable pour stocker le mode de transport sélectionné
-    private String selectedVehicle = "car"; // Par défaut, on commence avec le mode "car"
-    @FXML
-    private void handleCarMode() {
-        selectedVehicle = "car";
-    }
-
-    @FXML
-    private void handleBikeMode() {
-        selectedVehicle = "bike";
-    }
-
-    @FXML
-    private void handleWalkMode() {
-        selectedVehicle = "foot";
-    }
-
-
-    @FXML
-    private void handleCloseItinerary() {
-        // Masquer le VBox
-        itineraryFieldsVBox.setVisible(false);
-        itineraryFieldsVBox.setManaged(false);
-    }
+    
 
 
 
-    private double[] getCoordinates(String query) {
-        try {
-            // Encoder la requête
-            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
-
-            // URL pour la requête Nominatim
-            String url = "https://nominatim.openstreetmap.org/search?q=" + encodedQuery + "&format=json&addressdetails=1&limit=1";
-
-            // Envoi de la requête
-            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-                HttpGet request = new HttpGet(url);
-                try (CloseableHttpResponse response = httpClient.execute(request)) {
-                    // Vérifier le statut de la réponse
-                    if (response.getStatusLine().getStatusCode() == 200) {
-                        String jsonResponse = EntityUtils.toString(response.getEntity());
-                        JSONArray results = new JSONArray(jsonResponse);
-
-                        // Vérifier si des résultats sont disponibles
-                        if (results.length() > 0) {
-                            JSONObject location = results.getJSONObject(0);
-                            double latitude = location.optDouble("lat");
-                            double longitude = location.optDouble("lon");
-
-                            // Retourner les coordonnées
-                            return new double[]{latitude, longitude};
-                        } else {
-                            System.out.println("Aucun lieu trouvé pour : " + query);
 
 
-                        }
-                    } else {
-                        System.err.println("Erreur lors de la requête HTTP : " + response.getStatusLine());
-                    }
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Erreur lors de la recherche de la localisation : " + e.getMessage());
-        }
-        return null; // Retourner null si les coordonnées ne sont pas disponibles
-    }
 
 
     public void handleRecentSearches(ActionEvent actionEvent) {
@@ -1601,6 +1660,10 @@ public class HomeController {
             closeButton.setOnAction(event -> {
                 recherchrecenteScrollPane.setVisible(false);
                 recherchrecenteScrollPane.setManaged(false);
+
+                itineraryFieldsVBox.setVisible(true);
+                itineraryFieldsVBox.setManaged(true);
+
             });
 
             // Ajouter le bouton de fermeture à droite de l'HBox
@@ -1689,9 +1752,6 @@ public class HomeController {
         return recentSearches;
     }
 
-
-
-
     public void handleadresseenredgistre(ActionEvent actionEvent) {
         // Cette méthode affiche les hôtels sur la carte
         hideAllVBoxes();  // Masque tous les VBox et ScrollPanes
@@ -1754,6 +1814,9 @@ public class HomeController {
             closeButton.setOnAction(event -> {
                 enregistreScrollPane.setVisible(false);
                 enregistreScrollPane.setManaged(false);
+
+                itineraryFieldsVBox.setVisible(true);
+                itineraryFieldsVBox.setManaged(true);
             });
 
             // Ajouter le bouton de fermeture à droite de l'HBox
@@ -1857,10 +1920,50 @@ public class HomeController {
         // Effacer les anciens éléments affichés
         profileVBox.getChildren().clear();
 
-        // Créer un titre pour les informations personnelles
+        // Créer un conteneur HBox pour le titre et le bouton de fermeture
+        HBox headerBox = new HBox(10); // Espacement de 10px entre les éléments
+        headerBox.setStyle("-fx-alignment: center-left; -fx-padding: 15px;");
+
+        // Ajouter un titre "Infos Personnelles" aligné à gauche
         Label titleLabel = new Label("Les Infos Personnelles");
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 10px;");
-        profileVBox.getChildren().add(titleLabel);
+        HBox.setHgrow(titleLabel, Priority.ALWAYS); // Permet au titre de prendre tout l'espace disponible à gauche
+        headerBox.getChildren().add(titleLabel);
+
+        // Ajouter un espace entre le titre et le bouton
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS); // Le spacer occupe tout l'espace restant entre le titre et le bouton
+        headerBox.getChildren().add(spacer);
+
+        // Créer le bouton de fermeture avec une icône
+        Button closeButton = new Button();
+        Image closeImage = new Image(getClass().getResource("/images/close-icon.png").toString());
+        ImageView closeImageView = new ImageView(closeImage);
+        closeImageView.setFitWidth(20);
+        closeImageView.setFitHeight(20);
+        closeButton.setGraphic(closeImageView);
+        closeButton.setStyle(
+                "-fx-background-radius: 50%; " +
+                        "-fx-border-color: #ccc; " +
+                        "-fx-border-width: 1px; " +
+                        "-fx-border-radius: 50%; " +
+                        "-fx-cursor: hand;"
+        );
+
+        // Action du bouton de fermeture
+        closeButton.setOnAction(event -> {
+            profileScrollPane.setVisible(false);
+            profileScrollPane.setManaged(false);
+
+            itineraryFieldsVBox.setVisible(true);
+            itineraryFieldsVBox.setManaged(true);
+        });
+
+        // Ajouter le bouton de fermeture à droite de l'HBox
+        headerBox.getChildren().add(closeButton);
+
+        // Ajouter la HBox au VBox principal
+        profileVBox.getChildren().add(headerBox);
 
         // Récupérer le username de l'utilisateur connecté
         String username = welcomeLabel.getText().replace("Bienvenue, ", "").replace(" !", "");
@@ -1898,6 +2001,7 @@ public class HomeController {
         profileScrollPane.setVisible(true);
         profileScrollPane.setManaged(true);
     }
+
 
     private List<String> getAppFeatures() {
         // Liste des fonctionnalités disponibles (vous pouvez les rendre dynamiques)
@@ -1997,7 +2101,7 @@ public class HomeController {
         for (GHPoint point : decodedPoints) {
             // Inverser les coordonnées : latitude en premier
             routeCoordinates.append("[").append(point.lat).append(",").append(point.lon).append("],");
-           /* System.out.println(String.format("Point décodé - Latitude : %f, Longitude : %f", point.lat, point.lon));*/
+            /* System.out.println(String.format("Point décodé - Latitude : %f, Longitude : %f", point.lat, point.lon));*/
         }
 
         // Supprimer la dernière virgule
@@ -2009,41 +2113,78 @@ public class HomeController {
         /*  System.out.println("Coordonnées au format JavaScript : " + routeCoordinates);*/
         return routeCoordinates.toString();
     }
+    // Variable pour stocker le mode de transport sélectionné
+    private String selectedVehicle = "car"; // Par défaut, on commence avec le mode "car"
+    @FXML
+    private void handleCarMode() {
+        selectedVehicle = "car";
+        calculateAndDisplayItinerary();
+    }
+
 
     @FXML
-    private void handleCalculateItinerary() {
-        // Afficher les indicateurs de chargement
-        loadingIndicator.setVisible(true);
-        loadingLabel.setVisible(true);
+    private void handleBikeMode() {
+        selectedVehicle = "bike";
+        calculateAndDisplayItinerary();
+    }
 
+    @FXML
+    private void handleWalkMode() {
+        selectedVehicle = "foot";
+        calculateAndDisplayItinerary();
+    }
+    private String formatTravelTime(long milliseconds) {
+        long totalMinutes = milliseconds / 60000;
+        long hours = totalMinutes / 60;
+        long minutes = totalMinutes % 60;
+
+        if (hours >= 24) {
+            long days = hours / 24;
+            hours = hours % 24;
+            return days + " jour" + (days > 1 ? "s" : "") + (hours > 0 ? " " + hours + "h" : "");
+        } else if (hours > 0) {
+            return hours + "h" + (minutes > 0 ? minutes : "");
+        } else {
+            return minutes + " min";
+        }
+    }
+
+
+    private void calculateAndDisplayItinerary(){
+        // Afficher les indicateurs de chargement
+
+
+        // Réinitialise la VBox
+
+        // Utiliser les coordonnées précises de la destination
         // Désactiver les champs
         String startCoordinates = startField.getText();
         String endCoordinates = endField.getText();
 
         if (startCoordinates.isEmpty() || endCoordinates.isEmpty()) {
             System.out.println("Veuillez remplir les deux champs.");
-            loadingIndicator.setVisible(false);
-            loadingLabel.setVisible(false);
+
             return;
         }
-
-
-
         try {
-            double[] startCoords =getCoordinates(startCoordinates);
-            double[] endCoords =getCoordinates(endCoordinates);
-
-
-
+            double[] startCoords =selectedStartCoordinates != null ? selectedStartCoordinates : getCoordinates(startCoordinates);
+            double[] endCoords = selectedEndCoordinates != null ? selectedEndCoordinates : getCoordinates(endCoordinates);
             System.out.println("Coordonnées de départ : " + startCoords[0] + ", " + startCoords[1]);
             System.out.println("Coordonnées d'arrivée : " + endCoords[0] + ", " + endCoords[1]);
+
+            // Calculer les durées pour chaque mode
+            long carTime = extractTravelTime(startCoords[0], startCoords[1], endCoords[0], endCoords[1], "car");
+            long bikeTime = extractTravelTime(startCoords[0], startCoords[1], endCoords[0], endCoords[1], "bike");
+            long walkTime = extractTravelTime(startCoords[0], startCoords[1], endCoords[0], endCoords[1], "foot");
+
+            // Mettre à jour les labels
+            carDurationLabel.setText(formatTravelTime(carTime));
+            bikeDurationLabel.setText(formatTravelTime(bikeTime));
+            walkDurationLabel.setText(formatTravelTime(walkTime));
             // Appeler pour récupérer les points de l'itinéraire
             String routeCoordinatesJS =calculateRoute(startCoords[0], startCoords[1], endCoords[0], endCoords[1], selectedVehicle);
-
-
             // Masquer les indicateurs de chargement
-            loadingIndicator.setVisible(false);
-            loadingLabel.setVisible(false);
+
 
             // Réactiver les champs
             startField.setDisable(false);
@@ -2057,18 +2198,158 @@ public class HomeController {
 
 
             webView.getEngine().executeScript("drawRouteOnMap(" + routeCoordinatesJS + ");");
+            // Ajouter des marqueurs pour le départ et l'arrivée
+            // Ajouter des marqueurs pour le départ et l'arrivée *après* avoir tracé l'itinéraire
 
 
         }catch (Exception e) {
-            loadingIndicator.setVisible(false);
-            loadingLabel.setVisible(false);
+
             System.out.println("Erreur : " + e.getMessage());
         }
 
 
     }
 
+    private long extractTravelTime(double startLat, double startLon, double endLat, double endLon, String vehicle) throws IOException {
+        String API_URL = "https://graphhopper.com/api/1/route";
+        String apiKey = "0f5d7a61-cd15-4cb7-a179-8319fdf9912f";
+        String url = String.format(Locale.ENGLISH,
+                "%s?point=%f,%f&point=%f,%f&type=json&locale=en&vehicle=%s&key=%s",
+                API_URL, startLat, startLon, endLat, endLon, vehicle, apiKey
+        );
 
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            HttpGet request = new HttpGet(url);
+            HttpEntity entity = client.execute(request).getEntity();
+            String responseString = EntityUtils.toString(entity);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode rootNode = mapper.readTree(responseString);
+            JsonNode pathNode = rootNode.path("paths");
+
+            if (pathNode.isArray() && pathNode.size() > 0) {
+                JsonNode path = pathNode.get(0);
+                return path.path("time").asLong(); // Retourner le temps en millisecondes
+            } else {
+                throw new RuntimeException("Aucune route trouvée.");
+            }
+        }}
+
+    private double[] getCoordinates(String query) {
+        try {
+            // Encoder la requête
+            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
+
+            // URL pour la requête Nominatim
+            String url = "https://nominatim.openstreetmap.org/search?q=" + encodedQuery + "&format=json&addressdetails=1&limit=1";
+
+            // Envoi de la requête
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                HttpGet request = new HttpGet(url);
+                try (CloseableHttpResponse response = httpClient.execute(request)) {
+                    // Vérifier le statut de la réponse
+                    if (response.getStatusLine().getStatusCode() == 200) {
+                        String jsonResponse = EntityUtils.toString(response.getEntity());
+                        JSONArray results = new JSONArray(jsonResponse);
+
+                        // Vérifier si des résultats sont disponibles
+                        if (results.length() > 0) {
+                            JSONObject location = results.getJSONObject(0);
+                            double latitude = location.optDouble("lat");
+                            double longitude = location.optDouble("lon");
+
+                            // Retourner les coordonnées
+                            return new double[]{latitude, longitude};
+                        } else {
+                            System.out.println("Aucun lieu trouvé pour : " + query);
+
+
+                        }
+                    } else {
+                        System.err.println("Erreur lors de la requête HTTP : " + response.getStatusLine());
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la recherche de la localisation : " + e.getMessage());
+        }
+        return null; // Retourner null si les coordonnées ne sont pas disponibles
+    }
+
+
+
+    public void handleitinerary(ActionEvent actionEvent) {
+
+        try {hideAllVBoxes();
+            resetItineraryFields(); // Réinitialise la VBox
+            itineraryFieldsVBox.setVisible(true); // Affiche la VBox d'itinéraire
+            itineraryFieldsVBox.setManaged(true);
+
+            // Récupérer les coordonnées de la localisation actuelle
+            double[] selectedStartCoordinates = geolocationService.getLocationCoordinates();
+            double latitude = selectedStartCoordinates[1];
+            double longitude = selectedStartCoordinates[0];
+
+            // Obtenir le nom de la position à partir des coordonnées
+            String locationName = getLocationNameFromCoordinate(latitude, longitude);
+
+            // Remplir le champ de départ avec le nom
+            startField.setText(locationName);
+
+            System.out.println("Position actuelle : " + locationName);
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la détection de la position : " + e.getMessage());
+        }
+    }
+
+    public String getLocationNameFromCoordinate(double latitude, double longitude) {
+        String nominatimUrl = "https://nominatim.openstreetmap.org/reverse?format=json&lat=" + latitude + "&lon=" + longitude;
+
+        try {
+            URL url = new URL(nominatimUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder response = new StringBuilder();
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+
+            // Parse la réponse JSON pour récupérer le "display_name"
+            JSONObject jsonResponse = new JSONObject(response.toString());
+            return jsonResponse.optString("display_name", "Nom inconnu");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Erreur lors de la récupération du nom";
+        }
+    }
+    public void handleDetectLocation(ActionEvent actionEvent) {
+        try {
+
+            // Récupérer les coordonnées de la localisation actuelle
+            double[] selectedStartCoordinates = geolocationService.getLocationCoordinates();
+            double latitude = selectedStartCoordinates[1];
+            double longitude = selectedStartCoordinates[0];
+
+            // Obtenir le nom de la position à partir des coordonnées
+            String locationName = getLocationNameFromCoordinate(latitude, longitude);
+
+            // Remplir le champ de départ avec le nom
+            startField.setText(locationName);
+
+            System.out.println("Position actuelle : " + locationName);
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la détection de la position : " + e.getMessage());
+        }
+
+
+
+    }
 
 }
 

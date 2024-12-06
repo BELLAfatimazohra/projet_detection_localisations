@@ -1,0 +1,367 @@
+/* Styles globaux */
+.vbox {
+    -fx-spacing: 15; /* Espacement vertical plus important */
+}
+
+.text-field {
+    -fx-pref-width: 400;
+    -fx-padding: 10;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 5;
+}
+
+.label {
+    -fx-text-fill: #333;
+}
+
+#welcomeLabel {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #34495e;
+    -fx-padding: 10px;
+    -fx-alignment: center;
+}
+
+#locationNameLabel {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+#locationDescriptionLabel {
+    -fx-font-size: 14px;
+    -fx-text-fill: #7f8c8d;
+}
+
+
+#searchButton,
+.action-button,
+.save-button,
+.search-button,
+.secondary-button,
+.danger-button {
+    -fx-background-color: #3498db; /* Bleu */
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px 20px;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+    -fx-transition: background-color 0.3s ease, transform 0.2s ease; /* Transition ajoutée */
+}
+
+
+.save-button:hover,
+.search-button:hover,
+.secondary-button:hover,
+.danger-button:hover {
+    -fx-background-color: #2980b9; /* Bleu foncé lors du survol */
+    -fx-transform: scale(1.1); /* Légère agrandissement du bouton au survol */
+}
+
+/
+#searchButton:hover,
+.action-button:hover,
+.save-button:hover,
+.search-button:hover,
+.secondary-button:hover,
+.danger-button:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 5, 0, 0, 3); /* Ombre autour du bouton */
+}
+
+
+
+#buttonsWebView {
+    -fx-background-color: #ecf0f1;
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 10px;
+    -fx-padding: 10px;
+}
+
+/* Améliorations du style */
+.title-label {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+.description-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #7f8c8d;
+}
+
+.action-button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px 20px;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.save-button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px 20px;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.search-field {
+    -fx-pref-width: 400;
+    -fx-padding: 10;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 5;
+}
+
+.search-button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px 20px;
+    -fx-cursor: hand;
+}
+
+.secondary-button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px 20px;
+    -fx-cursor: hand;
+}
+
+.danger-button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px 20px;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+}
+
+
+/* Style pour les boutons */
+.profil, .menu-button {
+    -fx-background-color: #ffffff;  /* Fond blanc */
+    -fx-border-color: #dcdcdc;      /* Bordure grise claire */
+    -fx-border-radius: 5;           /* Bordures arrondies */
+    -fx-padding: 10px 15px;         /* Espacement interne */
+    -fx-font-size: 14px;            /* Taille de la police */
+    -fx-font-weight: bold;          /* Police en gras */
+    -fx-text-fill: #333333;         /* Couleur du texte */
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.2), 5, 0, 1, 1); /* Ombre légère */
+    -fx-alignment: center;          /* Centrer le texte et l'icône */
+}
+
+/* Style pour l'icône dans chaque bouton */
+.profil .graphic, .menu-button .graphic {
+    -fx-padding: 0 10px 0 0;        /* Espacement entre l'icône et le texte */
+}
+
+/* Effet au survol des boutons */
+.profil:hover, .menu-button:hover {
+    -fx-background-color: #e0e0e0;  /* Fond gris clair au survol */
+    -fx-border-color: #b3b3b3;      /* Bordure plus foncée au survol */
+}
+
+/* Ajout d'une petite marge entre chaque bouton */
+.profil, .menu-button {
+    -fx-margin-bottom: 10px;         /* Marge en bas pour chaque bouton */
+}
+.transport-button {
+    -fx-border-color: #0078d7; /* Couleur de la bordure en bleu lors du focus */
+             -fx-background-color: white; /* Bordure grise */
+         -fx-border-width: 1.5; /* Largeur de la bordure */
+         -fx-border-radius: 25; /* Forme circulaire */
+         -fx-background-radius: 25; /* Assure que l'arrière-plan est circulaire */
+         -fx-padding: 7; /* Taille intérieure */
+         -fx-cursor: hand;  /* Curseur en mode clic */
+}
+
+.transport-button:hover {
+    -fx-background-color: #0078d7; /* Fond bleu au survol */
+    -fx-text-fill: white; /* Couleur de l'icône en blanc */
+}
+.transport-button:focused{
+  -fx-background-color: #0078d7;
+}
+.search-field {
+    -fx-padding: 10; /* Espacement interne */
+    -fx-font-size: 14px; /* Taille du texte */
+    -fx-border-color: #cccccc; /* Bordure grise */
+    -fx-border-radius: 8; /* Coins arrondis */
+    -fx-background-radius: 8; /* Coins arrondis pour le fond */
+    -fx-background-color: white; /* Fond blanc */
+    -fx-min-height: 40px; /* Hauteur du champ */
+    -fx-max-height: 40px; /* Hauteur fixe */
+    -fx-prompt-text-fill: #aaaaaa; /* Texte d'indice grisé */
+     -fx-margin: 0 0 0 10;
+}
+
+.search-field:focused {
+    -fx-border-color: #0078d7; /* Couleur de la bordure en bleu lors du focus */
+    -fx-background-color: white; /* Garder le fond blanc */
+}
+.hbox-transport {
+    -fx-spacing: 10; /* Espacement entre les boutons */
+    -fx-alignment: center; /* Centrer les éléments */
+}
+
+.vbox-itinerary {
+    -fx-spacing: 10; /* Espacement entre les champs */
+    -fx-alignment: top-left; /* Alignement vers le haut gauche */
+    -fx-padding: 15 0 0 0; /* Décalage en haut de 20 pixels */
+
+}
+.button-icon {
+    -fx-fit-width: 20px; /* Largeur de l'icône */
+    -fx-fit-height: 20px; /* Hauteur de l'icône */
+    -fx-padding: 0; /* Pas d'espacement interne */
+}
+
+/* Style général pour la VBox */
+#locationVBox {
+    -fx-spacing: 15px; /* Espacement vertical entre les éléments */
+    -fx-padding: 20px; /* Padding interne */
+    -fx-background-color: #f0f0f0; /* Couleur de fond claire */
+    -fx-background-radius: 10px; /* Coins arrondis */
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 10, 0, 0, 5); /* Ombre légère */
+}
+
+/* Style des Labels dans la VBox */
+#locationNameLabel {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+#locationDescriptionLabel {
+    -fx-font-size: 14px;
+    -fx-text-fill: #7f8c8d;
+    -fx-wrap-text: true;
+    -fx-padding: 5px 0;
+}
+
+/* Style des boutons circulaires dans la HBox */
+#itineraryButton, #saveButton {
+      -fx-border-color: #0078d7; /* Couleur de la bordure en bleu lors du focus */
+             -fx-background-color: white; /* Bordure grise */
+       -fx-border-width: 1,5;
+       -fx-border-radius: 25;       /* Forme circulaire */
+       -fx-background-radius: 25;  /* Assure que l'arrière-plan est circulaire */
+       -fx-padding: 9;            /* Assure une bonne taille intérieure */
+       -fx-cursor: hand;   /* Transition pour effet de survol */
+}
+#itineraryButton, #saveButton :focused{
+-fx-background-color: #0078d7;
+}
+/* Effet au survol des boutons circulaires */
+#itineraryButton:hover, #saveButton:hover {
+     -fx-border-color: #0078d7; /* Couleur de la bordure en bleu lors du focus */
+       -fx-background-color: white;
+}
+
+/* Style pour l'icône dans chaque bouton circulaire */
+#itineraryIcon, #saveIcon {
+  -fx-border-color: #0078d7; /* Couleur de la bordure en bleu lors du focus */
+         -fx-background-color: white;
+      -fx-padding: 0;
+      -fx-border: none; /* Icône en blanc */
+}
+#itineraryIcon, #saveIcon :hover{
+ -fx-background-color: #e0e0e0; /* Couleur au survol */
+    -fx-background-radius: 50%;
+}
+
+#itineraryIcon, #saveIcon :focused{
+-fx-background-color: #0078d7;
+}
+/* Style pour l'HBox des boutons */
+#locationVBox HBox {
+    -fx-alignment: center; /* Aligner les boutons horizontalement */
+    -fx-spacing: 15px; /* Espacement entre les boutons */
+}
+
+/* Champ de texte */
+.search-field {
+  -fx-border-color: #0078d7; /* Couleur de la bordure en bleu lors du focus */
+         -fx-background-color: white;
+    -fx-padding: 5;
+    -fx-font-size: 14px;
+}
+
+/* Icônes */
+.icon-container ImageView {
+    -fx-cursor: hand;
+    -fx-padding: 5;
+}
+
+.icon-container ImageView:hover {
+    -fx-background-color: #e0e0e0; /* Couleur au survol */
+    -fx-border-radius: 50%;
+    -fx-background-radius: 50%;
+}
+/* Style des boutons d'icônes */
+.icon-button {
+    -fx-border-color: #0078d7; /* Couleur de la bordure en bleu lors du focus */
+       -fx-background-color: white;
+    -fx-padding: 0;
+    -fx-border: none;
+}
+
+.icon-button:hover {
+    -fx-background-color: #e0e0e0; /* Couleur au survol */
+    -fx-background-radius: 50%;
+}
+.icon-button:focused{
+-fx-background-color: #0078d7;
+
+}
+/* Style pour les boutons circulaires */
+.circular-button {
+    -fx-border-color: #0078d7; /* Couleur de la bordure en bleu lors du focus */
+       -fx-background-color: white;   /* Bordure grise */
+    -fx-border-width: 1,5;
+    -fx-border-radius: 25;       /* Forme circulaire */
+    -fx-background-radius: 25;  /* Assure que l'arrière-plan est circulaire */
+    -fx-padding: 7;            /* Assure une bonne taille intérieure */
+    -fx-cursor: hand;           /* Curseur de la souris en mode clic */
+}
+
+.circular-button:focused {
+    -fx-background-color: #0078d7; /* Garder le fond blanc */
+}
+.circular-button:hover {
+    -fx-border-color: #0078d7; /* Couleur de la bordure en bleu lors du focus */
+    -fx-background-color: white; /* Garder le fond blanc */
+}
+/* Style des boutons */
+.menu-button {
+     -fx-border-color: #0078d7; /* Couleur de la bordure en bleu lors du focus */
+        -fx-background-color: white; /* Bordure grise */
+    -fx-border-width: 1.5; /* Largeur de la bordure */
+    -fx-border-radius: 25; /* Forme circulaire */
+    -fx-background-radius: 25; /* Assure que l'arrière-plan est circulaire */
+    -fx-padding: 7; /* Taille intérieure */
+    -fx-cursor: hand; /* Curseur en mode clic */
+}
+
+/* Effet au focus (bordure bleue) */
+.menu-button:focused {
+
+    -fx-background-color: #0078d7;
+}
+
+/* Effet au survol */
+.menu-button:hover {
+    -fx-border-color: #0078d7;
+    -fx-background-color: white;
+}
+
+/* MArge en haut et à droite */
+.menu-button {
+    -fx-margin: 10 20 0 0; /* Marge de 10px en haut et 20px à droite */
+}
+
