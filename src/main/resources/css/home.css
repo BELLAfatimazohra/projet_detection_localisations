@@ -245,7 +245,7 @@
 }
 
 /* Style des boutons circulaires dans la HBox */
-#itineraryButton, #saveButton {
+ #saveButton {
       -fx-border-color: #0078d7; /* Couleur de la bordure en bleu lors du focus */
              -fx-background-color: white; /* Bordure grise */
        -fx-border-width: 1,5;
@@ -254,30 +254,12 @@
        -fx-padding: 9;            /* Assure une bonne taille intérieure */
        -fx-cursor: hand;   /* Transition pour effet de survol */
 }
-#itineraryButton, #saveButton :focused{
+#saveButton :focused{
 -fx-background-color: #0078d7;
 }
 /* Effet au survol des boutons circulaires */
-#itineraryButton:hover, #saveButton:hover {
-     -fx-border-color: #0078d7; /* Couleur de la bordure en bleu lors du focus */
-       -fx-background-color: white;
-}
 
-/* Style pour l'icône dans chaque bouton circulaire */
-#itineraryIcon, #saveIcon {
-  -fx-border-color: #0078d7; /* Couleur de la bordure en bleu lors du focus */
-         -fx-background-color: white;
-      -fx-padding: 0;
-      -fx-border: none; /* Icône en blanc */
-}
-#itineraryIcon, #saveIcon :hover{
- -fx-background-color: #e0e0e0; /* Couleur au survol */
-    -fx-background-radius: 50%;
-}
 
-#itineraryIcon, #saveIcon :focused{
--fx-background-color: #0078d7;
-}
 /* Style pour l'HBox des boutons */
 #locationVBox HBox {
     -fx-alignment: center; /* Aligner les boutons horizontalement */
@@ -365,3 +347,58 @@
     -fx-margin: 10 20 0 0; /* Marge de 10px en haut et 20px à droite */
 }
 
+/* Fichier styles.css */
+/* Style de base pour le bouton */
+/* Style de base pour le bouton */
+.location-button {
+    -fx-text-fill: black; /* Texte noir */
+    -fx-font-size: 14px; /* Taille du texte */
+    -fx-padding: 10px; /* Espacement autour du texte */
+    -fx-border-radius: 5px; /* Coins arrondis */
+    -fx-background-color: transparent; /* Pas de fond */
+    -fx-border-color: transparent; /* Pas de bordure par défaut */
+}
+
+/* Effet au survol */
+.location-button:hover {
+    -fx-text-fill: blue; /* Texte bleu au survol */
+    -fx-border-color: blue; /* Bordure bleue au survol */
+    -fx-border-width: 2px; /* Bordure visible */
+}
+
+/* Style pour l'icône du bouton */
+.location-button .image-view {
+    -fx-effect: colorize(blue); /* Applique une teinte bleue à l'icône au survol */
+}
+/* Fichier: styles.css */
+/* Centre le texte horizontalement et le rend vert */
+.status-label {
+    -fx-text-fill: green; /* Texte vert */
+    -fx-alignment: center; /* Centre le texte */
+    -fx-font-size: 14px; /* Taille de police */
+}
+/* Style pour le label d'accueil */
+.welcome-label {
+    -fx-font-size: 32px;             /* Taille de la police */
+    -fx-font-weight: bold;           /* Texte en gras */
+    -fx-text-fill: #2c3e50;          /* Couleur du texte (bleu sombre élégant) */
+    -fx-font-family: 'Arial', sans-serif; /* Police moderne */
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 5, 0.3, 0, 3); /* Ombre portée pour un effet 3D */
+    -fx-padding: 20px;               /* Espacement autour du texte */
+            /* Bordure arrondie */
+    -fx-alignment: center;           /* Centrer le texte */
+    -fx-margin: 20px;                /* Marge extérieure pour espacement */
+}
+
+#meteoVBox {
+     -fx-spacing: 10; /* Espacement entre les champs */
+     -fx-alignment: top-left; /* Alignement vers le haut gauche */
+     -fx-padding: 70 0 0 0;  /* Ajustez la valeur selon la marge que vous souhaitez */
+}
+*#meteooButton {
+    -fx-alignment: CENTER; /* Ceci est correct */
+}
+
+#locationField {
+    -fx-margin-top: 50px;
+}

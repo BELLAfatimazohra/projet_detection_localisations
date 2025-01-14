@@ -1,3 +1,30 @@
+/* Style général pour le VBox */
+.vbox {
+    -fx-alignment: center;
+    -fx-padding: 40px;
+    -fx-background-size: cover;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+    -fx-opacity: 1;
+    -fx-transition: -fx-opacity 0.5s ease-in;
+    -fx-background-color: rgba(0, 0, 0, 0.5);
+    -fx-pref-width: 400px;  /* Largeur préférée */
+}
+
+/* Stackpane avec image de fond */
+.stackpane-background {
+    -fx-background-image: url("images/bac.png");
+    -fx-background-size: cover;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+    -fx-background-color: rgba(0, 0, 0, 0.3); /* Ajouter une légère teinte sombre */
+}
+
+/* Animation d'apparition du VBox */
+.vbox.visible {
+    -fx-opacity: 1; /* Opacité à 1 lors de la visibilité */
+}
+
 .title {
     -fx-font-size: 28px; /* Taille du texte */
     -fx-font-weight: bold; /* Gras pour le texte */
@@ -10,18 +37,23 @@
 
 
 .text-field {
-    -fx-pref-width: 280px;
-    -fx-pref-height: 40px;
-    -fx-font-size: 14px;
-    -fx-background-color: #ffffff;
-    -fx-border-color: #ccc;
-    -fx-border-radius: 5px;
+    -fx-pref-width: 250px; /* Largeur des champs de texte */
+       -fx-pref-height: 40px; /* Hauteur des champs de texte */
+       -fx-padding: 10px 30px 10px 10px; /* Padding à droite pour l'icône */
+       -fx-border-color: #ccc; /* Couleur de la bordure */
+       -fx-border-radius: 5px; /* Coins arrondis */
+       -fx-font-size: 14px; /* Taille de la police */
+       -fx-background-color: #ffffff; /* Couleur de fond */
+       -fx-effect: innershadow(gaussian, #aaa, 8, 0, 0, 2); /* Ombre interne légère */
+       -fx-transition: -fx-border-color 0.3s, -fx-background-color 0.3s;
 }
 
 .text-field:focused {
-    -fx-border-color: #3498db;
-    -fx-border-width: 2px;
+    -fx-border-color: #3498db; /* Bordure bleue lors du focus */
+    -fx-background-color: #e6f7ff; /* Fond bleu clair lors du focus */
+    -fx-effect: innershadow(gaussian, #3498db, 6, 0, 0, 2); /* Ombre interne bleue */
 }
+
 
 .button-signup {
     -fx-background-color: #2980b9;

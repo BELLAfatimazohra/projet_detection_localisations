@@ -5,7 +5,7 @@
 <?import javafx.scene.image.Image?>
 <StackPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.controller.SignupController"
            stylesheets="@../css/signup.css"
-           style="-fx-background-image: url('images/cott.jpg'); -fx-background-size: cover; -fx-background-position: center; -fx-background-repeat: no-repeat;">
+           style="-fx-background-image: url('images/bakk.png'); -fx-background-size: cover; -fx-background-position: center; -fx-background-repeat: no-repeat;">
     <VBox alignment="CENTER" spacing="15" styleClass="vbox">
         <Label text="Inscription" styleClass="title"/>
         <TextField fx:id="usernameField" promptText="Nom d'utilisateur" styleClass="text-field"/>

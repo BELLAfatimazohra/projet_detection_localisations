@@ -138,3 +138,8 @@
     -fx-fit-width: 170px;  /* Agrandissement de l'image */
     -fx-fit-height: 170px; /* Agrandissement de l'image */
 }
+
+#meteoVBox {
+    -fx-margin-top: 20px;  /* Ajustez la valeur selon la marge que vous souhaitez */
+}
+

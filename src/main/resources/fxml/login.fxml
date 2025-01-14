@@ -6,7 +6,7 @@
 
 <StackPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.controller.LoginController"
            stylesheets="@../css/login.css"
-           style="-fx-background-image: url('images/cott.jpg'); -fx-background-size: cover; -fx-background-position: center; -fx-background-repeat: no-repeat;">
+           style="-fx-background-image: url('images/bakk.png'); -fx-background-size: cover; -fx-background-position: center; -fx-background-repeat: no-repeat;">
 
     <!-- VBox au centre de la page -->
     <VBox alignment="CENTER" spacing="15" styleClass="vbox">

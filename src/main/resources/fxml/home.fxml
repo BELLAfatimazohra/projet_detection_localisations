@@ -13,10 +13,10 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.geometry.Insets?>
-<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.controller.HomeController"
+<AnchorPane  xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.controller.HomeController"
             stylesheets="@../css/home.css">
     <children>
-        <HBox spacing="20" prefHeight="800" prefWidth="1500">
+        <HBox spacing="20" prefHeight="800" prefWidth="1300">
             <!-- Sidebar à gauche -->
             <!-- ScrollPane enveloppant la VBox -->
 
@@ -27,7 +27,7 @@
 
                 <!-- HBox pour les boutons sur la même ligne -->
                 <HBox spacing="15">
-                    <Button fx:id="itineraryButton" onAction="#handleitinerary" styleClass="itinerary-button">
+                    <Button fx:id="itineraryButton" onAction="#handleitinerary" styleClass="circular-button">
                         <graphic>
                             <ImageView fx:id="itineraryIcon" fitWidth="20" fitHeight="20">
                                 <Image url="@../images/itinerary-icon.png"/>
@@ -41,11 +41,46 @@
                             </ImageView>
                         </graphic>
                     </Button>
+
+                    <Button fx:id="meteobutton" onAction="#handlemeteo" styleClass="menu-button">
+                        <graphic>
+                            <ImageView fx:id="meteoicon" fitWidth="20" fitHeight="20">
+                                <Image url="@../images/cloud.png"/>
+                            </ImageView>
+                        </graphic>
+                    </Button>
+
+
+                    
                 </HBox>
+                <!-- Ajout de la Label pour le message -->
+                <Label fx:id="statusLabel" text="" styleClass="status-label" wrapText="true" visible="false" managed="false"/>
+
                 <!-- Indicateur de chargement -->
                 <ProgressIndicator fx:id="loadingIndicator" visible="false" />
                 <Label fx:id="loadingLabel" text="Chargement..." visible="false" style="-fx-text-fill: blue;" />
             </VBox>
+            <VBox fx:id="meteoVBox" prefWidth="300" style="-fx-margin-top: 50px;" visible="false" managed="false">
+                <!-- Champ de texte pour saisir le lieu -->
+                <TextField fx:id="locationField" promptText="Entrez un lieu pour la météo" style="-fx-margin-top: 50px;" styleClass="search-field"/>
+                <HBox alignment="CENTER" >
+
+                <!-- Bouton pour afficher la météo -->
+                <Button fx:id="meteooButton" text="Afficher Météo" onAction="#handleMeteoVBOX" styleClass="menu-button">
+                    <graphic>
+                        <ImageView fx:id="meteooIcon" fitWidth="20" fitHeight="20">
+                            <Image url="@../images/cloud.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="meteoafficherVBox" prefWidth="300" visible="false" managed="false">
+                <!-- Contenu du VBox -->
+            </VBox>
+
+
 
 
             <ScrollPane fx:id="restaurantScrollPane" prefWidth="300" fitToWidth="true" fitToHeight="true" visible="false" managed="false">
@@ -115,62 +150,71 @@
 
             <VBox fx:id="itineraryFieldsVBox" spacing="10"  styleClass="vbox-itinerary" prefWidth="300">
 
-            <!-- HBox pour les boutons de sélection de mode de transport -->
-            <HBox spacing="10" alignment="CENTER" styleClass="hbox-transport">
-                <VBox alignment="CENTER" spacing="5">
-                    <Button fx:id="carModeButton" text="" onAction="#handleCarMode" styleClass="transport-button">
-                        <graphic>
-                            <ImageView fx:id="carIcon" fitWidth="20" fitHeight="20">
-                                <Image url="@../images/car-icon.png"/>
-                            </ImageView>
-                        </graphic>
-                    </Button>
-                    <Label fx:id="carDurationLabel" text=" " style="-fx-font-size: 14px;" />
-                </VBox>
+                <!-- HBox pour les boutons de sélection de mode de transport -->
+                <HBox spacing="10" alignment="CENTER" styleClass="hbox-transport">
+                    <VBox alignment="CENTER" spacing="5">
+                        <Button fx:id="carModeButton" text="" onAction="#handleCarMode" styleClass="transport-button">
+                            <graphic>
+                                <ImageView fx:id="carIcon" fitWidth="20" fitHeight="20">
+                                    <Image url="@../images/car-icon.png"/>
+                                </ImageView>
+                            </graphic>
+                        </Button>
+                        <Label fx:id="carDurationLabel" text=" " style="-fx-font-size: 14px;" />
+                    </VBox>
 
-                <VBox alignment="CENTER" spacing="5">
-                    <Button fx:id="bikeModeButton" text="" onAction="#handleBikeMode" styleClass="transport-button">
-                        <graphic>
-                            <ImageView fx:id="bikeIcon" fitWidth="20" fitHeight="20">
-                                <Image url="@../images/bike-icon.png"/>
-                            </ImageView>
-                        </graphic>
-                    </Button>
-                    <Label fx:id="bikeDurationLabel" text="---" style="-fx-font-size: 14px;" />
-                </VBox>
-                <VBox alignment="CENTER" spacing="5">
-                    <Button fx:id="walkModeButton" text="" onAction="#handleWalkMode" styleClass="transport-button">
-                        <graphic>
-                            <ImageView fx:id="walkIcon" fitWidth="20" fitHeight="20">
-                                <Image url="@../images/walk-icon.png"/>
-                            </ImageView>
-                        </graphic>
-                    </Button>
-                    <Label fx:id="walkDurationLabel" text="---" style="-fx-font-size: 14px;" />
-                </VBox>
+                    <VBox alignment="CENTER" spacing="5">
+                        <Button fx:id="bikeModeButton" text="" onAction="#handleBikeMode" styleClass="transport-button">
+                            <graphic>
+                                <ImageView fx:id="bikeIcon" fitWidth="20" fitHeight="20">
+                                    <Image url="@../images/bike-icon.png"/>
+                                </ImageView>
+                            </graphic>
+                        </Button>
+                        <Label fx:id="bikeDurationLabel" text="---" style="-fx-font-size: 14px;" />
+                    </VBox>
+                    <VBox alignment="CENTER" spacing="5">
+                        <Button fx:id="walkModeButton" text="" onAction="#handleWalkMode" styleClass="transport-button">
+                            <graphic>
+                                <ImageView fx:id="walkIcon" fitWidth="20" fitHeight="20">
+                                    <Image url="@../images/walk-icon.png"/>
+                                </ImageView>
+                            </graphic>
+                        </Button>
+                        <Label fx:id="walkDurationLabel" text="---" style="-fx-font-size: 14px;" />
+                    </VBox>
 
-            </HBox>
+                </HBox>
 
                 <!-- Champs pour les positions de départ et d'arrivée -->
                 <TextField fx:id="startField" promptText="Position de départ"  styleClass="search-field"/>
                 <TextField fx:id="endField" promptText="Position d'arrivée"  styleClass="search-field"/>
-                <Button fx:id="detectLocationButton"  text="votre position" onAction="#handleDetectLocation" styleClass="location-button">
-                    <graphic>
-                        <ImageView fitWidth="20" fitHeight="20">
-                            <Image url="@../images/location-icon.png" />
-                        </ImageView>
-                    </graphic>
-                </Button>
+                <HBox alignment="CENTER" >
+                    <Button fx:id="detectLocationButton" text="votre position" onAction="#handleDetectLocation" styleClass="location-button">
+                        <graphic>
+                            <ImageView fitWidth="20" fitHeight="20">
+                                <Image url="@../images/location-icon.png" />
+                            </ImageView>
+                        </graphic>
+                    </Button>
+
+                </HBox>
+                <Label fx:id="errorLabel" text="Une erreur s'est produite ." style="-fx-text-fill: red;" visible="false" managed="false"/>
+
                 <!-- Bouton pour calculer l'itinéraire -->
             </VBox>
 
             <!-- Contenu principal -->
-            <VBox spacing="20" layoutX="320" prefWidth="900" prefHeight="2000">
+            <VBox spacing="20" layoutX="320" prefWidth="980" prefHeight="2000">
                 <!-- Label d'accueil -->
-                <Label fx:id="welcomeLabel" text="Bienvenue dans l'application" styleClass="welcome-label"/>
-
+                <HBox alignment="CENTER" spacing="10">
+                    <Label fx:id="welcomeLabel" text="Bienvenue dans l'application" styleClass="welcome-label"/>
+                    <ImageView fx:id="iconImageView" fitWidth="40" fitHeight="40" preserveRatio="true">
+                        <Image url="@../images/img.png" />
+                    </ImageView>
+                </HBox>
                 <!-- Ligne principale avec la barre de recherche et les boutons -->
-                <HBox spacing="10" alignment="CENTER_LEFT">
+                <HBox spacing="10" alignment="CENTER_LEFT" prefWidth="1000" >
                     <!-- Barre de recherche -->
                     <TextField fx:id="searchField" prefWidth="400" promptText="Rechercher une localisation..." styleClass="search-field"/>
 
@@ -200,7 +244,7 @@
                     </HBox>
 
                     <!-- Boutons supplémentaires : Hotels, Mosquées, etc. -->
-                    <HBox spacing="10" alignment="CENTER_RIGHT">
+                    <HBox spacing="10" alignment="CENTER_RIGHT" prefWidth="600" >
                         <Button fx:id="restaurantsButton" text="Hotels" onAction="#handleRestaurants" styleClass="circular-button">
                             <graphic>
                                 <ImageView fx:id="restaurantsIcon" fitWidth="20" fitHeight="20">
@@ -233,11 +277,18 @@
                 </HBox>
 
                 <!-- WebView pour afficher la carte -->
-                <WebView fx:id="webView" prefHeight="500" styleClass="map-view"/>
+                <WebView fx:id="webView" prefHeight="550" prefWidth="900"  styleClass="map-view"/>
             </VBox>
 
 
-            <VBox minWidth="50" maxWidth="100" spacing="10"  style="-fx-padding: 140 30 0 0;">
+            <VBox minWidth="50" maxWidth="100" spacing="10"  style="-fx-padding: 130 20 0 0;">
+                <Button fx:id="meteoButton" onAction="#handleMeteo" styleClass="menu-button">
+                    <graphic>
+                        <ImageView fx:id="meteoIcon" fitWidth="20" fitHeight="20">
+                            <Image url="@../images/cloud.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
                 <!-- Vos boutons ici -->
                 <Button fx:id="profil" onAction="#handleProfileDisplay" styleClass="menu-button">
                     <graphic>

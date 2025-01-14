@@ -1,4 +1,3 @@
-
 package com.example.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,15 +30,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import netscape.javascript.JSObject;
+import com.sun.net.httpserver.HttpServer;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -74,8 +71,24 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
+import javafx.scene.layout.VBox;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpExchange;
+import java.io.*;
+import java.net.InetSocketAddress;
+import java.util.stream.Collectors;
+import javafx.geometry.Insets;
 
 public class HomeController {
+
+    public Label errorLabel;
+    public Label errorlabel;
+    public VBox meteoVBox;
+    public VBox meteoafficherVBox;
+
+    private HttpServer server;
+    @FXML
+    private TextField locationField;
     @FXML
     public Label mosqueLabel;
     @FXML
@@ -88,6 +101,7 @@ public class HomeController {
     public ScrollPane profileScrollPane;
     public VBox profileVBox;
     public Button closeButton;
+   public Button meteooButton ;
     public ImageView closIcon;
     public ProgressIndicator loadingIndicator;
     public Label walkDurationLabel;
@@ -147,9 +161,18 @@ public class HomeController {
 
 
     private WebEngine webEngine;
+    private ObjectStreamClass mainAnchorPane;
+    private String coordinates;
+    private String searchQuery;
 
     public HomeController() {
+
         this.geolocationService = new GeolocationService();
+        try {
+            startHttpServer();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     // Déclaration des champs pour la position de départ et d'arrivée
@@ -161,15 +184,166 @@ public class HomeController {
 
     @FXML
     private TextField endField;
+
+
     private double[] selectedEndCoordinates;
     private double[] selectedStartCoordinates;
-    // Méthode qui sera appelée lorsque l'utilisateur clique sur le bouton "Itinéraire"
+    private boolean isStartFieldActive = false;
 
+    private boolean issearchFieldActive = false;
+    private boolean isEndFieldActive = false;
+
+    // Méthode qui sera appelée lorsque l'utilisateur clique sur le bouton "Itinéraire"
+    public  static String getLocationNameFromCoordinate(double latitude, double longitude) {
+        String nominatimUrl = "https://nominatim.openstreetmap.org/reverse?format=json&lat=" + latitude + "&lon=" + longitude;
+
+        try {
+            URL url = new URL(nominatimUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder response = new StringBuilder();
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+
+            // Parse la réponse JSON pour récupérer le "display_name"
+            JSONObject jsonResponse = new JSONObject(response.toString());
+            return jsonResponse.optString("display_name", "Nom inconnu");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Erreur lors de la récupération du nom";
+        }
+    }
+
+    public void startHttpServer() throws Exception {
+        server = HttpServer.create(new InetSocketAddress(8000), 0);
+        server.createContext("/coordinates", new CoordinatesHandler());
+        server.setExecutor(null);
+        server.start();
+        System.out.println("Serveur démarré sur http://localhost:8000");
+
+        // Ajouter un shutdown hook pour fermer le serveur à la fermeture de l'application
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            stopHttpServer();
+        }));
+    }
+
+
+
+
+    class CoordinatesHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if ("POST".equals(exchange.getRequestMethod())) {
+                // Lire les données reçues
+                InputStream requestBody = exchange.getRequestBody();
+                String requestData = new BufferedReader(new InputStreamReader(requestBody))
+                        .lines()
+                        .collect(Collectors.joining("\n"));
+
+                System.out.println("Données reçues depuis JavaScript : " + requestData);
+
+                try {
+                    // Parser les coordonnées reçues (attendues au format JSON)
+                    JSONArray requestArray = new JSONArray(requestData); // Parser le tableau JSON
+                    JSONObject requestJson = requestArray.getJSONObject(0); // Récupérer le premier objet du tableau
+
+                    double latitude = requestJson.getDouble("lat");
+                    double longitude = requestJson.getDouble("lng");
+                    String markerName = requestJson.optString("name", "Nom inconnu");
+
+                    System.out.println("Latitude : " + latitude);
+                    System.out.println("Longitude : " + longitude);
+                    System.out.println("Nom : " + markerName);
+
+                    // Récupérer le nom de l'endroit via un service de géocodage inverse
+                   final String locationName = getLocationNameFromCoordinate(latitude, longitude);
+                    System.out.println("Nom de la localisation : " + locationName);
+
+
+                    // Mettre à jour les champs correspondants
+
+
+                        Platform.runLater(() -> {
+                            if (locationName == null || locationName.isEmpty()) {
+                                // Afficher un message d'erreur si aucun nom n'est trouvé
+                                errorLabel.setText("Erreur : emplacement inconnu.");
+                                errorLabel.setVisible(true);
+                                errorLabel.setManaged(true);
+                            }
+                                if (issearchFieldActive) {
+                                    searchField.setText(locationName);
+                                    System.out.println("searchField mis à jour avec : " + locationName);
+                                } else if (isStartFieldActive) {
+                                    startField.setText(locationName);
+                                    System.out.println("startField mis à jour avec : " + locationName);
+                                } else if (isEndFieldActive) {
+                                    endField.setText(locationName);
+                                    System.out.println("endField mis à jour avec : " + locationName);
+                                } else {
+                                    System.out.println("Aucun champ actif trouvé !");
+                                }
+
+                                // Réinitialiser les indicateurs
+                                issearchFieldActive = false;
+                                isStartFieldActive = false;
+                                isEndFieldActive = false;
+
+                                System.out.println("Indicateurs réinitialisés.");
+                            });
+
+                            // Envoyer une réponse simple
+                    // Créer la réponse JSON
+                    String response = "{\"status\":\"success\", \"message\":\"Coordonnées reçues\"}";
+
+// Convertir la réponse en tableau d'octets (UTF-8)
+                    byte[] responseBytes = response.getBytes(StandardCharsets.UTF_8);
+
+// Envoyer les en-têtes avec la longueur correcte
+                    exchange.getResponseHeaders().add("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(200, responseBytes.length);
+
+// Envoyer le corps de la réponse
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(responseBytes);
+                    os.close();
+
+                } catch (Exception e) {
+                    System.err.println("Erreur lors du traitement des données reçues : " + e.getMessage());
+                    e.printStackTrace();
+
+                    String response = "{\"status\":\"error\", \"message\":\"Erreur de traitement des données\"}";
+                    exchange.getResponseHeaders().add("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(400, response.length());
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                }
+            } else {
+                exchange.sendResponseHeaders(405, -1);
+            }
+        }
+    }
+
+    public void stopHttpServer() {
+        if (server != null) {
+            server.stop(0);
+            System.out.println("Serveur arrêté.");
+        }
+    }
 
 
 
     @FXML
     private void hideAllVBoxes() {
+        errorLabel.setVisible(false);
+        errorLabel.setManaged(false);
         locationVBox.setVisible(false);
         locationVBox.setManaged(false);
 
@@ -196,6 +370,15 @@ public class HomeController {
 
         profileScrollPane.setVisible(false);
         profileScrollPane.setManaged(false);
+
+        statusLabel.setVisible(false);
+        statusLabel.setManaged(false);
+
+        meteoVBox.setVisible(false);
+        meteoVBox.setManaged(false);
+        meteoafficherVBox.setVisible(false);
+        meteoafficherVBox.setManaged(false);
+
     }
     private void resetItineraryFields() {
         // Effacer les champs de départ et d'arrivée
@@ -393,46 +576,102 @@ public class HomeController {
         }
     }
 
-
     public void initialize() {
         if (webView == null) {
             System.err.println("webView est null !");
         } else {
-            // Initialisation de la session Spark
-            spark = SparkSession.builder()
-                    .appName("SearchLocationApp")
-                    .master("local")
-                    .getOrCreate();
+            try {
+                // Initialisation de la session Spark
+                spark = SparkSession.builder()
+                        .appName("SearchLocationApp")
+                        .master("local")
+                        .getOrCreate();
 
-            // Charger le WebView avec le fichier HTML de la carte
-            WebEngine webEngine = webView.getEngine();
-            String mapFilePath = getClass().getResource("/html/index.html").toExternalForm();
+                // Charger le WebView avec le fichier HTML de la carte
+                WebEngine webEngine = webView.getEngine();
+                String mapFilePath = getClass().getResource("/html/index.html").toExternalForm();
 
-            if (mapFilePath != null) {
-                webEngine.load(mapFilePath);
-            } else {
-                System.err.println("Le fichier HTML de la carte est introuvable !");
-            }
-
-            // Ajouter un écouteur pour vérifier quand la carte est prête
-            webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
-                if (newState == Worker.State.SUCCEEDED) {
-                    System.out.println("Carte prête pour les interactions.");
-                    webEngine.executeScript("alert('Carte chargée');"); // Test pour confirmer le chargement
-                } else if (newState == Worker.State.FAILED) {
-                    System.err.println("Erreur lors du chargement de la carte.");
+                if (mapFilePath != null) {
+                    webEngine.load(mapFilePath);
+                } else {
+                    throw new RuntimeException("Le fichier HTML de la carte est introuvable !");
                 }
-            });
 
-            // Gestion des erreurs JavaScript
-            webEngine.setOnError(event -> System.out.println("Erreur JavaScript : " + event.getMessage()));
-            webEngine.setOnAlert(event -> System.out.println(event.getData())); // pour capturer les alertes JavaScript
+                // Ajouter un écouteur pour vérifier quand la carte est prête
+                webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+                    if (newState == Worker.State.SUCCEEDED) {
+                        System.out.println("Carte prête pour les interactions.");
+                        webEngine.executeScript("alert('Carte chargée');"); // Test pour confirmer le chargement
+                    } else if (newState == Worker.State.FAILED) {
+                        System.err.println("Erreur lors du chargement de la carte.");
+                        chargerVueDeSecours(webEngine);
+                    }
+                });
+                searchField.setOnMouseClicked(event -> {
+                    issearchFieldActive = true;
+                    isStartFieldActive = false;
+                    isEndFieldActive = false;
+                    System.out.println("searchField activé.");
+                });
 
-            System.out.println("Carte chargée : " + webEngine.getLoadWorker().getState());
+                startField.setOnMouseClicked(event -> {
+                    issearchFieldActive = false;
+                    isStartFieldActive = true;
+                    isEndFieldActive = false;
+                    System.out.println("startField activé.");
+                });
 
+                endField.setOnMouseClicked(event -> {
+                    issearchFieldActive = false;
+                    isStartFieldActive = false;
+                    isEndFieldActive = true;
+                    System.out.println("endField activé.");
+                });
+
+                // Gestion des erreurs JavaScript
+                webEngine.setOnError(event -> System.out.println("Erreur JavaScript : " + event.getMessage()));
+                webEngine.setOnAlert(event -> System.out.println(event.getData())); // pour capturer les alertes JavaScript
+
+                System.out.println("Carte chargée : " + webEngine.getLoadWorker().getState());
+            } catch (Exception e) {
+                System.err.println("Erreur lors de l'initialisation de la carte : " + e.getMessage());
+                chargerVueDeSecours(webView.getEngine());
+            }
         }
     }
+    // Méthode pour exposer Java à JavaScript
+    public void setupJavaScriptBridge() {
+        WebEngine webEngine = webView.getEngine();
+        webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+            if (newState == Worker.State.SUCCEEDED) {
+                JSObject window = (JSObject) webEngine.executeScript("window");
+                window.setMember("javaController", this); // Expose l'instance actuelle du contrôleur
+            }
+        });
+    }
 
+    // Méthode appelée depuis JavaScript
+    public void receiveJson(String jsonResponse) {
+        System.out.println("Données reçues de JavaScript : " + jsonResponse);
+    }
+
+
+    private void chargerVueDeSecours(WebEngine webEngine) {
+        try {
+            System.out.println("Chargement de la vue de secours...");
+            String backupFilePath = getClass().getResource("/html/backup.html").toExternalForm();
+
+            if (backupFilePath != null) {
+                webEngine.load(backupFilePath);
+                System.out.println("Vue de secours chargée avec succès.");
+            } else {
+                System.err.println("Le fichier de secours est introuvable !");
+                webEngine.loadContent("<html><body><h1>Erreur</h1><p>La carte n'a pas pu être chargée. Veuillez réessayer plus tard.</p></body></html>");
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors du chargement de la vue de secours : " + e.getMessage());
+        }
+    }
 
 
     void showTransports() {
@@ -497,9 +736,9 @@ public class HomeController {
 
     private void fetchTransportsAroundLocation(double latitude, double longitude) {
         String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];" +
-                "(node(around:10000," + longitude + "," + latitude + ")[amenity=taxi];" +
-                "node(around:10000," + latitude + "," + longitude + ")[railway=tram_stop];" +
-                "node(around:10000," + latitude + "," + longitude + ")[highway=bus_stop];);out;";
+                "(node(around:20000," + longitude + "," + latitude + ")[amenity=taxi];" +
+                "node(around:20000," + latitude + "," + longitude + ")[railway=tram_stop];" +
+                "node(around:20000," + latitude + "," + longitude + ")[highway=bus_stop];);out;";
 
         try {
             URL url = new URL(overpassUrl);
@@ -560,9 +799,24 @@ public class HomeController {
                     transportHBox.setAlignment(Pos.CENTER_LEFT);
                     transportHBox.setStyle("-fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-color: #f9f9f9;");
 
+
                     Label transportLabel = new Label(name + "\n" + transportInfo.toString());
                     transportLabel.setWrapText(true);
-                    transportLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-max-width: 500px; -fx-text-fill: #333;");
+                    transportLabel.setStyle(
+                            "-fx-font-size: 14px; " +
+                                    "-fx-font-weight: bold; " +
+                                    "-fx-text-fill: #333; " +
+
+                                    "-fx-padding: 8px; " +
+
+                                    "-fx-border-radius: 4px;"
+                    );
+                    transportHBox.setStyle(
+                            "-fx-padding: 10; " +
+
+                                    "-fx-background-color: F1F6F9; " +
+                                    "-fx-effect: dropshadow(two-pass-box, rgba(0,0,0,0.2), 5, 0, 2, 2);"
+                    );
 
                     Region spacer = new Region();
                     HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -575,11 +829,12 @@ public class HomeController {
                     saveImageView.setFitHeight(20);
                     saveButton.setGraphic(saveImageView);
                     saveButton.setStyle(
-                            "-fx-background-color: #f9f9f9; " +
-                                    "-fx-background-radius: 50%; " +
-                                    "-fx-border-color: #ccc; " +
-                                    "-fx-border-width: 1px; " +
-                                    "-fx-border-radius: 50%; " +
+                            "-fx-border-color: #0078d7;" +
+                                    "-fx-background-color: white; " +
+                                    "-fx-border-width: 1.5;" +
+                                    "-fx-border-radius: 25;  " +
+                                    "-fx-background-radius: 25; "+
+                                    "-fx-padding: 7; "+
                                     "-fx-cursor: hand;"
                     );
                     saveButton.setOnAction(event -> {
@@ -595,11 +850,12 @@ public class HomeController {
                     routeImageView.setFitHeight(20);
                     routeButton.setGraphic(routeImageView);
                     routeButton.setStyle(
-                            "-fx-background-color: #f9f9f9; " +
-                                    "-fx-background-radius: 50%; " +
-                                    "-fx-border-color: #ccc; " +
-                                    "-fx-border-width: 1px; " +
-                                    "-fx-border-radius: 50%; " +
+                            "-fx-border-color: #0078d7;" +
+                                    "-fx-background-color: white; " +
+                                    "-fx-border-width: 1.5;" +
+                                    "-fx-border-radius: 25;  " +
+                                    "-fx-background-radius: 25; "+
+                                    "-fx-padding: 7; "+
                                     "-fx-cursor: hand;"
                     );
                     routeButton.setOnAction(event -> {
@@ -613,7 +869,7 @@ public class HomeController {
                         // Remplir le champ de destination avec le nom de la mosquée sélectionnée
                         endField.setText(name);
 
-                        selectedEndCoordinates = new double[]{transport.optDouble("lat"), transport.optDouble("lon")};
+                        double[] selectedEndCoordinates = new double[]{transport.optDouble("lat"), transport.optDouble("lon")};
 
                         // Effacer le champ de départ (à remplir par l'utilisateur)
                         startField.clear();
@@ -641,6 +897,7 @@ public class HomeController {
                 // Aucun transport trouvé
                 System.out.println("Aucun transport trouvé dans la zone.");
                 if (transportVBox != null) {
+                    transportVBox.getChildren().clear();
                     Label noTransportLabel = new Label("Aucun transport trouvé dans cette zone.");
                     noTransportLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #ff0000;");
                     transportVBox.getChildren().add(noTransportLabel);
@@ -650,10 +907,6 @@ public class HomeController {
             e.printStackTrace();
         }
     }
-
-
-
-
 
     void showHotels() {
         System.out.println("Affichage des hôtels.");
@@ -716,7 +969,7 @@ public class HomeController {
     }
     private void fetchHotelsAroundLocation(double latitude, double longitude) {
         // Réduire le rayon pour une recherche plus précise (5 km)
-        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:1000," + longitude + "," + latitude + ")[tourism=hotel];out;";
+        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:5000," + longitude + "," + latitude + ")[tourism=hotel];out;";
 
         try {
             URL url = new URL(overpassUrl);
@@ -735,7 +988,7 @@ public class HomeController {
             JSONArray elements = jsonResponse.getJSONArray("elements");
 
             if (elements.length() > 0) {
-                System.out.println("Hotels trouvées :");
+                System.out.println("Hôtels trouvés :");
 
                 StringBuilder hotelsLocations = new StringBuilder("[");
 
@@ -775,17 +1028,26 @@ public class HomeController {
 
                     // Créer un HBox pour afficher les informations
                     HBox hotelHBox = new HBox(8);
-                    hotelHBox.setAlignment(Pos.TOP_LEFT);
+                    hotelHBox.setAlignment(Pos.CENTER_LEFT);
                     hotelHBox.setStyle("-fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-color: #f9f9f9;");
 
-                    // Ajoutez toutes les informations sous forme de texte
-                    Text hotelText = new Text("Nom : " + name + "\nInformations : \n" + hotelInfo.toString());
-                    hotelText.setStyle("-fx-font-size: 14px; -fx-text-fill: #333;");
-                    hotelText.setWrappingWidth(400); // Limitez la largeur pour éviter des débordements
+                    Label hotelLabel = new Label(name + "\n" + hotelInfo.toString());
+                    hotelLabel.setWrapText(true);
+                    hotelLabel.setStyle(
+                            "-fx-font-size: 14px; " +
+                                    "-fx-font-weight: bold; " +
+                                    "-fx-text-fill: #333; " +
+                                    "-fx-padding: 8px; " +
+                                    "-fx-border-radius: 4px;"
+                    );
+                    hotelHBox.setStyle(
+                            "-fx-padding: 10; " +
+                                    "-fx-background-color: F1F6F9; " +
+                                    "-fx-effect: dropshadow(two-pass-box, rgba(0,0,0,0.2), 5, 0, 2, 2);"
+                    );
 
-                    // Créer un HBox pour les boutons et les aligner en bas
-                    VBox buttonsBox = new VBox(10);
-                    buttonsBox.setAlignment(Pos.TOP_LEFT); // Les boutons seront à gauche sous le texte
+                    Region spacer = new Region();
+                    HBox.setHgrow(spacer, Priority.ALWAYS);
 
                     // Bouton "Enregistrer"
                     Button saveButton = new Button();
@@ -795,11 +1057,12 @@ public class HomeController {
                     saveImageView.setFitHeight(20);
                     saveButton.setGraphic(saveImageView);
                     saveButton.setStyle(
-                            "-fx-background-color: #f9f9f9; " +
-                                    "-fx-background-radius: 50%; " +
-                                    "-fx-border-color: #ccc; " +
-                                    "-fx-border-width: 1px; " +
-                                    "-fx-border-radius: 50%; " +
+                            "-fx-border-color: #0078d7;" +
+                                    "-fx-background-color: white; " +
+                                    "-fx-border-width: 1.5;" +
+                                    "-fx-border-radius: 25;  " +
+                                    "-fx-background-radius: 25; " +
+                                    "-fx-padding: 7; " +
                                     "-fx-cursor: hand;"
                     );
                     saveButton.setOnAction(event -> {
@@ -815,35 +1078,36 @@ public class HomeController {
                     routeImageView.setFitHeight(20);
                     routeButton.setGraphic(routeImageView);
                     routeButton.setStyle(
-                            "-fx-background-color: #f9f9f9; " +
-                                    "-fx-background-radius: 50%; " +
-                                    "-fx-border-color: #ccc; " +
-                                    "-fx-border-width: 1px; " +
-                                    "-fx-border-radius: 50%; " +
+                            "-fx-border-color: #0078d7;" +
+                                    "-fx-background-color: white; " +
+                                    "-fx-border-width: 1.5;" +
+                                    "-fx-border-radius: 25;  " +
+                                    "-fx-background-radius: 25; " +
+                                    "-fx-padding: 7; " +
                                     "-fx-cursor: hand;"
                     );
                     routeButton.setOnAction(event -> {
                         System.out.println("Bouton Itinéraire cliqué pour : " + name);
+                        // Logique de calcul d'itinéraire ici
                         hideAllVBoxes();
                         resetItineraryFields(); // Réinitialise la VBox
                         itineraryFieldsVBox.setVisible(true); // Affiche la VBox d'itinéraire
                         itineraryFieldsVBox.setManaged(true);
 
-                        // Remplir le champ de destination avec le nom de la mosquée sélectionnée
+                        // Remplir le champ de destination avec le nom de l'hôtel sélectionné
                         endField.setText(name);
-                        selectedEndCoordinates = new double[]{hotel.optDouble("lat"), hotel.optDouble("lon")};
+
+                        double[] selectedEndCoordinates = new double[]{hotel.optDouble("lat"), hotel.optDouble("lon")};
 
                         // Effacer le champ de départ (à remplir par l'utilisateur)
                         startField.clear();
                     });
 
-                    // Ajoutez les boutons à la VBox
-                    buttonsBox.getChildren().addAll(saveButton, routeButton);
+                    VBox buttonsBox = new VBox(10, saveButton, routeButton);
+                    buttonsBox.setAlignment(Pos.TOP_RIGHT);
 
-                    // Ajoutez le texte et les boutons dans le HBox
-                    hotelHBox.getChildren().addAll(hotelText, buttonsBox);
+                    hotelHBox.getChildren().addAll(hotelLabel, spacer, buttonsBox);
 
-                    // Ajoutez le HBox à la VBox principale
                     if (restaurantVBox != null) {
                         restaurantVBox.getChildren().add(hotelHBox);
                     }
@@ -853,23 +1117,26 @@ public class HomeController {
 
                 if (webView != null && webView.getEngine() != null) {
                     webView.getEngine().executeScript("updateMapWithRestaurants(" + hotelsLocations.toString() + ");");
-                    System.out.println("Pharmacies envoyées à la carte.");
+                    System.out.println("Hôtels envoyés à la carte.");
                 } else {
                     System.out.println("WebView ou son moteur non initialisé.");
                 }
-            } else {
-                System.out.println("Aucune pharmacie trouvée dans la zone.");
+            }  else {
+                hideAllVBoxes();
+                restaurantVBox.setManaged(true);
+                restaurantVBox.setVisible(true);
+                System.out.println("Aucun hotel trouvé dans la zone.");
+                if (restaurantVBox != null) {
+                    restaurantVBox.getChildren().clear();
+                    Label noTransportLabel = new Label("Aucun thotel trouvé dans cette zone.");
+                    noTransportLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #ff0000;");
+                    restaurantVBox.getChildren().add(noTransportLabel);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-
-
-
-
-
     void showPharmacies() {
         System.out.println("Affichage des pharmacies.");
 
@@ -931,7 +1198,7 @@ public class HomeController {
     }
     private void fetchpharmaciesAroundLocation(double latitude, double longitude) {
         // Réduire le rayon pour une recherche plus précise (5 km)
-        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:1000," + longitude + "," + latitude + ")[amenity=pharmacy];out;";
+        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:2000," + longitude + "," + latitude + ")[amenity=pharmacy];out;";
 
         try {
             URL url = new URL(overpassUrl);
@@ -991,12 +1258,21 @@ public class HomeController {
                     // Créer un HBox pour afficher les informations
                     HBox pharmacyHBox = new HBox(8);
                     pharmacyHBox.setAlignment(Pos.TOP_LEFT);
-                    pharmacyHBox.setStyle("-fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 1px; -fx-border-radius: 5px; -fx-background-color: #f9f9f9;");
+                    pharmacyHBox.setStyle(
+                            "-fx-padding: 10; " +
+                                    "-fx-background-color: F1F6F9; " +
+                                    "-fx-effect: dropshadow(two-pass-box, rgba(0,0,0,0.2), 5, 0, 2, 2);"
+                    );
 
                     // Ajoutez toutes les informations sous forme de texte
                     Text pharmacyText = new Text("Nom : " + name + "\nInformations : \n" + pharmacyInfo.toString());
-                    pharmacyText.setStyle("-fx-font-size: 14px; -fx-text-fill: #333;");
+                    pharmacyText.setStyle( "-fx-font-size: 14px; " +
+                            "-fx-font-weight: bold; " +
+                            "-fx-text-fill: #333; " +
+                            "-fx-padding: 8px; " +
+                            "-fx-border-radius: 4px;");
                     pharmacyText.setWrappingWidth(400); // Limitez la largeur pour éviter des débordements
+
 
                     // Créer un HBox pour les boutons et les aligner en bas
                     VBox buttonsBox = new VBox(10);
@@ -1010,11 +1286,12 @@ public class HomeController {
                     saveImageView.setFitHeight(20);
                     saveButton.setGraphic(saveImageView);
                     saveButton.setStyle(
-                            "-fx-background-color: #f9f9f9; " +
-                                    "-fx-background-radius: 50%; " +
-                                    "-fx-border-color: #ccc; " +
-                                    "-fx-border-width: 1px; " +
-                                    "-fx-border-radius: 50%; " +
+                            "-fx-border-color: #0078d7;" +
+                                    "-fx-background-color: white; " +
+                                    "-fx-border-width: 1.5;" +
+                                    "-fx-border-radius: 25;  " +
+                                    "-fx-background-radius: 25; "+
+                                    "-fx-padding: 7; "+
                                     "-fx-cursor: hand;"
                     );
                     saveButton.setOnAction(event -> {
@@ -1030,11 +1307,12 @@ public class HomeController {
                     routeImageView.setFitHeight(20);
                     routeButton.setGraphic(routeImageView);
                     routeButton.setStyle(
-                            "-fx-background-color: #f9f9f9; " +
-                                    "-fx-background-radius: 50%; " +
-                                    "-fx-border-color: #ccc; " +
-                                    "-fx-border-width: 1px; " +
-                                    "-fx-border-radius: 50%; " +
+                            "-fx-border-color: #0078d7;" +
+                                    "-fx-background-color: white; " +
+                                    "-fx-border-width: 1.5;" +
+                                    "-fx-border-radius: 25;  " +
+                                    "-fx-background-radius: 25; "+
+                                    "-fx-padding: 7; "+
                                     "-fx-cursor: hand;"
                     );
                     routeButton.setOnAction(event -> {
@@ -1047,7 +1325,7 @@ public class HomeController {
                         // Remplir le champ de destination avec le nom de la mosquée sélectionnée
                         endField.setText(name);
                         // Remplir le champ de destination avec un format précis
-                        selectedEndCoordinates = new double[]{pharmacy.optDouble("lat"), pharmacy.optDouble("lon")};
+                        double[] selectedEndCoordinates = new double[]{pharmacy.optDouble("lat"), pharmacy.optDouble("lon")};
 
                         // Effacer le champ de départ (à remplir par l'utilisateur)
                         startField.clear();
@@ -1080,8 +1358,6 @@ public class HomeController {
             e.printStackTrace();
         }
     }
-
-
     void showMosques() {
         System.out.println("Affichage des mosques.");
 
@@ -1141,9 +1417,10 @@ public class HomeController {
             System.out.println("WebView ou son moteur non initialisé.");
         }
     }
+
     private void fetchmosquesAroundLocation(double latitude, double longitude) {
         // Réduire le rayon pour une recherche plus précise (5 km)
-        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:7000," + longitude + "," +latitude + ")[amenity=place_of_worship];out;";
+        String overpassUrl = "http://overpass-api.de/api/interpreter?data=[out:json];node(around:9000," + longitude + "," +latitude + ")[amenity=place_of_worship];out;";
         try {
             URL url = new URL(overpassUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -1206,9 +1483,17 @@ public class HomeController {
 
                     // Ajoutez toutes les informations sous forme de texte
                     Text mosqueText = new Text("Nom : " + name + "\nInformations : \n" + mosqueInfo.toString());
-                    mosqueText.setStyle("-fx-font-size: 14px; -fx-text-fill: #333;");
+                    mosqueHBox.setStyle(
+                            "-fx-padding: 10; " +
+                                    "-fx-background-color: F1F6F9; " +
+                                    "-fx-effect: dropshadow(two-pass-box, rgba(0,0,0,0.2), 5, 0, 2, 2);"
+                    );
                     mosqueText.setWrappingWidth(400); // Limitez la largeur pour éviter des débordements
-
+                    mosqueText.setStyle( "-fx-font-size: 14px; " +
+                            "-fx-font-weight: bold; " +
+                            "-fx-text-fill: #333; " +
+                            "-fx-padding: 8px; " +
+                            "-fx-border-radius: 4px;");
                     // Créer un HBox pour les boutons et les aligner en bas
                     VBox buttonsBox = new VBox(10);
                     buttonsBox.setAlignment(Pos.TOP_LEFT); // Les boutons seront à gauche sous le texte
@@ -1221,11 +1506,12 @@ public class HomeController {
                     saveImageView.setFitHeight(20);
                     saveButton.setGraphic(saveImageView);
                     saveButton.setStyle(
-                            "-fx-background-color: #f9f9f9; " +
-                                    "-fx-background-radius: 50%; " +
-                                    "-fx-border-color: #ccc; " +
-                                    "-fx-border-width: 1px; " +
-                                    "-fx-border-radius: 50%; " +
+                            "-fx-border-color: #0078d7;" +
+                                    "-fx-background-color: white; " +
+                                    "-fx-border-width: 1.5;" +
+                                    "-fx-border-radius: 25;  " +
+                                    "-fx-background-radius: 25; "+
+                                    "-fx-padding: 7; "+
                                     "-fx-cursor: hand;"
                     );
                     saveButton.setOnAction(event -> {
@@ -1242,11 +1528,12 @@ public class HomeController {
                     routeImageView.setFitHeight(20);
                     routeButton.setGraphic(routeImageView);
                     routeButton.setStyle(
-                            "-fx-background-color: #f9f9f9; " +
-                                    "-fx-background-radius: 50%; " +
-                                    "-fx-border-color: #ccc; " +
-                                    "-fx-border-width: 1px; " +
-                                    "-fx-border-radius: 50%; " +
+                            "-fx-border-color: #0078d7;" +
+                                    "-fx-background-color: white; " +
+                                    "-fx-border-width: 1.5;" +
+                                    "-fx-border-radius: 25;  " +
+                                    "-fx-background-radius: 25; "+
+                                    "-fx-padding: 7; "+
                                     "-fx-cursor: hand;"
                     );
                     routeButton.setOnAction(event -> {
@@ -1263,7 +1550,7 @@ public class HomeController {
                         startField.clear();
 
                         // Sauvegarder les coordonnées exactes pour l'itinéraire
-                        selectedEndCoordinates = new double[]{mosque.optDouble("lat"), mosque.optDouble("lon")};
+                        double[] selectedEndCoordinates = new double[]{mosque.optDouble("lat"), mosque.optDouble("lon")};
 
                         // Effacer le champ de départ (à remplir par l'utilisateur)
                         startField.clear();
@@ -1298,11 +1585,6 @@ public class HomeController {
         }
     }
 
-
-
-
-
-
     public void setUserDetails(String username, int userId) {
         if (welcomeLabel != null) {
             welcomeLabel.setText("Bienvenue, " + username + " !");
@@ -1313,7 +1595,7 @@ public class HomeController {
 
     @FXML
     private void handleSearch() {
-        String searchQuery = searchField.getText().trim();
+         searchQuery = searchField.getText().trim();
         if (!searchQuery.isEmpty()) {
             searchLocation(searchQuery); // Appeler la méthode pour effectuer la recherche
 
@@ -1323,6 +1605,7 @@ public class HomeController {
         } else {
             System.out.println("Veuillez entrer une requête de recherche.");
         }
+
     }
 
     private void searchLocation(String query) {
@@ -1347,6 +1630,10 @@ public class HomeController {
                                 String longitude = location.optString("lon");
 
                                 jsonArray.append(String.format("{\"name\":\"%s\", \"lat\":%s, \"lng\":%s},", name, latitude, longitude));
+                                // Stocker les coordonnées de la première localisation trouvée
+                                if (i == 0) {
+                                    coordinates = latitude + "," + longitude;
+                                }
                             }
 
                             if (jsonArray.length() > 1) {
@@ -1374,6 +1661,7 @@ public class HomeController {
         } catch (IOException e) {
             System.err.println("Erreur lors de la recherche de la localisation : " + e.getMessage());
         }
+        searchField.clear();
     }
 
     public int getUserIdByUsername(String username) {
@@ -1512,7 +1800,8 @@ public class HomeController {
             fetchUserSearchHistory();
         }
     }
-
+    @FXML
+    private Label statusLabel;
 
     @FXML
     private void handleSave() {
@@ -1520,6 +1809,12 @@ public class HomeController {
 
 
         storeLocationInDatabase(name);
+        statusLabel.setText("Enregistrement réussi !");
+        statusLabel.setVisible(true);
+        statusLabel.setManaged(true);
+
+        // Optionnel : Afficher un log dans la console pour vérification
+        System.out.println("Bouton enregistré cliqué.");
     }
 
     private void storeLocationInDatabase(String name) {
@@ -1588,24 +1883,8 @@ public class HomeController {
             System.out.println("Erreur lors de la redirection vers la page de connexion.");
         }
     }
-
-
-
-
-
-
-
-    // Variable pour stocker le mode de transport sélectionné
-    
-
-
-
-
-
-
-
     public void handleRecentSearches(ActionEvent actionEvent) {
-         // Cette méthode affiche les hôtels sur la carte
+        // Cette méthode affiche les hôtels sur la carte
         hideAllVBoxes();  // Masque tous les VBox et ScrollPanes
 
         // Rendre visible le ScrollPane du restaurant (et donc son VBox)
@@ -1614,6 +1893,7 @@ public class HomeController {
         displayRecentSearches();
 
     }
+
     private void displayRecentSearches() {
         // Effacer les anciens éléments affichés dans le VBox existant
         recentSearchesVBox.getChildren().clear();
@@ -1626,22 +1906,19 @@ public class HomeController {
             // Récupérer les recherches récentes
             List<Map<String, String>> enregistres = getRecentSearches(userId);
 
-            // Créer un conteneur HBox pour le titre et le bouton de fermeture
-            HBox headerBox = new HBox(10); // Espacement de 10px entre les éléments
-            headerBox.setStyle("-fx-alignment: center-left; -fx-padding: 15px;");
+            // Conteneur HBox pour le titre et le bouton de fermeture
+            HBox headerBox = new HBox(15);
+            headerBox.setStyle("-fx-alignment: center-left; -fx-padding: 10px; -fx-background-color: #e0f2f1;");
 
-            // Ajouter un titre "Recherches Récentes" aligné à gauche
+            // Titre
             Label titleLabel = new Label("Recherches Récentes");
-            titleLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #333;");
-            HBox.setHgrow(titleLabel, Priority.ALWAYS); // Permet au titre de prendre tout l'espace disponible à gauche
-            headerBox.getChildren().add(titleLabel);
+            titleLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #004d40;");
 
-            // Ajouter un espace entre le titre et le bouton
+            // Espace dynamique entre le titre et le bouton
             Region spacer = new Region();
-            HBox.setHgrow(spacer, Priority.ALWAYS); // Le spacer occupe tout l'espace restant entre le titre et le bouton
-            headerBox.getChildren().add(spacer);
+            HBox.setHgrow(spacer, Priority.ALWAYS);
 
-            // Créer le bouton de fermeture avec une icône
+            // Bouton avec une icône
             Button closeButton = new Button();
             Image closeImage = new Image(getClass().getResource("/images/close-icon.png").toString());
             ImageView closeImageView = new ImageView(closeImage);
@@ -1649,62 +1926,60 @@ public class HomeController {
             closeImageView.setFitHeight(20);
             closeButton.setGraphic(closeImageView);
             closeButton.setStyle(
-                    "-fx-background-radius: 50%; " +
-                            "-fx-border-color: #ccc; " +
-                            "-fx-border-width: 1px; " +
-                            "-fx-border-radius: 50%; " +
+                    "-fx-border-color: #0078d7;" +
+                            "-fx-background-color: white; " +
+                            "-fx-border-width: 1.5;" +
+                            "-fx-border-radius: 25;  " +
+                            "-fx-background-radius: 25; "+
+                            "-fx-padding: 7; "+
                             "-fx-cursor: hand;"
             );
-
-            // Action du bouton de fermeture
             closeButton.setOnAction(event -> {
-                recherchrecenteScrollPane.setVisible(false);
-                recherchrecenteScrollPane.setManaged(false);
 
+                hideAllVBoxes();
+                resetItineraryFields();
                 itineraryFieldsVBox.setVisible(true);
                 itineraryFieldsVBox.setManaged(true);
 
+
+
+
             });
 
-            // Ajouter le bouton de fermeture à droite de l'HBox
-            headerBox.getChildren().add(closeButton);
 
-            // Ajouter la HBox au VBox principal
+            headerBox.getChildren().addAll(titleLabel, spacer, closeButton);
             recentSearchesVBox.getChildren().add(headerBox);
 
-            // Ajouter les recherches dynamiquement au VBox
+            // Boucle pour ajouter les données dynamiques
             for (Map<String, String> search : enregistres) {
                 String term = search.get("term");
                 String date = search.get("date");
 
-                // Supprimer les secondes et tout ce qui suit
                 String truncatedDate = date.length() > 16 ? date.substring(0, 16) : date;
 
-                // Créer une HBox pour afficher chaque recherche
-                HBox enregistreHBox = new HBox(20); // Espacement de 20px entre le terme et la date
-                enregistreHBox.setStyle("-fx-padding: 5px; -fx-background-color: #ffffff; -fx-border-radius: 10px; -fx-border-color: #f0f0f0; -fx-border-width: 1px;");
+                HBox enregistreHBox = new HBox(10);
+                enregistreHBox.setStyle(
+                        "-fx-padding: 10px; " +
+                                "-fx-background-color: #ffffff; " +
+                                "-fx-border-color: #b2dfdb; " +
+                                "-fx-border-width: 1; " +
+                                "-fx-border-radius: 8;"
+                );
 
-                // Termes de recherche
                 Label termLabel = new Label(term);
-                termLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00796b; -fx-font-weight: bold;");
-                termLabel.setWrapText(true);
+                termLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #004d40; -fx-font-weight: bold;");
 
-                // Date de recherche
                 Label dateLabel = new Label("(" + truncatedDate + ")");
-                dateLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #757575; -fx-font-style: italic;");
-                dateLabel.setWrapText(true);
+                dateLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #616161; -fx-font-style: italic;");
 
-                // Ajouter les labels à l'HBox
                 enregistreHBox.getChildren().addAll(termLabel, dateLabel);
 
-                // Ajouter l'HBox au VBox
                 recentSearchesVBox.getChildren().add(enregistreHBox);
             }
 
-            recentSearchesVBox.setPrefWidth(600); // Ajuster la largeur
+            recentSearchesVBox.setPrefWidth(600);
             recentSearchesVBox.setMaxWidth(Double.MAX_VALUE);
 
-            // Créer un ScrollPane
             ScrollPane scrollPane = new ScrollPane();
             scrollPane.setContent(recentSearchesVBox);
             scrollPane.setFitToWidth(true);
@@ -1714,18 +1989,17 @@ public class HomeController {
             recherchrecenteScrollPane.setContent(scrollPane);
             recherchrecenteScrollPane.setVisible(true);
             recherchrecenteScrollPane.setManaged(true);
-
         } else {
             Label errorLabel = new Label("Utilisateur non trouvé.");
-            errorLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: red; -fx-padding: 10px; -fx-font-weight: bold;");
+            errorLabel.setStyle(
+                    "-fx-font-size: 14px; -fx-text-fill: red; -fx-padding: 10px; -fx-font-weight: bold; -fx-background-color: #ffcdd2; -fx-border-radius: 5px; -fx-border-color: #b71c1c;"
+            );
             recentSearchesVBox.getChildren().add(errorLabel);
 
             recherchrecenteScrollPane.setVisible(false);
             recherchrecenteScrollPane.setManaged(false);
         }
     }
-
-
     public List<Map<String, String>> getRecentSearches(int userId) {
         List<Map<String, String>> recentSearches = new ArrayList<>();
         String query = "SELECT NAME, MAX(SEARCHED_AT) AS SEARCHED_AT " +
@@ -1757,6 +2031,7 @@ public class HomeController {
         hideAllVBoxes();  // Masque tous les VBox et ScrollPanes
 
         // Rendre visible le ScrollPane du restaurant (et donc son VBox)
+        resetItineraryFields();
         enregistreScrollPane.setVisible(true);
         enregistreScrollPane.setManaged(true);
         displayenregistres();
@@ -1765,7 +2040,8 @@ public class HomeController {
     @FXML
     private void handleClose() {
         System.out.println("Close button clicked");
-       enregistreScrollPane.setVisible(false);
+        resetItineraryFields();
+        enregistreScrollPane.setVisible(false);
         enregistreScrollPane.setManaged(false);
     }
     private void displayenregistres() {
@@ -1780,22 +2056,19 @@ public class HomeController {
             // Récupérer les recherches récentes
             List<Map<String, String>> enregistres = getenregistres(userId);
 
-            // Créer un conteneur HBox pour le titre et le bouton de fermeture
-            HBox headerBox = new HBox(10); // Espacement de 10px entre les éléments
-            headerBox.setStyle("-fx-alignment: center-left; -fx-padding: 15px;");
+            // Conteneur HBox pour le titre et le bouton de fermeture
+            HBox headerBox = new HBox(15);
+            headerBox.setStyle("-fx-alignment: center-left; -fx-padding: 10px; -fx-background-color: #e0f2f1;");
 
-            // Ajouter un titre "Recherches Récentes" aligné à gauche
+            // Titre
             Label titleLabel = new Label("Lieux Visités");
-            titleLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #333;");
-            HBox.setHgrow(titleLabel, Priority.ALWAYS); // Permet au titre de prendre tout l'espace disponible à gauche
-            headerBox.getChildren().add(titleLabel);
+            titleLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #004d40;");
 
-            // Ajouter un espace entre le titre et le bouton
+            // Espace dynamique entre le titre et le bouton
             Region spacer = new Region();
-            HBox.setHgrow(spacer, Priority.ALWAYS); // Le spacer occupe tout l'espace restant entre le titre et le bouton
-            headerBox.getChildren().add(spacer);
+            HBox.setHgrow(spacer, Priority.ALWAYS);
 
-            // Créer le bouton de fermeture avec une icône
+            // Bouton avec une icône
             Button closeButton = new Button();
             Image closeImage = new Image(getClass().getResource("/images/close-icon.png").toString());
             ImageView closeImageView = new ImageView(closeImage);
@@ -1803,61 +2076,59 @@ public class HomeController {
             closeImageView.setFitHeight(20);
             closeButton.setGraphic(closeImageView);
             closeButton.setStyle(
-                    "-fx-background-radius: 50%; " +
-                            "-fx-border-color: #ccc; " +
-                            "-fx-border-width: 1px; " +
-                            "-fx-border-radius: 50%; " +
+                    "-fx-border-color: #0078d7;" +
+                            "-fx-background-color: white; " +
+                            "-fx-border-width: 1.5;" +
+                            "-fx-border-radius: 25;  " +
+                            "-fx-background-radius: 25; "+
+                            "-fx-padding: 7; "+
                             "-fx-cursor: hand;"
             );
-
-            // Action du bouton de fermeture
             closeButton.setOnAction(event -> {
-                enregistreScrollPane.setVisible(false);
-                enregistreScrollPane.setManaged(false);
 
+                hideAllVBoxes();
+                 resetItineraryFields();
                 itineraryFieldsVBox.setVisible(true);
                 itineraryFieldsVBox.setManaged(true);
+
+
+
+
             });
 
-            // Ajouter le bouton de fermeture à droite de l'HBox
-            headerBox.getChildren().add(closeButton);
 
-            // Ajouter la HBox au VBox principal
+            headerBox.getChildren().addAll(titleLabel, spacer, closeButton);
             enregistreVBox.getChildren().add(headerBox);
 
-            // Ajouter les recherches dynamiquement au VBox
             for (Map<String, String> search : enregistres) {
                 String term = search.get("term");
                 String date = search.get("date");
 
-                // Supprimer les secondes et tout ce qui suit
                 String truncatedDate = date.length() > 16 ? date.substring(0, 16) : date;
 
-                // Créer une HBox pour afficher chaque recherche
-                HBox enregistreHBox = new HBox(20); // Espacement de 20px entre le terme et la date
-                enregistreHBox.setStyle("-fx-padding: 5px; -fx-background-color: #ffffff; -fx-border-radius: 10px; -fx-border-color: #f0f0f0; -fx-border-width: 1px;");
+                HBox enregistreHBox = new HBox(10);
+                enregistreHBox.setStyle(
+                        "-fx-padding: 10px; " +
+                                "-fx-background-color: #ffffff; " +
+                                "-fx-border-color: #b2dfdb; " +
+                                "-fx-border-width: 1; " +
+                                "-fx-border-radius: 8;"
+                );
 
-                // Termes de recherche
                 Label termLabel = new Label(term);
-                termLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #00796b; -fx-font-weight: bold;");
-                termLabel.setWrapText(true);
+                termLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #004d40; -fx-font-weight: bold;");
 
-                // Date de recherche
                 Label dateLabel = new Label("(" + truncatedDate + ")");
-                dateLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #757575; -fx-font-style: italic;");
-                dateLabel.setWrapText(true);
+                dateLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #616161; -fx-font-style: italic;");
 
-                // Ajouter les labels à l'HBox
                 enregistreHBox.getChildren().addAll(termLabel, dateLabel);
 
-                // Ajouter l'HBox au VBox
                 enregistreVBox.getChildren().add(enregistreHBox);
             }
 
-            enregistreVBox.setPrefWidth(600); // Ajuster la largeur
+            enregistreVBox.setPrefWidth(600);
             enregistreVBox.setMaxWidth(Double.MAX_VALUE);
 
-            // Créer un ScrollPane
             ScrollPane scrollPane = new ScrollPane();
             scrollPane.setContent(enregistreVBox);
             scrollPane.setFitToWidth(true);
@@ -1867,22 +2138,17 @@ public class HomeController {
             enregistreScrollPane.setContent(scrollPane);
             enregistreScrollPane.setVisible(true);
             enregistreScrollPane.setManaged(true);
-
         } else {
             Label errorLabel = new Label("Utilisateur non trouvé.");
-            errorLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: red; -fx-padding: 10px; -fx-font-weight: bold;");
+            errorLabel.setStyle(
+                    "-fx-font-size: 14px; -fx-text-fill: red; -fx-padding: 10px; -fx-font-weight: bold; -fx-background-color: #ffcdd2; -fx-border-radius: 5px; -fx-border-color: #b71c1c;"
+            );
             enregistreVBox.getChildren().add(errorLabel);
 
             enregistreScrollPane.setVisible(false);
             enregistreScrollPane.setManaged(false);
         }
     }
-
-
-
-
-
-
     public List<Map<String, String>> getenregistres(int userId) {
         List<Map<String, String>> enregistres = new ArrayList<>();
         String query = "SELECT NAME,CREATED_AT " +
@@ -1915,24 +2181,23 @@ public class HomeController {
         profileScrollPane.setManaged(true);
         displayUserProfile();
     }
-
     private void displayUserProfile() {
         // Effacer les anciens éléments affichés
         profileVBox.getChildren().clear();
 
         // Créer un conteneur HBox pour le titre et le bouton de fermeture
-        HBox headerBox = new HBox(10); // Espacement de 10px entre les éléments
-        headerBox.setStyle("-fx-alignment: center-left; -fx-padding: 15px;");
+        HBox headerBox = new HBox(10);
+        headerBox.setStyle("-fx-alignment: center-left; -fx-padding: 15px; -fx-background-color: #f0f4f8; -fx-border-color: #ccc; -fx-border-width: 1px;");
 
-        // Ajouter un titre "Infos Personnelles" aligné à gauche
+        // Ajouter un titre "Infos Personnelles"
         Label titleLabel = new Label("Les Infos Personnelles");
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 10px;");
-        HBox.setHgrow(titleLabel, Priority.ALWAYS); // Permet au titre de prendre tout l'espace disponible à gauche
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #333;");
+        HBox.setHgrow(titleLabel, Priority.ALWAYS);
         headerBox.getChildren().add(titleLabel);
 
         // Ajouter un espace entre le titre et le bouton
         Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS); // Le spacer occupe tout l'espace restant entre le titre et le bouton
+        HBox.setHgrow(spacer, Priority.ALWAYS);
         headerBox.getChildren().add(spacer);
 
         // Créer le bouton de fermeture avec une icône
@@ -1941,12 +2206,15 @@ public class HomeController {
         ImageView closeImageView = new ImageView(closeImage);
         closeImageView.setFitWidth(20);
         closeImageView.setFitHeight(20);
+
         closeButton.setGraphic(closeImageView);
         closeButton.setStyle(
-                "-fx-background-radius: 50%; " +
-                        "-fx-border-color: #ccc; " +
-                        "-fx-border-width: 1px; " +
-                        "-fx-border-radius: 50%; " +
+                "-fx-border-color: #0078d7;" +
+                        "-fx-background-color: white; " +
+                        "-fx-border-width: 1.5;" +
+                        "-fx-border-radius: 25;  " +
+                        "-fx-background-radius: 25; "+
+                        "-fx-padding: 7; "+
                         "-fx-cursor: hand;"
         );
 
@@ -1954,12 +2222,11 @@ public class HomeController {
         closeButton.setOnAction(event -> {
             profileScrollPane.setVisible(false);
             profileScrollPane.setManaged(false);
-
+resetItineraryFields();
             itineraryFieldsVBox.setVisible(true);
             itineraryFieldsVBox.setManaged(true);
         });
 
-        // Ajouter le bouton de fermeture à droite de l'HBox
         headerBox.getChildren().add(closeButton);
 
         // Ajouter la HBox au VBox principal
@@ -1973,27 +2240,40 @@ public class HomeController {
             // Afficher les informations de l'utilisateur
             Label userInfoLabel = new Label("Nom complet : " + userInfo.get("username") + "\n" +
                     "Email : " + userInfo.get("email"));
-            userInfoLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-padding: 10px;");
-            userInfoLabel.setMaxWidth(400); // Limite la largeur maximale du label
+            userInfoLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #555; -fx-padding: 15px; -fx-background-color: #e9ecef; -fx-border-color: #ccc; -fx-border-width: 1px; -fx-border-radius: 5px;");
+            userInfoLabel.setMaxWidth(400);
             profileVBox.getChildren().add(userInfoLabel);
 
             // Ajouter un titre pour les fonctionnalités
             Label featuresTitle = new Label("Fonctionnalités Disponibles");
-            featuresTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 10px;");
+            featuresTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #555; -fx-padding: 10px;");
             profileVBox.getChildren().add(featuresTitle);
 
-            // Ajouter la liste des fonctionnalités
-            List<String> features = getAppFeatures(); // Méthode pour obtenir les fonctionnalités
+            // Ajouter la liste des fonctionnalités avec un style amélioré
+            List<String> features = getAppFeatures();
             for (String feature : features) {
                 Text featureText = new Text("• " + feature);
-                featureText.setStyle("-fx-font-size: 14px; -fx-text-fill: #4CAF50; -fx-padding: 5px;");
-                featureText.setWrappingWidth(400); // Limite la largeur pour éviter des débordements horizontaux
+
+                // Appliquer un style amélioré directement
+                featureText.setStyle(
+                        "-fx-font-size: 14px; " +
+                                "-fx-text-fill: #2A9D8F; " +
+                                "-fx-padding: 8px 12px; " +
+                                "-fx-background-color: #E0FBFC; " +
+                                "-fx-background-radius: 5px; " +
+                                "-fx-border-color: #2A9D8F; " +
+                                "-fx-border-width: 1px; " +
+                                "-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 4, 0.5, 2, 2); " // Effet d'ombre
+                );
+
+                // Ajout au conteneur
                 profileVBox.getChildren().add(featureText);
             }
+
         } else {
             // Ajouter un message d'erreur si l'utilisateur n'est pas trouvé
             Label errorLabel = new Label("Utilisateur non trouvé.");
-            errorLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: red; -fx-padding: 10px;");
+            errorLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #E74C3C; -fx-padding: 10px; -fx-background-color: #f8d7da; -fx-border-color: #E74C3C; -fx-border-width: 1px; -fx-border-radius: 5px;");
             profileVBox.getChildren().add(errorLabel);
         }
 
@@ -2001,22 +2281,24 @@ public class HomeController {
         profileScrollPane.setVisible(true);
         profileScrollPane.setManaged(true);
     }
-
-
     private List<String> getAppFeatures() {
-        // Liste des fonctionnalités disponibles (vous pouvez les rendre dynamiques)
+        // Liste des fonctionnalités avancées pour votre application
         return Arrays.asList(
-                "la rechreche et la detection des localisations ",
-                "Afficher des lieux comme les pharmacies ,les hopitaux...",
-                "La consultation des recherches recentes et les lieux visites  ",
-                "rechercher des itineraires "
-
-
-
-
-
+                "La recherche et la détection des localisations",
+                "Afficher des lieux comme les pharmacies, les hôpitaux...",
+                "La consultation des recherches récentes et les lieux visités",
+                "Rechercher des itinéraires",
+                "Planification d'itinéraires : Permettre à l'utilisateur de calculer l'itinéraire optimal entre deux adresses",
+                "Offrir le choix du mode de transport : À pied, À vélo, En voiture",
+                "Fournir une estimation du temps de trajet pour chaque mode de transport",
+                "Afficher les itinéraires sur une carte interactive avec des indications claires des points de départ et d'arrivée",
+                "Inclure des points d'intérêt tels que : Pharmacies, Hôtels, Mosquées, Moyens de transport",
+                "Afficher les informations détaillées sur ces points d'intérêt (adresse, site web, etc.)",
+                "Proposer la possibilité d'afficher l'itinéraire vers un point d'intérêt sélectionné",
+                "Localisation de l'utilisateur : Afficher la position actuelle de l'utilisateur pour faciliter son orientation en temps réel"
         );
     }
+
 
     public Map<String, String> getUserInfoByUsername(String username) {
         Map<String, String> userInfo = new HashMap<>();
@@ -2040,12 +2322,6 @@ public class HomeController {
 
         return userInfo;
     }
-
-
-
-
-
-
     public String calculateRoute(double startLat, double startLon, double endLat, double endLon, String vehicle) throws IOException {
         String API_URL = "https://graphhopper.com/api/1/route";
         String apiKey= "0f5d7a61-cd15-4cb7-a179-8319fdf9912f";
@@ -2149,23 +2425,17 @@ public class HomeController {
         }
     }
 
-
     private void calculateAndDisplayItinerary(){
-        // Afficher les indicateurs de chargement
 
-
-        // Réinitialise la VBox
-
-        // Utiliser les coordonnées précises de la destination
-        // Désactiver les champs
         String startCoordinates = startField.getText();
         String endCoordinates = endField.getText();
 
         if (startCoordinates.isEmpty() || endCoordinates.isEmpty()) {
             System.out.println("Veuillez remplir les deux champs.");
-
-            return;
-        }
+            errorLabel.setText("Veuillez remplir les deux champs.");
+            errorLabel.setVisible(true);
+            errorLabel.setManaged(true);
+            return;}
         try {
             double[] startCoords =selectedStartCoordinates != null ? selectedStartCoordinates : getCoordinates(startCoordinates);
             double[] endCoords = selectedEndCoordinates != null ? selectedEndCoordinates : getCoordinates(endCoordinates);
@@ -2185,26 +2455,35 @@ public class HomeController {
             String routeCoordinatesJS =calculateRoute(startCoords[0], startCoords[1], endCoords[0], endCoords[1], selectedVehicle);
             // Masquer les indicateurs de chargement
 
-
+            if (routeCoordinatesJS == null || routeCoordinatesJS.isEmpty()) {
+                throw new Exception("Aucun itinéraire trouvé.");
+            }
             // Réactiver les champs
             startField.setDisable(false);
             endField.setDisable(false);
 
             // Afficher le contenu de routeCoordinatesJS dans la console
-            System.out.println("Route Coordinates (JS format): " + routeCoordinatesJS);
+           // System.out.println("Route Coordinates (JS format): " + routeCoordinatesJS);
 
             /* System.out.println("un teste ici" + routeCoordinatesJS);*/
             // Injecter les points dans OpenLayers via WebEngine
-
-
             webView.getEngine().executeScript("drawRouteOnMap(" + routeCoordinatesJS + ");");
             // Ajouter des marqueurs pour le départ et l'arrivée
-            // Ajouter des marqueurs pour le départ et l'arrivée *après* avoir tracé l'itinéraire
+            // Ajouter des marqueurs pour le départ et l'arrivée après avoir tracé l'itinéraire
+// Masquer le label d'erreur si le calcul a réussi
+            errorLabel.setVisible(false);
+            errorLabel.setManaged(false);
 
-
-        }catch (Exception e) {
-
+        }catch (Exception e) {//
             System.out.println("Erreur : " + e.getMessage());
+// Afficher un message d'erreur dans le label
+            errorLabel.setText("Une erreur s'est produite : Aucun itinéraire trouvé.");
+            errorLabel.setVisible(true);
+            errorLabel.setManaged(true);
+
+            // Réactiver les champs même en cas d'erreur
+            startField.setDisable(false);
+            endField.setDisable(false);
         }
 
 
@@ -2280,7 +2559,8 @@ public class HomeController {
 
     public void handleitinerary(ActionEvent actionEvent) {
 
-        try {hideAllVBoxes();
+        try {
+            hideAllVBoxes();
             resetItineraryFields(); // Réinitialise la VBox
             itineraryFieldsVBox.setVisible(true); // Affiche la VBox d'itinéraire
             itineraryFieldsVBox.setManaged(true);
@@ -2301,33 +2581,21 @@ public class HomeController {
             System.err.println("Erreur lors de la détection de la position : " + e.getMessage());
         }
     }
+    public void handlemeteo(ActionEvent actionEvent) {
+        hideAllVBoxes();
+        locationField.clear();
+        meteoVBox.setManaged(true);
+        meteoVBox.setVisible(true);
+        //Utiliser les coordonnées stockées
+        if (searchQuery != null) {
+            locationField.setText(searchQuery);
+            System.out.println("le lieu "+ searchQuery);
+        } else {
+            System.err.println("Erreur lors de la détection de la position ");
 
-    public String getLocationNameFromCoordinate(double latitude, double longitude) {
-        String nominatimUrl = "https://nominatim.openstreetmap.org/reverse?format=json&lat=" + latitude + "&lon=" + longitude;
-
-        try {
-            URL url = new URL(nominatimUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder response = new StringBuilder();
-            String line;
-
-            while ((line = reader.readLine()) != null) {
-                response.append(line);
-            }
-            reader.close();
-
-            // Parse la réponse JSON pour récupérer le "display_name"
-            JSONObject jsonResponse = new JSONObject(response.toString());
-            return jsonResponse.optString("display_name", "Nom inconnu");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Erreur lors de la récupération du nom";
         }
     }
+
     public void handleDetectLocation(ActionEvent actionEvent) {
         try {
 
@@ -2347,14 +2615,179 @@ public class HomeController {
             System.err.println("Erreur lors de la détection de la position : " + e.getMessage());
         }
 
+    }
+    public void handleMeteo(ActionEvent actionEvent) {
 
+        hideAllVBoxes();
+        locationField.clear();
+        meteoVBox.setManaged(true);
+        meteoVBox.setVisible(true);
 
     }
 
+
+
+    public void handleMeteoVBOX(ActionEvent actionEvent) {
+        String locationQuery = locationField.getText();
+
+        if (locationQuery != null && !locationQuery.isEmpty()) {
+            // Utiliser la méthode getCoordinates pour obtenir les coordonnées du lieu
+            double[] coordinates = getCoordinates(locationQuery);
+
+            if (coordinates != null) {
+                // Une fois les coordonnées obtenues, vous pouvez récupérer la météo
+                getWeather(coordinates[0], coordinates[1], locationQuery);
+            } else {
+                // Afficher un message d'erreur si aucune coordonnée n'est trouvée
+                System.out.println("Lieu non trouvé.");
+            }
+        } else {
+            // Afficher un message d'erreur si aucun lieu n'est saisi
+            System.out.println("Veuillez entrer un lieu.");
+        }
+    }
+    private void getWeather(double latitude, double longitude, String locationQuery) {
+        try {
+            String apiKey = "c575c734e794f30a3f07b7018a965c1f"; // Votre clé API WeatherStack
+            String url = "https://api.weatherstack.com/current?access_key=" + apiKey + "&query=" + latitude + "," + longitude;
+
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                HttpGet request = new HttpGet(url);
+                try (CloseableHttpResponse response = httpClient.execute(request)) {
+                    if (response.getStatusLine().getStatusCode() == 200) {
+                        String jsonResponse = EntityUtils.toString(response.getEntity());
+                        JSONObject weatherData = new JSONObject(jsonResponse);
+
+                        // Vérifier si la réponse contient les informations météo
+                        if (weatherData.has("current") && weatherData.has("location")) {
+                            JSONObject currentWeather = weatherData.getJSONObject("current");
+                            JSONObject locationInfo = weatherData.getJSONObject("location");
+
+                            // Extraire les informations météo
+                            String weatherDescription = currentWeather.getJSONArray("weather_descriptions").getString(0);
+                            double temperature = currentWeather.getDouble("temperature");
+                            String iconUrl = currentWeather.getJSONArray("weather_icons").getString(0);
+                            double windSpeed = currentWeather.getDouble("wind_speed");
+                            int humidity = currentWeather.getInt("humidity");
+                            double feelsLike = currentWeather.getDouble("feelslike");
+
+                            // Extraire la date et l'heure locale
+                            String localtime = locationInfo.getString("localtime");
+
+                            // Appeler showWeatherInfo pour afficher les informations dans le VBox de la météo
+                            showWeatherInfo(locationQuery, localtime, weatherDescription, temperature, iconUrl, windSpeed, humidity, feelsLike);
+                        } else {
+                            System.out.println("Données météo non disponibles.");
+                        }
+                    } else {
+                        System.err.println("Erreur lors de la requête météo : " + response.getStatusLine());
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la récupération de la météo : " + e.getMessage());
+        }
+    }
+
+    private void showWeatherInfo(String locationName, String localtime, String description, double temperature, String iconUrl, double windSpeed, int humidity, double feelsLike) {
+        // Appeler la méthode hideAllVBoxes pour cacher tous les autres éléments
+        hideAllVBoxes();
+
+        // Vérifier si le VBox a bien été trouvé
+        if (meteoafficherVBox != null) {
+            // Vider le contenu précédent
+            meteoafficherVBox.getChildren().clear();
+
+            // Créer un bouton de fermeture avec une icône
+            Button closeButton = new Button();
+            Image closeImage = new Image(getClass().getResource("/images/close-icon.png").toString());
+            ImageView closeImageView = new ImageView(closeImage);
+            closeImageView.setFitWidth(20);
+            closeImageView.setFitHeight(20);
+
+            closeButton.setGraphic(closeImageView);
+            closeButton.setStyle(
+                    "-fx-border-color: #0078d7;" +
+                            "-fx-background-color: white; " +
+                            "-fx-border-width: 1.5;" +
+                            "-fx-border-radius: 25; " +
+                            "-fx-background-radius: 25; " +
+                            "-fx-padding: 7; " +
+                            "-fx-cursor: hand;"
+            );
+
+            // Action du bouton de fermeture
+            closeButton.setOnAction(event -> {
+                hideAllVBoxes();
+                resetItineraryFields();
+                itineraryFieldsVBox.setVisible(true);
+                itineraryFieldsVBox.setManaged(true);
+            });
+
+            // Ajouter un espace en haut et en bas du bouton de fermeture
+            VBox.setMargin(closeButton, new Insets(10, 0, 20, 0)); // 10px en haut et 20px en bas
+
+            // Afficher le nom du lieu
+            Label locationLabel = new Label("Lieu : " + locationName);
+            locationLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
+            // Afficher la date et l'heure locale
+            Label localtimeLabel = new Label("Date et heure locale : " + localtime);
+            localtimeLabel.setStyle("-fx-font-size: 14px;");
+
+            VBox.setMargin(localtimeLabel, new Insets(0, 0, 5, 0)); // 5px en bas
+
+
+            // Icônes et labels pour les autres valeurs
+            ImageView temperatureIcon = new ImageView(getClass().getResource("/images/wi2.png").toString()); // icône température
+            temperatureIcon.setFitWidth(30);
+            temperatureIcon.setFitHeight(30);
+            Label temperatureLabel = new Label(temperature + "°C");
+            temperatureLabel.setStyle("-fx-font-size: 14px;");
+
+            ImageView windIcon = new ImageView(getClass().getResource("/images/wi1.png").toString()); // icône vent
+            windIcon.setFitWidth(30);
+            windIcon.setFitHeight(30);
+            Label windLabel = new Label(windSpeed + " km/h");
+            windLabel.setStyle("-fx-font-size: 14px;");
+
+            ImageView humidityIcon = new ImageView(getClass().getResource("/images/wi3.png").toString()); // icône humidité
+            humidityIcon.setFitWidth(30);
+            humidityIcon.setFitHeight(30);
+            Label humidityLabel = new Label(humidity + "%");
+            humidityLabel.setStyle("-fx-font-size: 14px;");
+
+            // Créer un VBox pour chaque icône et sa valeur
+            VBox temperatureVBox = new VBox(5);
+            temperatureVBox.getChildren().addAll(temperatureIcon, temperatureLabel);
+
+            VBox windVBox = new VBox(5);
+            windVBox.getChildren().addAll(windIcon, windLabel);
+
+            VBox humidityVBox = new VBox(5);
+            humidityVBox.getChildren().addAll(humidityIcon, humidityLabel);
+
+            // Créer un HBox pour organiser les VBoxes horizontalement
+            HBox weatherInfoHBox = new HBox(15); // Espacement de 15 entre les éléments
+            weatherInfoHBox.setAlignment(Pos.CENTER);
+            weatherInfoHBox.getChildren().addAll(temperatureVBox, windVBox, humidityVBox);
+
+            // Créer un VBox pour afficher le bouton de fermeture, le nom du lieu, la date et l'heure, et les informations météo
+            VBox descriptionVBox = new VBox(10); // Espacement de 10 entre les éléments
+            descriptionVBox.setAlignment(Pos.CENTER);
+            descriptionVBox.getChildren().addAll(closeButton, locationLabel, localtimeLabel);
+
+            // Ajouter tout dans le VBox principal
+            meteoafficherVBox.getChildren().addAll(descriptionVBox, weatherInfoHBox);
+
+            // Rendre le VBox visible
+            meteoafficherVBox.setVisible(true);
+            meteoafficherVBox.setManaged(true);
+        } else {
+            System.out.println("Le VBox 'meteoafficherVBox' n'a pas été trouvé.");
+        }
+    }
+
+
+
 }
-
-
-
-
-
-

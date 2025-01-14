@@ -5,7 +5,9 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
+
 import java.io.IOException;
 import java.net.URL;
 
@@ -27,8 +29,19 @@ public class MainApp extends Application {
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
             Parent root = loader.load();
             Scene scene = new Scene(root);
+
+            // Définir le titre de la fenêtre
+            primaryStage.setTitle("MapEase");
+
+            // Définir une icône personnalisée pour la fenêtre
+            URL iconUrl = getClass().getResource("/images/img.png"); // Chemin de l'icône
+            if (iconUrl != null) {
+                primaryStage.getIcons().add(new Image(iconUrl.toExternalForm()));
+            } else {
+                System.out.println("Icône introuvable !");
+            }
+
             primaryStage.setScene(scene);
-            primaryStage.setTitle("Application de detection des lieux");
             primaryStage.show();
         } catch (IOException e) {
             e.printStackTrace();

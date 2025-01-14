@@ -35,6 +35,104 @@
         })
     });
 
+
+  // Fonction pour envoyer les coordonnées vers le serveur Java
+  function sendCoordinatesToServer(locations) {
+    fetch('http://localhost:8000/coordinates', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(locations) // Convertir les coordonnées en JSON
+    })
+    .then(response => response.json())
+    .then(data => console.log('Réponse du serveur :', data))
+    .catch(error => console.error('Erreur lors de l\'envoi des données :', error));
+  }
+
+  // Fonction pour convertir les coordonnées et ajouter un marqueur sur la carte
+  map.on('singleclick', function (event) {
+    var coordinates = ol.proj.toLonLat(event.coordinate);
+    console.log('Clic détecté aux coordonnées (longitude, latitude) :', coordinates);
+
+    var locations = [
+        { lat: coordinates[1], lng: coordinates[0], name: 'Marqueur 1' },
+    ];
+
+    console.log('Coordonnées transmises à updatemap :', locations);
+
+    // Mettre à jour la carte avec les nouveaux marqueurs
+    updatemap(locations);
+
+    // Envoyer les données vers le serveur Java
+    sendCoordinatesToServer(locations);
+  });
+
+  // Fonction pour mettre à jour la carte avec plusieurs marqueurs
+  function updatemap(locations) {
+    const existingLayers = map.getLayers().getArray().filter(layer => layer instanceof ol.layer.Vector);
+    existingLayers.forEach(layer => map.removeLayer(layer));
+
+    let markersArray = [];
+
+    locations.forEach(function (location) {
+      var coords = ol.proj.fromLonLat([location.lng, location.lat]);
+      var marker = new ol.Feature({
+        geometry: new ol.geom.Point(coords),
+        name: location.name
+      });
+
+      var canvas = document.createElement('canvas');
+      var ctx = canvas.getContext('2d');
+      var size = 32;
+      canvas.width = size;
+      canvas.height = size;
+
+      var img = new Image();
+      img.src = '../images/marker.png';
+      img.onload = function () {
+        ctx.drawImage(img, 0, 0, size, size);
+
+        ctx.beginPath();
+        ctx.arc(size / 2, size - 5, 5, 0, Math.PI * 2, false);
+        ctx.fillStyle = 'red';
+        ctx.fill();
+
+        var iconStyle = new ol.style.Style({
+          image: new ol.style.Icon({
+            anchor: [0.5, 1],
+            img: canvas,
+            imgSize: [size, size]
+          })
+        });
+        marker.setStyle(iconStyle);
+
+        var vectorSource = new ol.source.Vector({
+          features: [marker]
+        });
+
+        var markerLayer = new ol.layer.Vector({
+          source: vectorSource
+        });
+
+        map.addLayer(markerLayer);
+      };
+
+      markersArray.push({ lat: location.lat, lng: location.lng });
+    });
+
+    if (locations.length > 0) {
+      var firstCoords = ol.proj.fromLonLat([locations[0].lng, locations[0].lat]);
+      map.getView().setCenter(firstCoords);
+      map.getView().setZoom(12);
+    }
+
+    console.log("Coordonnées des marqueurs envoyées vers le serveur :", markersArray);
+  }
+
+
+
+
 function drawRouteOnMap(apiRouteCoordinates) {
     // Supprimer les couches d'itinéraires existantes
     const existingRouteLayers = map.getLayers().getArray().filter(layer => layer.get('name') === 'routeLayer');
@@ -112,6 +210,7 @@ function drawRouteOnMap(apiRouteCoordinates) {
 
     console.log("Itinéraire et marqueurs tracés avec succès.");
     console.log("Itinéraire tracé avec succès.");}
+
 function addMarker(latitude, longitude) {
  // Supprimer les couches de marqueurs existantes
     const existingLayers = map.getLayers().getArray().filter(layer => layer instanceof ol.layer.Vector);
@@ -246,57 +345,6 @@ function getFirstMarkerCoordinates() {
         return null;
     }
 }
-
-
-
-
-function drawRouteOnMap(apiRouteCoordinates) {
-
-// Supprimer les couches de marqueurs existantes
-    const existingLayers = map.getLayers().getArray().filter(layer => layer instanceof ol.layer.Vector);
-    existingLayers.forEach(layer => map.removeLayer(layer));
-
-    // Supprimer les couches d'itinéraires existantes
-    const existingRouteLayers = map.getLayers().getArray().filter(layer => layer.get('name') === 'routeLayer');
-    existingRouteLayers.forEach(layer => map.removeLayer(layer));
-
-    // Convertir les coordonnées [latitude, longitude] en [longitude, latitude] pour OpenLayers
-    var convertedCoordinates = apiRouteCoordinates.map(coord => ol.proj.fromLonLat([coord[1], coord[0]]));
-
-    // Créer une géométrie de type ligne
-    var routeLine = new ol.geom.LineString(convertedCoordinates);
-
-    // Créer une source de vecteur pour la ligne
-    var vectorSource = new ol.source.Vector({
-        features: [new ol.Feature({ geometry: routeLine })]
-    });
-
-    // Définir le style de la ligne
-    var routeStyle = new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: 'blue', // Couleur de l'itinéraire
-            width: 4       // Épaisseur de la ligne
-        })
-    });
-
-    // Créer une couche pour afficher la ligne
-    var routeLayer = new ol.layer.Vector({
-        source: vectorSource,
-        style: routeStyle
-    });
-
-    // Attribuer un nom pour identifier la couche plus tard
-    routeLayer.set('name', 'routeLayer');
-
-    // Ajouter la couche d'itinéraire à la carte
-    map.addLayer(routeLayer);
-
-    // Recentrer la vue sur l'itinéraire
-    var routeExtent = routeLine.getExtent();
-    map.getView().fit(routeExtent, { padding: [50, 50, 50, 50], maxZoom: 14 });
-
-    console.log("Itinéraire tracé avec succès.");}
-
 
 
 
